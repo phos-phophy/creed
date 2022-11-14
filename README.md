@@ -1,0 +1,1 @@
+# Change of Relation Extraction's Entity Domain
