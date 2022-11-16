@@ -6,11 +6,14 @@ from .span import Span
 
 
 class Document:
-    def __init__(self, doc_id: str, text: str, facts: Iterable[AbstractFact], coref_chains: Optional[List[Tuple[int]]] = None):
+    def __init__(self, doc_id: str, text: str, sentences: List[Span], facts: Iterable[AbstractFact],
+                 coref_chains: Optional[List[Tuple[int]]] = None):
         self._doc_id = doc_id
         self._text = text
+        self._sentences = sentences
         self._facts = tuple(facts)
         self._coref_chains = coref_chains
+        self._validate_sentences()
         self._validate_facts()
         self._validate_chains()
 
@@ -23,12 +26,23 @@ class Document:
         return self._text
 
     @property
+    def sentences(self):
+        return self._sentences
+
+    @property
     def facts(self):
         return self._facts
 
     @property
     def coref_chains(self):
         return self._coref_chains
+
+    def _validate_sentences(self):
+        text_span = Span(self.text, 0, len(self.text))
+
+        for ind, sent_span in enumerate(self.sentences):
+            if sent_span not in text_span:
+                raise ValueError(f"Sentence {ind} should be in the text: {sent_span} not in {text_span}")
 
     def _validate_chains(self):
         for idx in chain(*self.coref_chains):
