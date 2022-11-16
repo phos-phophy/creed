@@ -39,9 +39,9 @@ class AbstractFact(metaclass=ABCMeta):
 
 
 class EntityFact(AbstractFact):
-    def __init__(self, fact_id: str, fact_type_id: str, fact_type: FactType):
+    def __init__(self, fact_id: str, fact_type_id: str, fact_type: FactType, span: Span):
         self._validate_fact_type(fact_type)
-        super().__init__(fact_id, fact_type_id, fact_type)
+        super().__init__(fact_id, fact_type_id, fact_type, span)
 
     @staticmethod
     def _validate_fact_type(fact_type: FactType):
@@ -50,10 +50,10 @@ class EntityFact(AbstractFact):
 
 
 class RelationFact(AbstractFact):
-    def __init__(self, fact_id: str, fact_type_id: str, fact_type: FactType, from_fact: EntityFact, to_fact: EntityFact):
+    def __init__(self, fact_id: str, fact_type_id: str, fact_type: FactType, span: Span, from_fact: EntityFact, to_fact: EntityFact):
         self._validate_fact_type(fact_type)
 
-        super().__init__(fact_id, fact_type_id, fact_type)
+        super().__init__(fact_id, fact_type_id, fact_type, span)
         self._from_fact = from_fact
         self._to_fact = to_fact
 
