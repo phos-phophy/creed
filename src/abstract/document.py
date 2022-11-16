@@ -1,8 +1,8 @@
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple
 
-from fact import AbstractFact, EntityFact, RelationFact
-from span import Span
+from .fact import AbstractFact, EntityFact, RelationFact
+from .span import Span
 
 
 class Document:

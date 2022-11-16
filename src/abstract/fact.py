@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
-from span import Span
+from .span import Span
 
 
 class FactType(str, Enum):
