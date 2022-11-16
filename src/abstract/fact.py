@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
+from span import Span
+
 
 class FactType(str, Enum):
     ENTITY = "entity"
@@ -8,10 +10,11 @@ class FactType(str, Enum):
 
 
 class AbstractFact(metaclass=ABCMeta):
-    def __init__(self, fact_id: str, fact_type_id: str, fact_type: FactType):
+    def __init__(self, fact_id: str, fact_type_id: str, fact_type: FactType, span: Span):
         self._fact_id = fact_id
         self._fact_type_id = fact_type_id
         self._fact_type = fact_type
+        self._span = span
 
     @property
     def fact_id(self):
@@ -24,6 +27,10 @@ class AbstractFact(metaclass=ABCMeta):
     @property
     def fact_type(self):
         return self._fact_type
+
+    @property
+    def span(self):
+        return self._span
 
     @staticmethod
     @abstractmethod
