@@ -1,0 +1,20 @@
+[flake8]
+
+import-order-style = pycharm
+
+max-line-length = 140
+# TODO(#89): refactor code to decrease possible complexity
+max-complexity = 10
+ignore =
+    E722, # duplicates B001 from flake8-bugbear
+    E731, # we want use lambdas
+    C408, # dict(), list(), tuple() is ok
+    W503, # line breaks before binary operator is ok according to PEP8, flake8 error
+exclude =
+    .git,
+    .idea,
+    *.pyc,
+    __pycache__,
+    etc,
+    .venv,
+    venv
