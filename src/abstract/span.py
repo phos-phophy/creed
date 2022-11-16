@@ -6,7 +6,8 @@ class Span:
         self._validate_length()
 
     def __contains__(self, item: 'Span'):
-        return self.start_idx <= item.start_idx and self.end_idx >= item.end_idx
+        start = item.start_idx - self.start_idx
+        return self.start_idx <= item.start_idx and self.end_idx >= item.end_idx and item.text == self.text[start: start + len(item)]
 
     def __eq__(self, other: 'Span'):
         return self.text == other.text and self.start_idx == other.start_idx and self.end_idx == self.end_idx
