@@ -51,7 +51,7 @@ class Document:
             raise ValueError(f"Span should be in the text: {span} not in {text_span}")
 
     def _validate_spans(self, spans: Tuple[Span]):
-        text_span = Span(self.text, 0, len(self.text))
+        text_span = Span(0, len(self.text))
 
         for span in spans:
             self._validate_span(text_span, span)
@@ -62,7 +62,7 @@ class Document:
                 raise ValueError(f"There is not {idx}th fact")
 
     def _validate_facts(self):
-        text_span = Span(self.text, 0, len(self.text))
+        text_span = Span(0, len(self.text))
 
         for fact in self.facts:
             if isinstance(fact, EntityFact):
@@ -72,6 +72,11 @@ class Document:
                 self._validate_span(text_span, fact.to_fact.span)
             else:
                 raise ValueError
+
+    def get_word(self, span: Span):
+        if span in self.words:
+            return self.text[span.start_idx: span.end_idx]
+        raise ValueError(f"Document does not contain a word in the span: {span}")
 
     def add_relation_facts(self, facts: Iterable[RelationFact]):
         self._facts = tuple(list(self._facts) + list(facts))
