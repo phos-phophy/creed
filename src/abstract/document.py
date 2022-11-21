@@ -62,14 +62,12 @@ class Document:
                 raise ValueError(f"There is not {idx}th fact")
 
     def _validate_facts(self):
-        text_span = Span(0, len(self.text))
-
         for fact in self.facts:
             if isinstance(fact, EntityFact):
-                self._validate_span(text_span, fact.span)
+                self._validate_spans(fact.mentions)
             elif isinstance(fact, RelationFact):
-                self._validate_span(text_span, fact.from_fact.span)
-                self._validate_span(text_span, fact.to_fact.span)
+                self._validate_spans(fact.from_fact.mentions)
+                self._validate_spans(fact.to_fact.mentions)
             else:
                 raise ValueError
 

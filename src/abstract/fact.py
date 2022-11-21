@@ -1,5 +1,6 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from enum import Enum
+from typing import Tuple
 
 from .span import Span
 
@@ -30,33 +31,23 @@ class AbstractFact(metaclass=ABCMeta):
     def fact_type(self):
         return self._fact_type
 
-    @abstractmethod
-    def _validate_fact_type(self):
-        pass
-
 
 class EntityFact(AbstractFact):
-    def __init__(self, fact_id: str, fact_type_id: str, fact_type: FactType, span: Span):
-        super().__init__(fact_id, fact_type_id, fact_type)
-        self._span = span
-        self._validate_fact_type()
+    def __init__(self, fact_id: str, fact_type_id: str, mentions: Tuple[Span]):
+        super().__init__(fact_id, fact_type_id, FactType.ENTITY)
+        self._mentions = mentions
 
     def __eq__(self, other: 'AbstractFact'):
-        return isinstance(other, EntityFact) and super().__eq__(other) and self.span == other.span
+        return isinstance(other, EntityFact) and super().__eq__(other) and self.mentions == other.mentions
 
     @property
-    def span(self):
-        return self._span
-
-    def _validate_fact_type(self):
-        if self.fact_type != FactType.ENTITY:
-            raise ValueError(f"illegal fact type for entity fact: {self.fact_type}")
+    def mentions(self):
+        return self._mentions
 
 
 class RelationFact(AbstractFact):
-    def __init__(self, fact_id: str, fact_type_id: str, fact_type: FactType, from_fact: EntityFact, to_fact: EntityFact):
-        super().__init__(fact_id, fact_type_id, fact_type)
-        self._validate_fact_type()
+    def __init__(self, fact_id: str, fact_type_id: str, from_fact: EntityFact, to_fact: EntityFact):
+        super().__init__(fact_id, fact_type_id, FactType.RELATION)
 
         self._from_fact = from_fact
         self._to_fact = to_fact
@@ -72,7 +63,3 @@ class RelationFact(AbstractFact):
     @property
     def to_fact(self):
         return self._to_fact
-
-    def _validate_fact_type(self):
-        if self.fact_type != FactType.RELATION:
-            raise ValueError(f"illegal fact type for relation fact: {self.fact_type}")
