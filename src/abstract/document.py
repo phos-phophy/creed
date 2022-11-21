@@ -1,23 +1,23 @@
 from itertools import chain
 from typing import Iterable, Optional, Tuple
 
+from .coreference_chain import CoreferenceChain
 from .fact import AbstractFact, EntityFact, RelationFact
 from .span import Span
 
 
 class Document:
-    def __init__(self, doc_id: str, text: str, words: Tuple[Span], sentences: Tuple[Span], facts: Iterable[AbstractFact],
-                 coref_chains: Optional[Tuple[Tuple[int]]] = None):
+    def __init__(self, doc_id: str, text: str, sentences: Tuple[Tuple[Span]], facts: Iterable[AbstractFact],
+                 coref_chains: Optional[Tuple[CoreferenceChain]] = None):
 
         self._doc_id = doc_id
         self._text = text
-        self._words = words
+        self._words = tuple(chain.from_iterable(sentences))
         self._sentences = sentences
         self._facts = tuple(facts)
         self._coref_chains = coref_chains
 
-        self._validate_spans(words)
-        self._validate_spans(sentences)
+        self._validate_spans(self._words)
         self._validate_facts()
         self._validate_chains()
 
@@ -57,9 +57,9 @@ class Document:
             self._validate_span(text_span, span)
 
     def _validate_chains(self):
-        for idx in chain(*self.coref_chains):
-            if idx >= len(self.facts):
-                raise ValueError(f"There is not {idx}th fact")
+        for fact in chain(*self.coref_chains):
+            if fact not in self.facts:
+                raise ValueError(f"There is not fact {fact}")
 
     def _validate_facts(self):
         for fact in self.facts:
