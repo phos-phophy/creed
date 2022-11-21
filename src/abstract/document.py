@@ -57,9 +57,10 @@ class Document:
             self._validate_span(text_span, span)
 
     def _validate_chains(self):
-        for fact in chain(*self.coref_chains):
-            if fact not in self.facts:
-                raise ValueError(f"There is not fact {fact}")
+        for coref_chain in self.coref_chains:
+            for fact in coref_chain.facts:
+                if fact not in self.facts:
+                    raise ValueError(f"There is not fact {fact}")
 
     def _validate_facts(self):
         for fact in self.facts:

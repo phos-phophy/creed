@@ -9,4 +9,4 @@ class CoreferenceChain:
 
     @property
     def facts(self):
-        return self._facts
+        return tuple(self._facts)

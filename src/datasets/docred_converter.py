@@ -1,7 +1,7 @@
 import json
 from itertools import chain
 from pathlib import Path
-from typing import Any, Dict, Iterator, List
+from typing import Any, Dict, Iterator, List, Tuple
 
 from src.abstract import AbstractConverter, AbstractFact, CoreferenceChain, Document, EntityFact, RelationFact, Span
 
@@ -46,7 +46,7 @@ class DocREDConverter(AbstractConverter):
         entity_facts, coref_chains = self._extract_entity_facts(example["vertexSet"], sentences)
 
         facts: List[AbstractFact] = entity_facts
-        facts.extend(self._extract_rel_facts(example.get("labels", []), entity_facts))
+        facts.extend(self._extract_rel_facts(example.get("labels", []), coref_chains))
 
         return Document(example["title"], text, sentences, facts, coref_chains)
 
@@ -83,10 +83,12 @@ class DocREDConverter(AbstractConverter):
 
         return facts, tuple(coref_chains)
 
-    def _extract_rel_facts(self, labels: List[Dict], facts: List[EntityFact]):
+    def _extract_rel_facts(self, labels: List[Dict], coref_facts: Tuple[CoreferenceChain, ...]):
 
         def build_rel_fact(desc: dict):
             rel_type = self.rel_info.get(desc["r"], desc["r"])
-            return [RelationFact("", rel_type, from_fact, to_fact) for from_fact in facts[desc["h"]] for to_fact in facts[desc["t"]]]
+            from_facts = coref_facts[desc["h"]].facts
+            to_facts = coref_facts[desc["t"]].facts
+            return [RelationFact("", rel_type, from_fact, to_fact) for from_fact in from_facts for to_fact in to_facts]
 
         return list(chain.from_iterable(build_rel_fact(rel_desc) for rel_desc in labels))

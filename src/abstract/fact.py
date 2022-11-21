@@ -56,7 +56,7 @@ class EntityFact(AbstractFact):
         return self._mentions
 
     def _validate_mentions(self):
-        if len(self.mentions) != len(set(self._validate_mentions())):
+        if len(self.mentions) != len(set(self.mentions)):
             raise ValueError(f"EntityFact ({self}) has identical mentions!")
 
 
