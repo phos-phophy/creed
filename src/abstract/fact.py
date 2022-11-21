@@ -40,7 +40,7 @@ class AbstractFact(metaclass=ABCMeta):
 
 
 class EntityFact(AbstractFact):
-    def __init__(self, fact_id: str, fact_type_id: str, mentions: Tuple[Span]):
+    def __init__(self, fact_id: str, fact_type_id: str, mentions: Tuple[Span, ...]):
         super().__init__(fact_id, fact_type_id, FactType.ENTITY)
         self._mentions = mentions
         self._validate_mentions()

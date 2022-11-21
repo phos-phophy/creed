@@ -8,7 +8,7 @@ from .span import Span
 
 class Document:
     def __init__(self, doc_id: str, text: str, sentences: Iterable[Iterable[Span]], facts: Iterable[AbstractFact],
-                 coref_chains: Optional[Tuple[CoreferenceChain]] = None):
+                 coref_chains: Optional[Tuple[CoreferenceChain, ...]] = None):
 
         self._doc_id = doc_id
         self._text = text
@@ -50,7 +50,7 @@ class Document:
         if span not in text_span:
             raise ValueError(f"Span should be in the text: {span} not in {text_span}")
 
-    def _validate_spans(self, spans: Tuple[Span]):
+    def _validate_spans(self, spans: Tuple[Span, ...]):
         text_span = Span(0, len(self.text))
 
         for span in spans:
