@@ -7,15 +7,15 @@ from .span import Span
 
 
 class Document:
-    def __init__(self, doc_id: str, text: str, sentences: Tuple[Tuple[Span]], facts: Iterable[AbstractFact],
+    def __init__(self, doc_id: str, text: str, sentences: Iterable[Iterable[Span]], facts: Iterable[AbstractFact],
                  coref_chains: Optional[Tuple[CoreferenceChain]] = None):
 
         self._doc_id = doc_id
         self._text = text
         self._words = tuple(chain.from_iterable(sentences))
-        self._sentences = sentences
+        self._sentences = tuple(tuple(sentence) for sentence in sentences)
         self._facts = tuple(facts)
-        self._coref_chains = coref_chains
+        self._coref_chains = tuple(coref_chains) if coref_chains else None
 
         self._validate_spans(self._words)
         self._validate_facts()
