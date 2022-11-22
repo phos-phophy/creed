@@ -13,4 +13,26 @@ There are several ways to deal with changing entities' types
     * Or don't pay any attention to the domain shift during inference (get lower results)
     
 2) Mapping
-3) Adopting
+
+```mermaid
+flowchart LR
+   subgraph a["Unknown domain"]
+      direction TB
+      subgraph b[" "]
+         direction LR
+         NUM1(["NUM"])-- Date of birth --->PER1(["PER"])
+         NUM2(["NUM"])-- Age --->PER2(["PER"])
+      end
+   end
+   subgraph c["Model domain"]
+      direction TB
+      subgraph d[" "]
+         direction LR
+         time([TIME])-- Date of birth --->person1(["PERSON"])
+         number([NUMBER])-- Age --->person2(["PERSON"])
+      end
+   end
+   a ==> c 
+```
+
+4) Adopting
