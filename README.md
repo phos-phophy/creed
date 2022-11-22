@@ -15,8 +15,8 @@ There are several ways to deal with the changing types of entyties:
 2) Mapping
 
    Another way is to build a mapping from the model's entity types to another domain ones. But there may be situations when it is 
-impossible to build an unambiguous mapping (e.g. diagram below where `PER` correspond only to `PERSON`, but `NUM` is `NUMBER` and `TIME` 
-concurrently) 
+impossible to build the unambiguous mapping (e.g. diagram below, where `PER` correspond only to `PERSON`, but `NUM` is `NUMBER` and `TIME` 
+concurrently)
 
    ```mermaid
    flowchart LR
@@ -39,4 +39,7 @@ concurrently)
       a ==> c 
    ```
 
-3) Adopting
+3) Adapting
+
+   We are going to develop training methods that instill domain shift resistance in RE models and allow them to adapt to new types of 
+entities
