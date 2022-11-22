@@ -38,6 +38,9 @@ concurrently)
       end
       a ==> c 
    ```
+   
+   In the case of the unambiguous mapping, we can try all suitable mappings, but if there are $$ N $$  entities and $$ M $$ candidates for each of them, $$ M^N $$ model runs are 
+required
 
 3) Adapting
 
