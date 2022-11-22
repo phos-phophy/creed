@@ -6,33 +6,37 @@ there is a lack of cross-domain evaluation researches. The purpose of this work 
 types of entities.
 
 ## Motivation
-There are several ways to deal with changing entities' types
-1) Ignoring (baseline)
+There are several ways to deal with the changing types of entyties:
+1) Ignoring (our baseline)
    
-    * Build a model that does not use any information of entities' types (get lower results)
-    * Or don't pay any attention to the domain shift during inference (get lower results)
+    * Build a model that does not use any information of entities' types (and get lower results)
+    * Or don't pay any attention to the domain shift during inference (and also get lower results)
     
 2) Mapping
 
-```mermaid
-flowchart LR
-   subgraph a["Unknown domain"]
-      direction TB
-      subgraph b[" "]
-         direction LR
-         NUM1(["NUM"])-- Date of birth --->PER1(["PER"])
-         NUM2(["NUM"])-- Age --->PER2(["PER"])
-      end
-   end
-   subgraph c["Model domain"]
-      direction TB
-      subgraph d[" "]
-         direction LR
-         time([TIME])-- Date of birth --->person1(["PERSON"])
-         number([NUMBER])-- Age --->person2(["PERSON"])
-      end
-   end
-   a ==> c 
-```
+   Another way is to build a mapping from the model's entity types to another domain ones. But there may be situations when it is 
+impossible to build an unambiguous mapping (e.g. diagram below where `PER` correspond only to `PERSON`, but `NUM` is `NUMBER` and `TIME` 
+concurrently) 
 
-4) Adopting
+   ```mermaid
+   flowchart LR
+      subgraph a["Unknown domain"]
+         direction TB
+         subgraph b[" "]
+            direction LR
+            NUM1(["NUM"])-- Date of birth --->PER1(["PER"])
+            NUM2(["NUM"])-- Age --->PER2(["PER"])
+         end
+      end
+      subgraph c["Model's domain"]
+         direction TB
+         subgraph d[" "]
+            direction LR
+            time([TIME])-- Date of birth --->person1(["PERSON"])
+            number([NUMBER])-- Age --->person2(["PERSON"])
+         end
+      end
+      a ==> c 
+   ```
+
+3) Adopting
