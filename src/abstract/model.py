@@ -1,9 +1,10 @@
 import pickle
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Type, TypeVar
+from typing import Any, Iterable, Type, TypeVar
 
 import torch
+from .dataset import AbstractDataset
 from .document import Document
 
 _Model = TypeVar('_Model', bound='AbstractModel')
@@ -23,6 +24,10 @@ class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
 
     @abstractmethod
     def _forward(self, *args, **kwargs) -> Any:
+        pass
+
+    @abstractmethod
+    def _prepare_dataset(self, document: Iterable[Document]) -> AbstractDataset:
         pass
 
     @abstractmethod
@@ -48,3 +53,7 @@ class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
             pickle.dump(self, f, protocol=4)  # fixed protocol version to avoid issues with serialization on Python 3.6+ versions
 
         self.to(device=torch.device(previous_device))
+
+    @classmethod
+    def from_config(cls, config: dict) -> 'AbstractModel':
+        return type(cls)(**config)
