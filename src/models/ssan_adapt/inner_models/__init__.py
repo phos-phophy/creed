@@ -1,7 +1,7 @@
-from .base import Base
-from .wo_entities import WOEntities
+from .configure import get_inner_model
+from .model import AbstractInnerModel
 
 __all__ = [
-    "Base",
-    "WOEntities"
+    "AbstractInnerModel",
+    "get_inner_model"
 ]
