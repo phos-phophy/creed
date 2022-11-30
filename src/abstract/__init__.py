@@ -5,6 +5,7 @@ from .document import Document
 from .fact import AbstractFact, EntityFact, FactType, RelationFact
 from .model import AbstractModel
 from .span import Span
+from .torch import TorchModel
 
 __all__ = [
     "AbstractConverter",
@@ -16,5 +17,6 @@ __all__ = [
     "EntityFact",
     "FactType",
     "RelationFact",
-    "Span"
+    "Span",
+    "TorchModel"
 ]
