@@ -78,9 +78,9 @@ direction TB
 
    AbstractFact <|-- EntityFact
    AbstractFact <|-- RelationFact
-   EntityFact "1" --> "many" Span : is mentioned in
+   EntityFact "1" --> "1..*" Span : is mentioned in
    AbstractFact "1" --> "1" FactType : is a
-   EntityFact "many" --o "1" CoreferenceChain : consists of 
+   EntityFact "0..*" --o "1" CoreferenceChain : refers to
    
    class Span:::rect{
       +start_idx: int
@@ -126,11 +126,11 @@ direction TB
       +facts: Tuple[AbstractFact]
       +coref_chains: Tuple[CoreferenceChain]
       #_validate_span(text_span: Span, span: Span)
-      #_validate_spans(spans: Tuple[Span])
-      #_validate_chains()
-      #_validate_facts()
-      +get_word(span: Span)
-      +add_relation_facts(facts: Iterable[RelationFact])
+      #_validate_spans(self, spans: Tuple[Span])
+      #_validate_chains(self)
+      #_validate_facts(self)
+      +get_word(self, span: Span)
+      +add_relation_facts(self, facts: Iterable[RelationFact])
    }
    
    class AbstractDataset{
@@ -138,9 +138,9 @@ direction TB
       +tokenizer
       +evaluation: bool
       +extract_labels: bool
-      +get_fact(doc_idx, fact_idx) AbstractFact
-      +fact_count(doc_idx) int
-      #_prepare_doc(doc: Document)
+      +get_fact(self, doc_idx, fact_idx) AbstractFact
+      +fact_count(self, doc_idx) int
+      #_prepare_doc(self, doc: Document)
    }
 ```
 
@@ -151,23 +151,23 @@ direction TB
 
    class TorchModel{
       +device: torch.device
-      +forward(*args, **kwargs) Any
-      +save(path: Path, *, rewrite: bool)
-      +load(path: Path) TorchModel
-      +from_config(config: dict) TorchModel
+      +forward(self, *args, **kwargs) Any
+      +save(self, path: Path, *, rewrite: bool)
+      +load(cls, path: Path) TorchModel
+      +from_config(cls, config: dict) TorchModel
    }
    TorchModel <-- AbstractModel
    
    class AbstractModel{
       <<Abstract>>
-      +prepare_dataset(documents: Iterable[Document])  AbstractDataset
+      +prepare_dataset(self, documents: Iterable[Document])  AbstractDataset
    }
    AbstractModel <-- RelextModel
    AbstractModel <-- AbstractSubModel
    
    class RelextModel{
       #_inner_model: AbstractSubModel
-      +predict(doc: Document) Document
+      +predict(self, doc: Document) Document
    }
    RelextModel <-- SSANAdapt
    RelextModel <-- REBEL
