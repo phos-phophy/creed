@@ -53,13 +53,38 @@ flowchart LR
 
 ## Class diagrams
 
+The base classes are divided into 3 main categories:
+
+* **_Features_**:
+  * Span
+  * FactType
+  * AbstractFact
+    * EntityFact
+    * RelationFact
+  * CoreferenceChain
+* **_Examples_**:
+  * Document
+  * AbstractDataset
+* **_Models_**:
+  * TorchModel
+  * AbstractModel
+  * RelextModel
+  * AbstractSubModel
+
+### Features
 ```mermaid
 classDiagram
 direction TB
 
-   class Span{
-      +start_idx
-      +end_idx
+   AbstractFact <|-- EntityFact
+   AbstractFact <|-- RelationFact
+   EntityFact "1" --> "many" Span : is mentioned in
+   AbstractFact "1" --> "1" FactType : is a
+   EntityFact "many" --o "1" CoreferenceChain : consists of 
+   
+   class Span:::rect{
+      +start_idx: int
+      +end_idx: int
    }
    
    class FactType{
@@ -70,16 +95,14 @@ direction TB
 
    class AbstractFact{
       <<Abstract>> 
-      +fact_id
+      +fact_id: str
       +fact_type_id: FactType
-      +fact_type
+      +fact_type: str
    }
-   AbstractFact <|-- EntityFact
-   AbstractFact <|-- RelationFact
    
    class EntityFact{
       +mentions: Tuple[Span]
-      -validate_mentions()
+      -validate_mentions(self)
    }
    
    class RelationFact{
@@ -88,9 +111,13 @@ direction TB
    }
    
    class CoreferenceChain{
-      +facts: Tuple[entityFact]
+      +facts: Tuple[EntityFact]
    }
-   
+```
+### Examples
+```mermaid
+classDiagram
+direction TB
    class Document{
       +doc_id: str
       +text: str
@@ -117,6 +144,7 @@ direction TB
    }
 ```
 
+### Models
 ```mermaid
 classDiagram
 direction TB
