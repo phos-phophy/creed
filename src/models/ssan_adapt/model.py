@@ -1,10 +1,10 @@
 from typing import Any, Iterable
 
 import torch
+from src.abstract import AbstractDataset, AbstractModel, Document
 from transformers import AutoTokenizer
 
-from src.abstract import AbstractDataset, AbstractModel, Document
-from .configure import get_inner_model
+from .inner_models import get_inner_model
 
 
 class SSANAdaptModel(AbstractModel):
@@ -13,7 +13,7 @@ class SSANAdaptModel(AbstractModel):
         super(SSANAdaptModel, self).__init__()
 
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-        self._inner_model = get_inner_model(model_type, pretrained_model_path, **kwargs)
+        self._inner_model: AbstractModel = get_inner_model(model_type, pretrained_model_path, **kwargs)
 
         self._max_seq_len = self._tokenizer.model_max_length
 
@@ -25,11 +25,69 @@ class SSANAdaptModel(AbstractModel):
         hidden_dim += 20
         self._bili = torch.nn.Bilinear(hidden_dim, hidden_dim, len(self._model_relations))
 
-    def _forward(self, *args, **kwargs) -> Any:
-        raise NotImplementedError
+        self._loss = torch.nn.BCEWithLogitsLoss(reduction="none")
 
-    def _prepare_dataset(self, document: Iterable[Document]) -> AbstractDataset:
-        raise NotImplementedError
+    def forward(
+            self,
+            input_ids=None,  # (bs, len)
+            ner_ids=None,  # (bs, len)
+            rel_distance=None,  # (bs, max_ent, max_ent)
+            attention_mask=None,  # (bs, len)
+            struct_mask=None,  # (bs, 5, len, len)
+            ent_mask=None,  # (bs, max_ent, len)
+            labels=None,  # (bs, max_ent, max_ent, num_link)
+            labels_mask=None  # (bs, max_ent, max_ent)
+    ) -> Any:
+        input_ids, ner_ids, rel_distance, attention_mask, struct_mask, ent_mask, labels, labels_mask = \
+            tuple(map(self.to_device, [input_ids, ner_ids, rel_distance, attention_mask, struct_mask, ent_mask, labels, labels_mask]))
 
-    def predict(self, document: Document) -> Document:
-        pass
+        output = self._inner_model(input_ids=input_ids, ner_ids=ner_ids, attention_mask=attention_mask, struct_mask=struct_mask)
+
+        # tensors for each token in the text
+        tokens: torch.Tensor = output[0]  # (bs, len, dim)
+        tokens: torch.Tensor = torch.relu(self._dim_reduction(tokens))  # (bs, len, r_dim)
+
+        # extract tensors for entities only
+        entity: torch.Tensor = torch.matmul(ent_mask.float(), tokens)  # (bs, max_ent, r_dim)
+
+        # define head and tail entities (head --|relation|--> tail)
+        h_entity: torch.Tensor = entity[:, :, None, :].repeat(1, 1, ent_mask.size()[1], 1)  # (bs, max_ent, max_ent, r_dim)
+        t_entity: torch.Tensor = entity[:, None, :, :].repeat(1, ent_mask.size()[1], 1, 1)  # (bs, max_ent, max_ent, r_dim)
+
+        # add information about the relative distance between entities
+        h_entity = torch.cat([h_entity, self._distance_emb(rel_distance)], dim=-1)
+        t_entity = torch.cat([t_entity, self._distance_emb((20 - rel_distance) % 20)], dim=-1)
+
+        h_entity: torch.Tensor = self._dropout(h_entity)
+        t_entity: torch.Tensor = self._dropout(t_entity)
+
+        # get prediction
+        logits: torch.Tensor = self._bili(h_entity, t_entity)  # (bs, max_ent, max_ent, num_links)
+
+        if labels:
+            return self._compute_loss(logits, labels, labels_mask), torch.sigmoid(logits)
+        return logits
+
+    def prepare_dataset(self, document: Iterable[Document]) -> AbstractDataset:
+        return self._inner_model.prepare_dataset(document)
+
+    def _compute_loss(
+            self,
+            logits: torch.Tensor,  # (bs, max_ent, max_ent, num_link)
+            labels: torch.Tensor,  # (bs, max_ent, max_ent, num_link)
+            labels_mask: torch.Tensor,  # (bs, max_ent, max_ent)
+    ):
+        max_ent = logits.shape[1]
+        num_links = len(self._model_relations)
+
+        pair_logits = logits.view(-1, num_links)  # (bs * max_ent ^ 2, num_link)
+        pair_labels = labels.float().view(-1, num_links)  # (bs * max_ent ^ 2, num_link)
+
+        pair_loss = self._loss(pair_logits, pair_labels)  # (bs * max_ent ^ 2, num_link)
+        mean_pair_loss = pair_loss.view(-1, max_ent, max_ent, num_links)  # (bs, max_ent, max_ent, num_link)
+        mean_pair_loss = torch.mean(mean_pair_loss, dim=-1)  # (bs, max_ent, max_ent)
+
+        batch_loss = torch.sum(mean_pair_loss * labels_mask, dim=[1, 2]) / torch.sum(labels_mask, dim=[1, 2])  # (bs,)
+        mean_batch_loss = torch.mean(batch_loss)
+
+        return mean_batch_loss

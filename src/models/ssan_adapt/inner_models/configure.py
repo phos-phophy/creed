@@ -1,4 +1,4 @@
-from .model import AbstractInnerModel
+from src.abstract import AbstractModel
 
 
 def get_base():
@@ -17,5 +17,5 @@ INNER_MODELS = {
 }
 
 
-def get_inner_model(model_type: str, pretrained_model_path, **kwargs) -> AbstractInnerModel:
+def get_inner_model(model_type: str, pretrained_model_path, **kwargs) -> AbstractModel:
     return INNER_MODELS[model_type](pretrained_model_path, **kwargs)

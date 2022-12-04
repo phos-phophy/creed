@@ -1,7 +1,7 @@
 import pickle
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Type, TypeVar
+from typing import Any, Optional, Type, TypeVar
 
 import torch
 
@@ -24,13 +24,8 @@ class TorchModel(torch.nn.Module, metaclass=ABCMeta):
     def forward(self, *args, **kwargs) -> Any:
         pass
 
-    @classmethod
-    def load(cls: Type[_Model], path: Path) -> _Model:
-        with path.open('rb') as f:
-            model = pickle.load(f)
-        if not isinstance(model, cls):
-            raise Exception(f"Model at {path} is not an instance of {cls}")
-        return model
+    def to_device(self, tensor: Optional[torch.Tensor]) -> Optional[torch.Tensor]:
+        return tensor.to(device=self.device) if tensor else None
 
     def save(self, path: Path, *, rewrite: bool = False) -> None:
         previous_device = self.device
@@ -43,6 +38,14 @@ class TorchModel(torch.nn.Module, metaclass=ABCMeta):
             pickle.dump(self, f, protocol=4)  # fixed protocol version to avoid issues with serialization on Python 3.6+ versions
 
         self.to(device=torch.device(previous_device))
+
+    @classmethod
+    def load(cls: Type[_Model], path: Path) -> _Model:
+        with path.open('rb') as f:
+            model = pickle.load(f)
+        if not isinstance(model, cls):
+            raise Exception(f"Model at {path} is not an instance of {cls}")
+        return model
 
     @classmethod
     def from_config(cls, config: dict) -> _Model:
