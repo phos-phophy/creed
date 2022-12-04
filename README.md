@@ -150,31 +150,18 @@ classDiagram
 direction TB
 
    class TorchModel{
+      <<Abstract>>
       +device: torch.device
       +forward(self, *args, **kwargs) Any
       +save(self, path: Path, *, rewrite: bool)
       +load(cls, path: Path) TorchModel
       +from_config(cls, config: dict) TorchModel
    }
-   TorchModel <-- AbstractModel
+   TorchModel <|-- AbstractModel
    
    class AbstractModel{
       <<Abstract>>
       +prepare_dataset(self, documents: Iterable[Document])  AbstractDataset
-   }
-   AbstractModel <-- RelextModel
-   AbstractModel <-- AbstractSubModel
-   
-   class RelextModel{
-      #_inner_model: AbstractSubModel
-      +predict(self, doc: Document) Document
-   }
-   RelextModel <-- SSANAdapt
-   RelextModel <-- REBEL
-   RelextModel "1" --> "0..1" AbstractSubModel: contains
-   
-   class AbstractSubModel{
-      <<Abstract>>
    }
    
 ```
