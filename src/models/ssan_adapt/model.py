@@ -2,7 +2,6 @@ from typing import Any, Iterable
 
 import torch
 from src.abstract import AbstractDataset, AbstractModel, Document
-from transformers import AutoTokenizer
 
 from .inner_models import get_inner_model
 
@@ -13,19 +12,14 @@ class SSANAdaptModel(AbstractModel):
             self,
             entities: Iterable[str],
             relations: Iterable[str],
-            tokenizer_path: str,
             model_type: str,
-            pretrained_model_path: str,
             hidden_dim: int,
             dropout: float,
             **kwargs
     ):
         super(SSANAdaptModel, self).__init__(entities, relations)
 
-        self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-        self._inner_model: AbstractModel = get_inner_model(model_type, pretrained_model_path, **kwargs)
-
-        self._max_seq_len = self._tokenizer.model_max_length
+        self._inner_model: AbstractModel = get_inner_model(model_type=model_type, entities=entities, relations=relations, **kwargs)
 
         out_dim = next(module.out_features for module in list(self._inner_model.modules())[::-1] if "out_features" in module.__dict__)
 
@@ -77,8 +71,8 @@ class SSANAdaptModel(AbstractModel):
             return self._compute_loss(logits, labels, labels_mask), torch.sigmoid(logits)
         return logits
 
-    def prepare_dataset(self, document: Iterable[Document]) -> AbstractDataset:
-        return self._inner_model.prepare_dataset(document)
+    def prepare_dataset(self, document: Iterable[Document], extract_labels=False, evaluation=False) -> AbstractDataset:
+        return self._inner_model.prepare_dataset(document, extract_labels, evaluation)
 
     def _compute_loss(
             self,

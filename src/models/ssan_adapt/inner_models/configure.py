@@ -2,8 +2,8 @@ from src.abstract import AbstractModel
 
 
 def get_base():
-    from .base import Base
-    return Base
+    from .base import BaseSSANAdaptModel
+    return BaseSSANAdaptModel
 
 
 def get_wo_entities():
@@ -17,5 +17,5 @@ INNER_MODELS = {
 }
 
 
-def get_inner_model(model_type: str, pretrained_model_path, **kwargs) -> AbstractModel:
-    return INNER_MODELS[model_type](pretrained_model_path, **kwargs)
+def get_inner_model(model_type: str, **kwargs) -> AbstractModel:
+    return INNER_MODELS[model_type](**kwargs)
