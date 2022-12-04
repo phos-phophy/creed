@@ -10,6 +10,7 @@ ignore =
     E731, # we want use lambdas
     C408, # dict(), list(), tuple() is ok
     W503, # line breaks before binary operator is ok according to PEP8, flake8 error
+    C901,
 exclude =
     .git,
     .idea,

@@ -25,7 +25,7 @@ class SSANAdaptModel(AbstractModel):
 
         self._dim_reduction = torch.nn.Linear(out_dim, hidden_dim)
         self._dropout = torch.nn.Dropout(dropout)
-        self._rel_dist_emb = torch.nn.Embedding(20, 20, padding_idx=10)
+        self._rel_dist_embeddings = torch.nn.Embedding(20, 20, padding_idx=10)
         self._bili = torch.nn.Bilinear(hidden_dim + 20, hidden_dim + 20, len(self.relations))
 
         self._loss = torch.nn.BCEWithLogitsLoss(reduction="none")
@@ -58,8 +58,8 @@ class SSANAdaptModel(AbstractModel):
         t_entity: torch.Tensor = entity[:, None, :, :].repeat(1, ent_mask.size()[1], 1, 1)  # (bs, max_ent, max_ent, r_dim)
 
         # add information about the relative distance between entities
-        h_entity = torch.cat([h_entity, self._rel_dist_emb(rel_distance)], dim=-1)
-        t_entity = torch.cat([t_entity, self._rel_dist_emb((20 - rel_distance) % 20)], dim=-1)
+        h_entity = torch.cat([h_entity, self._rel_dist_embeddings(rel_distance)], dim=-1)
+        t_entity = torch.cat([t_entity, self._rel_dist_embeddings((20 - rel_distance) % 20)], dim=-1)
 
         h_entity: torch.Tensor = self._dropout(h_entity)
         t_entity: torch.Tensor = self._dropout(t_entity)
