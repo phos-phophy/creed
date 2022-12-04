@@ -2,9 +2,10 @@ from abc import ABCMeta, abstractmethod
 from typing import Dict, Iterable, List, Tuple
 
 import torch
-from .fact import AbstractFact
-from .document import Document
+from src.abstract.features.fact import AbstractFact
 from torch.utils.data import Dataset
+
+from .document import Document
 
 
 class AbstractDataset(Dataset, metaclass=ABCMeta):

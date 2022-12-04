@@ -1,11 +1,7 @@
-from .converter import AbstractConverter
-from .coreference_chain import CoreferenceChain
-from .dataset import AbstractDataset
-from .document import Document
-from .fact import AbstractFact, EntityFact, FactType, RelationFact
-from .model import AbstractModel
-from .span import Span
-from .torch import TorchModel
+from .examples import AbstractDataset, Document
+from .features import AbstractFact, CoreferenceChain, EntityFact, FactType, RelationFact, Span
+from .helpers import AbstractConverter
+from .models import AbstractModel, TorchModel
 
 __all__ = [
     "AbstractConverter",

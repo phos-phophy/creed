@@ -1,13 +1,14 @@
 import pickle
+from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Type, TypeVar
+from typing import Any, Type, TypeVar
 
 import torch
 
 _Model = TypeVar('_Model', bound='TorchModel')
 
 
-class TorchModel(torch.nn.Module):
+class TorchModel(torch.nn.Module, metaclass=ABCMeta):
 
     def __init__(self):
         super().__init__()
@@ -18,6 +19,10 @@ class TorchModel(torch.nn.Module):
     @property
     def device(self) -> str:
         return self._dummy_param.device
+
+    @abstractmethod
+    def forward(self, *args, **kwargs) -> Any:
+        pass
 
     @classmethod
     def load(cls: Type[_Model], path: Path) -> _Model:
@@ -40,5 +45,5 @@ class TorchModel(torch.nn.Module):
         self.to(device=torch.device(previous_device))
 
     @classmethod
-    def from_config(cls, config: dict) -> 'TorchModel':
+    def from_config(cls, config: dict) -> _Model:
         return type(cls)(**config)

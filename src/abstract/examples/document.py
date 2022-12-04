@@ -1,9 +1,13 @@
 from itertools import chain
 from typing import Iterable, Optional, Tuple
 
-from .coreference_chain import CoreferenceChain
-from .fact import AbstractFact, EntityFact, RelationFact
-from .span import Span
+from src.abstract.features import (
+    AbstractFact,
+    CoreferenceChain,
+    EntityFact,
+    RelationFact,
+    Span
+)
 
 
 class Document:
