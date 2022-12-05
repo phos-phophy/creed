@@ -34,17 +34,17 @@ class SSANAdaptModel(AbstractModel):
             self,
             input_ids=None,  # (bs, len)
             ner_ids=None,  # (bs, len)
-            rel_distance=None,  # (bs, max_ent, max_ent)
-            attention_mask=None,  # (bs, len)
-            struct_mask=None,  # (bs, 5, len, len)
+            dist_ids=None,  # (bs, max_ent, max_ent)
             ent_mask=None,  # (bs, max_ent, len)
+            attention_mask=None,  # (bs, len)
+            struct_matrix=None,  # (bs, 5, len, len)
             labels=None,  # (bs, max_ent, max_ent, num_link)
             labels_mask=None  # (bs, max_ent, max_ent)
     ) -> Any:
-        input_ids, ner_ids, rel_distance, attention_mask, struct_mask, ent_mask, labels, labels_mask = \
-            tuple(map(self.to_device, [input_ids, ner_ids, rel_distance, attention_mask, struct_mask, ent_mask, labels, labels_mask]))
+        input_ids, ner_ids, dist_ids, attention_mask, struct_matrix, ent_mask, labels, labels_mask = \
+            tuple(map(self.to_device, [input_ids, ner_ids, dist_ids, attention_mask, struct_matrix, ent_mask, labels, labels_mask]))
 
-        output = self._inner_model(input_ids=input_ids, ner_ids=ner_ids, attention_mask=attention_mask, struct_mask=struct_mask)
+        output = self._inner_model(input_ids=input_ids, ner_ids=ner_ids, attention_mask=attention_mask, struct_matrix=struct_matrix)
 
         # tensors for each token in the text
         tokens: torch.Tensor = output[0]  # (bs, len, dim)
@@ -58,8 +58,8 @@ class SSANAdaptModel(AbstractModel):
         t_entity: torch.Tensor = entity[:, None, :, :].repeat(1, ent_mask.size()[1], 1, 1)  # (bs, max_ent, max_ent, r_dim)
 
         # add information about the relative distance between entities
-        h_entity = torch.cat([h_entity, self._rel_dist_embeddings(rel_distance)], dim=-1)
-        t_entity = torch.cat([t_entity, self._rel_dist_embeddings((20 - rel_distance) % 20)], dim=-1)
+        h_entity = torch.cat([h_entity, self._rel_dist_embeddings(dist_ids)], dim=-1)
+        t_entity = torch.cat([t_entity, self._rel_dist_embeddings((20 - dist_ids) % 20)], dim=-1)
 
         h_entity: torch.Tensor = self._dropout(h_entity)
         t_entity: torch.Tensor = self._dropout(t_entity)

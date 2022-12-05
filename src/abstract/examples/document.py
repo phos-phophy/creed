@@ -65,6 +65,9 @@ class Document:
             for fact in coref_chain.facts:
                 if fact not in self.facts:
                     raise ValueError(f"There is not fact {fact}")
+        for fact in self.facts:
+            if not any(fact in coref_chain.facts for coref_chain in self.coref_chains):
+                raise ValueError(f"Fact {fact} does not belong to any coreference chain")
 
     def _validate_facts(self):
         for fact in self.facts:

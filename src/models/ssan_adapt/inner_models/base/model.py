@@ -21,26 +21,26 @@ class BaseSSANAdaptModel(AbstractModel):
         self._redefine_model_structure()
 
     def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> BaseSSANAdaptDataset:
-        return BaseSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation)
+        return BaseSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations)
 
     def forward(
             self,
             ner_ids=None,  # (bs, len)
-            struct_mask=None,  # (bs, 5, len, len),
+            struct_matrix=None,  # (bs, 5, len, len),
             **kwargs
     ) -> Any:
 
-        struct_mask = struct_mask.transpose(0, 1)[:, :, None, :, :]  # (5, bs, 1, len, len)
+        struct_matrix = struct_matrix.transpose(0, 1)[:, :, None, :, :]  # (5, bs, 1, len, len)
 
         self._model.embeddings.ner_ids = ner_ids
         for layer in self._model.encoder.layer:
-            layer.attention.self.struct_mask = struct_mask
+            layer.attention.self.struct_matrix = struct_matrix
 
         output = self._model(**kwargs)
 
         del self._model.embeddings.ner_ids
         for layer in self._model.encoder.layer:
-            del layer.attention.self.struct_mask
+            del layer.attention.self.struct_matrix
 
         return output
 
@@ -132,10 +132,10 @@ class Attention(torch.nn.Module):
 
     def apply_ssan_adapt_attention(self, attention_scores, query, key):
         # b is bs, n is n_heads, q and k are len (length), d is head_size
-        # struct_mask[i] is (bs, 1, len, len)
+        # struct_matrix[i] is (bs, 1, len, len)
         for i in range(5):
             attention_bias = torch.einsum("bnqd,ndd,bnkd->bnqk", query, self.ssan_attention[i], key)  # (bs, n_heads, len, len)
-            attention_scores += (attention_bias + self.abs_bias[i][None, :, None, None]) * self.struct_mask[i]  # (bs, n_heads, len, len)
+            attention_scores += (attention_bias + self.abs_bias[i][None, :, None, None]) * self.struct_matrix[i]  # (bs, n_heads, len, len)
 
         return attention_scores
 

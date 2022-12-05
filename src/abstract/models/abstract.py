@@ -11,8 +11,8 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
     def __init__(self, entities: Iterable[str], relations: Iterable[str]):
         super(AbstractModel, self).__init__()
 
-        self._entities = tuple(entities)
-        self._relations = tuple(relations)
+        self._entities = tuple(['NO_ENT'] + list(entities))
+        self._relations = tuple(['NO_REL'] + list(relations))
 
     @property
     def entities(self):
