@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from src.abstract import CoreferenceChain, Document, EntityFact, RelationFact, Span
+from src.abstract import Document, EntityFact, RelationFact, Span
 from src.datasets import DocREDConverter
 
 from .helpers import equal_docs
@@ -46,71 +46,48 @@ class DocREDConverterTest(unittest.TestCase):
                       Span(875, 880), Span(881, 890), Span(891, 894), Span(895, 901), Span(902, 905), Span(906, 913), Span(914, 919),
                       Span(920, 921)]]
 
-        coref_chains = (
-            CoreferenceChain(
-                [EntityFact("", "ORG", (Span(424, 428), Span(429, 431))),
-                 EntityFact("", "ORG", (Span(0, 4), Span(5, 7))),
-                 EntityFact("", "ORG", (Span(573, 577), Span(578, 580)))]
-            ),
-            CoreferenceChain(
-                [EntityFact("", "LOC", (Span(13, 18),))]
-            ),
-            CoreferenceChain(
-                [EntityFact("", "LOC", (Span(63, 70),))]
-            ),
-            CoreferenceChain(
-                [EntityFact("", "ORG", (Span(91, 95), Span(96, 101)))]
-            ),
-            CoreferenceChain(
-                [EntityFact("", "TIME", (Span(194, 197), Span(198, 200), Span(201, 206), Span(207, 211)))]
-            ),
-            CoreferenceChain(
-                [EntityFact("", "LOC", (Span(219, 225),))]
-            ),
-            CoreferenceChain(
-                [EntityFact("", "ORG", (Span(402, 406),))]
-            ),
-            CoreferenceChain(
-                [EntityFact("", "ORG", (Span(411, 418), Span(419, 421)))]
-            ),
-            CoreferenceChain(
-                [EntityFact("", "ORG", (Span(452, 457),))]
-            ),
-            CoreferenceChain(
-                [EntityFact("", "LOC", (Span(552, 558),)),
-                 EntityFact("", "LOC", (Span(695, 701),))]
-            ),
-            CoreferenceChain(
-                [EntityFact("", "MISC", (Span(633, 638),))]
-            )
-        )
+        facts = [
+            EntityFact("", "ORG", "0", (Span(424, 428), Span(429, 431))),
+            EntityFact("", "ORG", "0", (Span(0, 4), Span(5, 7))),
+            EntityFact("", "ORG", "0", (Span(573, 577), Span(578, 580))),
+            EntityFact("", "LOC", "1", (Span(13, 18),)),
+            EntityFact("", "LOC", "2", (Span(63, 70),)),
+            EntityFact("", "ORG", "3", (Span(91, 95), Span(96, 101))),
+            EntityFact("", "TIME", "4", (Span(194, 197), Span(198, 200), Span(201, 206), Span(207, 211))),
+            EntityFact("", "LOC", "5", (Span(219, 225),)),
+            EntityFact("", "ORG", "6", (Span(402, 406),)),
+            EntityFact("", "ORG", "7", (Span(411, 418), Span(419, 421))),
+            EntityFact("", "ORG", "8", (Span(452, 457),)),
+            EntityFact("", "LOC", "9", (Span(552, 558),)),
+            EntityFact("", "LOC", "9", (Span(695, 701),)),
+            EntityFact("", "MISC", "10", (Span(633, 638),))
+        ]
 
-        facts = [fact for coref_chain in coref_chains for fact in coref_chain.facts]
         facts.extend([
-            RelationFact("", "P17", coref_chains[2].facts[0], coref_chains[9].facts[0]),
-            RelationFact("", "P17", coref_chains[2].facts[0], coref_chains[9].facts[1]),
-            RelationFact("", "P17", coref_chains[3].facts[0], coref_chains[9].facts[0]),
-            RelationFact("", "P17", coref_chains[3].facts[0], coref_chains[9].facts[1]),
-            RelationFact("", "P17", coref_chains[5].facts[0], coref_chains[9].facts[0]),
-            RelationFact("", "P17", coref_chains[5].facts[0], coref_chains[9].facts[1]),
-            RelationFact("", "P159", coref_chains[0].facts[0], coref_chains[2].facts[0]),
-            RelationFact("", "P159", coref_chains[0].facts[1], coref_chains[2].facts[0]),
-            RelationFact("", "P159", coref_chains[0].facts[2], coref_chains[2].facts[0]),
-            RelationFact("", "P127", coref_chains[0].facts[0], coref_chains[3].facts[0]),
-            RelationFact("", "P127", coref_chains[0].facts[1], coref_chains[3].facts[0]),
-            RelationFact("", "P127", coref_chains[0].facts[2], coref_chains[3].facts[0]),
-            RelationFact("", "P159", coref_chains[0].facts[0], coref_chains[5].facts[0]),
-            RelationFact("", "P159", coref_chains[0].facts[1], coref_chains[5].facts[0]),
-            RelationFact("", "P159", coref_chains[0].facts[2], coref_chains[5].facts[0]),
-            RelationFact("", "P17", coref_chains[0].facts[0], coref_chains[9].facts[0]),
-            RelationFact("", "P17", coref_chains[0].facts[0], coref_chains[9].facts[1]),
-            RelationFact("", "P17", coref_chains[0].facts[1], coref_chains[9].facts[0]),
-            RelationFact("", "P17", coref_chains[0].facts[1], coref_chains[9].facts[1]),
-            RelationFact("", "P17", coref_chains[0].facts[2], coref_chains[9].facts[0]),
-            RelationFact("", "P17", coref_chains[0].facts[2], coref_chains[9].facts[1])
+            RelationFact("", "P17", facts[4], facts[11]),
+            RelationFact("", "P17", facts[4], facts[12]),
+            RelationFact("", "P17", facts[5], facts[11]),
+            RelationFact("", "P17", facts[5], facts[12]),
+            RelationFact("", "P17", facts[7], facts[11]),
+            RelationFact("", "P17", facts[7], facts[12]),
+            RelationFact("", "P159", facts[0], facts[4]),
+            RelationFact("", "P159", facts[1], facts[4]),
+            RelationFact("", "P159", facts[2], facts[4]),
+            RelationFact("", "P127", facts[0], facts[5]),
+            RelationFact("", "P127", facts[1], facts[5]),
+            RelationFact("", "P127", facts[2], facts[5]),
+            RelationFact("", "P159", facts[0], facts[7]),
+            RelationFact("", "P159", facts[1], facts[7]),
+            RelationFact("", "P159", facts[2], facts[7]),
+            RelationFact("", "P17", facts[0], facts[11]),
+            RelationFact("", "P17", facts[0], facts[12]),
+            RelationFact("", "P17", facts[1], facts[11]),
+            RelationFact("", "P17", facts[1], facts[12]),
+            RelationFact("", "P17", facts[2], facts[11]),
+            RelationFact("", "P17", facts[2], facts[12])
         ])
 
-        self.document = Document(doc_id, text, sentences, tuple(facts), coref_chains)
+        self.document = Document(doc_id, text, sentences, tuple(facts))
         self.converter = DocREDConverter()
 
     def test(self):

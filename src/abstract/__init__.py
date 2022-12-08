@@ -1,5 +1,5 @@
 from .examples import AbstractDataset, Document
-from .features import AbstractFact, CoreferenceChain, EntityFact, FactType, RelationFact, Span
+from .features import AbstractFact, EntityFact, FactType, RelationFact, Span
 from .helpers import AbstractConverter
 from .models import AbstractModel, TorchModel
 
@@ -8,7 +8,6 @@ __all__ = [
     "AbstractDataset",
     "AbstractFact",
     "AbstractModel",
-    "CoreferenceChain",
     "Document",
     "EntityFact",
     "FactType",
