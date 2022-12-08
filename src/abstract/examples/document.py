@@ -1,29 +1,29 @@
+from collections import defaultdict
 from itertools import chain
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Tuple
 
 from src.abstract.features import (
     AbstractFact,
-    CoreferenceChain,
     EntityFact,
+    FactType,
     RelationFact,
     Span
 )
 
 
 class Document:
-    def __init__(self, doc_id: str, text: str, sentences: Iterable[Iterable[Span]], facts: Iterable[AbstractFact],
-                 coref_chains: Optional[Tuple[CoreferenceChain, ...]] = None):
+    def __init__(self, doc_id: str, text: str, sentences: Iterable[Iterable[Span]], facts: Iterable[AbstractFact]):
 
         self._doc_id = doc_id
         self._text = text
         self._words = tuple(chain.from_iterable(sentences))
         self._sentences = tuple(tuple(sentence) for sentence in sentences)
         self._facts = tuple(facts)
-        self._coref_chains = tuple(coref_chains) if coref_chains else None
 
         self._validate_spans(self._words)
         self._validate_facts()
-        self._validate_chains()
+
+        self._coreference_chains = self._build_coreference_chains(facts)
 
     @property
     def doc_id(self):
@@ -46,8 +46,17 @@ class Document:
         return self._facts
 
     @property
-    def coref_chains(self):
-        return self._coref_chains
+    def coreference_chains(self):
+        return self._coreference_chains
+
+    @staticmethod
+    def _build_coreference_chains(facts):
+        coreference_chains = defaultdict(list)
+        for fact in facts:
+            if fact.fact_type is FactType.ENTITY:
+                fact: EntityFact
+                coreference_chains[fact.coreference_id].append(fact)
+        return coreference_chains
 
     @staticmethod
     def _validate_span(text_span: Span, span: Span):
@@ -59,15 +68,6 @@ class Document:
 
         for span in spans:
             self._validate_span(text_span, span)
-
-    def _validate_chains(self):
-        for coref_chain in self.coref_chains:
-            for fact in coref_chain.facts:
-                if fact not in self.facts:
-                    raise ValueError(f"There is not fact {fact}")
-        for fact in self.facts:
-            if not any(fact in coref_chain.facts for coref_chain in self.coref_chains):
-                raise ValueError(f"Fact {fact} does not belong to any coreference chain")
 
     def _validate_facts(self):
         for fact in self.facts:
