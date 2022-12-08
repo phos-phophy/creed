@@ -21,6 +21,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         self._rel2ind = {rel: ind for ind, rel in enumerate(relations)}
 
         self._usual_token = "<USUAL_TOKEN>"
+        self._distance_encoder = self._init_distance_encoder(self.max_len)
 
         super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, extract_labels, evaluation)
 
@@ -42,6 +43,15 @@ class BaseSSANAdaptDataset(AbstractDataset):
             return len(list(filter(lambda fact: fact.fact_type is FactType.ENTITY, doc.facts)))
         doc2ner_count = [1] + list(map(lambda document: get_ner_count(document), documents))
         return max(doc2ner_count)
+
+    @staticmethod
+    def _init_distance_encoder(max_len):
+        encoder = torch.zeros(max_len, dtype=torch.long)
+        ind = 1
+        while ind < max_len:
+            encoder[ind:] += 1
+            ind <<= 1
+        return encoder
 
     def _prepare_document(self, document: Document):
         """
@@ -72,10 +82,12 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         struct_matrix = self._extract_struct_matrix(token_to_sentence_ind, token_to_coreference_id)
 
+        dist_ids = self._extract_dist_ids(ent_mask)
+
         features = {
             "input_ids": input_ids,
             "ner_ids": ner_ids,
-            "dist_ids": ...,
+            "dist_ids": dist_ids,
             "ent_mask": ent_mask,
             "attention_mask": torch.ones(input_ids.shape[0]).bool(),
             "struct_matrix": struct_matrix,
@@ -154,3 +166,23 @@ class BaseSSANAdaptDataset(AbstractDataset):
                         struct_mask[4][i][j] = True  # intra-NA
 
         return struct_mask
+
+    def _extract_dist_ids(self, ent_mask):
+        max_ent = ent_mask.shape[0]
+        first_appearance = [-1] * max_ent
+        dist_ids = torch.zeros(max_ent, max_ent, dtype=torch.long)
+
+        for ind in range(max_ent):
+            if torch.all(ent_mask[ind] == 0):
+                continue
+            else:
+                first_appearance[ind] = torch.where(ent_mask[ind] == 1)[0][0]
+
+        for i in range(max_ent):
+            for j in range(max_ent):
+                if first_appearance[i] != -1 and first_appearance[j] != -1:
+                    diff = first_appearance[i] - first_appearance[j]
+                    dist_ids[i][j] = self._distance_encoder[abs(diff)]
+                    dist_ids[i][j] = dist_ids[i][j] * (-1) if diff < 0 else dist_ids[i][j]
+
+        return dist_ids + 10
