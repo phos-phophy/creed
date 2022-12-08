@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import product
 from typing import Dict, Iterable, List, Tuple
 
 import torch
@@ -16,14 +17,24 @@ class BaseSSANAdaptDataset(AbstractDataset):
             relations: Iterable[str]
     ):
         self._max_ent = self._count_max_ent(documents) if extract_labels and evaluation else None
-        self.ent2ind = {ent: ind for ind, ent in enumerate(entities)}
-        self.rel2ind = {rel: ind for ind, rel in enumerate(relations)}
+        self._ent2ind = {ent: ind for ind, ent in enumerate(entities)}
+        self._rel2ind = {rel: ind for ind, rel in enumerate(relations)}
+
+        self._usual_token = "<USUAL_TOKEN>"
 
         super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, extract_labels, evaluation)
 
     @property
     def max_ent(self):
         return self._max_ent
+
+    @property
+    def ent2ind(self):
+        return self._ent2ind
+
+    @property
+    def rel2ind(self):
+        return self._rel2ind
 
     @staticmethod
     def _count_max_ent(documents: Iterable[Document]):
@@ -56,9 +67,10 @@ class BaseSSANAdaptDataset(AbstractDataset):
         if len(ner_facts) == 0:
             return
 
-        ner_ids, ent_mask = self._extract_ner_types(ner_facts, span_to_token_ind, input_ids.shape[0])
+        # token_to_coreference_id - map token_ind to the coreference_id of the corresponding fact
+        ner_ids, ent_mask, token_to_coreference_id = self._extract_ner_types(ner_facts, span_to_token_ind, input_ids.shape[0])
 
-        struct_matrix = self._extract_struct_matrix(token_to_sentence_ind)
+        struct_matrix = self._extract_struct_matrix(token_to_sentence_ind, token_to_coreference_id)
 
         features = {
             "input_ids": input_ids,
@@ -96,13 +108,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         return torch.tensor(input_ids, dtype=torch.long), token_to_sentence_ind, span_to_token_ind
 
     def _extract_ner_facts(self, document: Document, span_to_token_ind: Dict[Span, List[int]]):
-
-        ner_facts = []
-
-        for ind, coref_chain in enumerate(document.coref_chains):
-            ner_facts.extend(list(filter(lambda fact: any((span in span_to_token_ind) for span in fact.mentions), coref_chain.facts)))
-
-        return ner_facts[:self.max_ent]
+        return tuple(filter(lambda fact: any((span in span_to_token_ind) for span in fact.mentions), document.facts))[:self.max_ent]
 
     def _extract_ner_types(self, ner_facts: Tuple[EntityFact, ...], span_to_token_ind: Dict[Span, List[int]], seq_len: int):
 
@@ -110,16 +116,41 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         ner_ids = torch.zeros(seq_len, dtype=torch.long)
         ent_mask = torch.zeros(seq_len, max_ent, dtype=torch.bool)
+        token_to_coreference_id = [self._usual_token] * seq_len
 
         for ind, fact in enumerate(ner_facts):
-            fact_type = self.ent2ind[fact.fact_type_id]
+            fact_type = self._ent2ind[fact.fact_type_id]
 
             for span in fact.mentions:
                 for token_ind in span_to_token_ind.get(span, []):
                     ner_ids[token_ind] = fact_type
                     ent_mask[ind][token_ind] = True
+                    token_to_coreference_id[ind] = fact.coreference_id
 
-        return ner_ids, ent_mask
+        return ner_ids, ent_mask, token_to_coreference_id
 
-    def _extract_struct_matrix(self, token_to_sentence_ind):
-        pass
+    def _extract_struct_matrix(self, token_to_sentence_ind, token_to_coreference_id):
+        length = len(token_to_sentence_ind)
+        struct_mask = torch.zeros((5, length, length), dtype=torch.bool)
+
+        for i in range(length):
+
+            if token_to_coreference_id[i] == self._usual_token:
+                continue
+
+            for j in range(length):
+
+                if token_to_sentence_ind[i] != token_to_sentence_ind[j]:
+                    if token_to_coreference_id[i] == token_to_coreference_id[j]:
+                        struct_mask[0][i][j] = True  # inter-coref
+                    elif token_to_coreference_id[j] != 0:
+                        struct_mask[1][i][j] = True  # inter-relate
+                else:
+                    if token_to_coreference_id[i] == token_to_coreference_id[j]:
+                        struct_mask[2][i][j] = True  # intra-coref
+                    elif token_to_coreference_id[j] != 0:
+                        struct_mask[3][i][j] = True  # intra-relate
+                    else:
+                        struct_mask[4][i][j] = True  # intra-NA
+
+        return struct_mask
