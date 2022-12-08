@@ -14,6 +14,9 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
         self._entities = tuple(['NO_ENT'] + list(entities))
         self._relations = tuple(['NO_REL'] + list(relations))
 
+        self._no_ent_ind = 0
+        self._no_rel_ind = 0
+
     @property
     def entities(self):
         return self._entities
@@ -21,6 +24,14 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
     @property
     def relations(self):
         return self._relations
+
+    @property
+    def no_ent_ind(self):
+        return self._no_ent_ind
+
+    @property
+    def no_rel_ind(self):
+        return self._no_rel_ind
 
     @abstractmethod
     def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> AbstractDataset:

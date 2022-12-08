@@ -21,7 +21,8 @@ class BaseSSANAdaptModel(AbstractModel):
         self._redefine_model_structure()
 
     def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> BaseSSANAdaptDataset:
-        return BaseSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations)
+        return BaseSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations,
+                                    self.no_ent_ind, self.no_rel_ind)
 
     def forward(
             self,
