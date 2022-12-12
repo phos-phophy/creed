@@ -91,5 +91,5 @@ class DocREDConverterTest(unittest.TestCase):
         self.converter = DocREDConverter()
 
     def test(self):
-        document = list(self.converter.convert(Path("tests/datasets/examples/docred.json")))[0]
+        document = list(self.converter.convert(Path("tests/datasets/data/docred.json")))[0]
         equal_docs(self, self.document, document)
