@@ -68,8 +68,6 @@ The base classes are divided into 3 main categories:
 * **_Models_**:
   * TorchModel
   * AbstractModel
-  * RelextModel
-  * AbstractSubModel
 
 ### Features
 ```mermaid
@@ -153,6 +151,7 @@ direction TB
       <<Abstract>>
       +device: torch.device
       +forward(self, *args, **kwargs) Any
+      +to_device(self, tensor: Tensor) Tensor
       +save(self, path: Path, *, rewrite: bool)
       +load(cls, path: Path) TorchModel
       +from_config(cls, config: dict) TorchModel
@@ -161,7 +160,11 @@ direction TB
    
    class AbstractModel{
       <<Abstract>>
-      +prepare_dataset(self, documents: Iterable[Document])  AbstractDataset
+      +entities: Tuple[str]
+      +relations: Tuple[str]
+      +no_ent_ind: str
+      +no_rel_ind: str
+      +prepare_dataset(self, documents: Iterable[Document], extract_labels, evaluation)  AbstractDataset
    }
    
 ```
