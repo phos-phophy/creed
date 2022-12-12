@@ -7,8 +7,8 @@ def get_base():
 
 
 def get_wo_entities():
-    from .wo_entities import WOEntities
-    return WOEntities
+    from .wo_types import WOTypesSSANAdaptModel
+    return WOTypesSSANAdaptModel
 
 
 INNER_MODELS = {

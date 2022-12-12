@@ -15,6 +15,8 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         self._extract_labels = extract_labels
         self._evaluation = evaluation
 
+        self._setup_len_attr(tokenizer)
+
         self._documents: List[Dict[str, torch.Tensor]] = []
         for doc in documents:
             self._prepare_document(doc)
@@ -31,7 +33,7 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
 
     @property
     def max_len(self):
-        return self.tokenizer.max_seq_len
+        return self.tokenizer.__getattribute__(self._len_attr)
 
     @property
     def tokenizer(self):
@@ -40,6 +42,16 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
     @property
     def evaluation(self):
         return self._evaluation
+
+    def _setup_len_attr(self, tokenizer):
+        self._len_attr = None
+        for attr in tokenizer.__dict__:
+            if 'max_len' in attr:
+                self._len_attr = attr
+                break
+
+        if self._len_attr is None:
+            raise ValueError("Can not find max_length attribute in tokenizer object")
 
     @abstractmethod
     def _prepare_document(self, document: Document):

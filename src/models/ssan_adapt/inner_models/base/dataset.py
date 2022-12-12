@@ -27,7 +27,9 @@ class BaseSSANAdaptDataset(AbstractDataset):
         self._no_rel_ind = no_rel_ind
 
         self._usual_token = "<USUAL_TOKEN>"
-        self._distance_encoder = self._init_distance_encoder(self.max_len)
+
+        self._setup_len_attr(tokenizer)
+        self._distance_encoder = self._init_distance_encoder(tokenizer.__getattribute__(self._len_attr))
 
         super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, extract_labels, evaluation)
 
@@ -88,7 +90,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         if self.extract_labels:
             link_facts = self._extract_link_facts(document)
-            features["labels"], features["labels_mask"] = self._extract_labels(ner_facts, link_facts)
+            features["labels"], features["labels_mask"] = self._extract_labels_and_mask(ner_facts, link_facts)
 
         self._documents.append(features)
 
@@ -96,9 +98,9 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         input_ids, token_to_sentence_ind, token_to_span = [], [], []
 
-        for ind, sentence in document.sentences:
+        for ind, sentence in enumerate(document.sentences):
             for span in sentence:
-                tokens = self.tokenizer(document.get_word(span))[1:-1]  # crop tokens of the beginning and the end
+                tokens = self.tokenizer(document.get_word(span))['input_ids'][1:-1]  # crop tokens of the beginning and the end
 
                 input_ids.extend(tokens)
                 token_to_sentence_ind += [ind] * len(tokens)
@@ -127,7 +129,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         max_ent = self.max_ent if self.max_ent else len(ner_facts)
 
         ner_ids = torch.zeros(seq_len, dtype=torch.long)
-        ent_mask = torch.zeros(seq_len, max_ent, dtype=torch.bool)
+        ent_mask = torch.zeros(max_ent, seq_len, dtype=torch.bool)
         token_to_coreference_id = [self._usual_token] * seq_len
 
         for ind, fact in enumerate(ner_facts):
@@ -187,7 +189,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         return dist_ids + 10
 
-    def _extract_labels(self, ner_facts: Tuple[EntityFact, ...], link_facts: Tuple[RelationFact, ...]):
+    def _extract_labels_and_mask(self, ner_facts: Tuple[EntityFact, ...], link_facts: Tuple[RelationFact, ...]):
         max_ent = self.max_ent if self.max_ent else len(ner_facts)
 
         fact_to_ind = {fact: ind for ind, fact in enumerate(ner_facts)}
