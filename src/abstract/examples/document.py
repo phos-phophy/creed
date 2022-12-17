@@ -1,6 +1,6 @@
 from collections import defaultdict
 from itertools import chain
-from typing import Iterable, Tuple
+from typing import Dict, Iterable, Tuple
 
 from src.abstract.features import (
     AbstractFact,
@@ -50,13 +50,13 @@ class Document:
         return self._coreference_chains
 
     @staticmethod
-    def _build_coreference_chains(facts):
+    def _build_coreference_chains(facts) -> Dict[str, Tuple[EntityFact]]:
         coreference_chains = defaultdict(list)
         for fact in facts:
             if fact.fact_type is FactType.ENTITY:
                 fact: EntityFact
                 coreference_chains[fact.coreference_id].append(fact)
-        return coreference_chains
+        return {key: tuple(item) for key, item in coreference_chains.items()}
 
     @staticmethod
     def _validate_span(text_span: Span, span: Span):

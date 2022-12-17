@@ -28,6 +28,10 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         return len(self._documents)
 
     @property
+    def evaluation(self):
+        return self._evaluation
+
+    @property
     def extract_labels(self):
         return self._extract_labels
 
@@ -38,10 +42,6 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
     @property
     def tokenizer(self):
         return self._tokenizer
-
-    @property
-    def evaluation(self):
-        return self._evaluation
 
     def _setup_len_attr(self, tokenizer):
         self._len_attr = None

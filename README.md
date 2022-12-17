@@ -78,7 +78,6 @@ direction TB
    AbstractFact <|-- RelationFact
    EntityFact "1" --> "1..*" Span : is mentioned in
    AbstractFact "1" --> "1" FactType : is a
-   EntityFact "0..*" --o "1" CoreferenceChain : refers to
    
    class Span:::rect{
       +start_idx: int
@@ -99,6 +98,7 @@ direction TB
    }
    
    class EntityFact{
+      +coreference_id: str
       +mentions: Tuple[Span]
       -validate_mentions(self)
    }
@@ -106,10 +106,6 @@ direction TB
    class RelationFact{
       +from_fact: EntityFact
       +to_fact: EntityFact
-   }
-   
-   class CoreferenceChain{
-      +facts: Tuple[EntityFact]
    }
 ```
 ### Examples
@@ -122,10 +118,10 @@ direction TB
       +words: Tuple[Span]
       +sentences: Tuple[Tuple[Span]]
       +facts: Tuple[AbstractFact]
-      +coref_chains: Tuple[CoreferenceChain]
+      +coreference_chains: Dict[str, Tuple[EntityFact]]
+      #_build_coreference_chains(facts)
       #_validate_span(text_span: Span, span: Span)
       #_validate_spans(self, spans: Tuple[Span])
-      #_validate_chains(self)
       #_validate_facts(self)
       +get_word(self, span: Span)
       +add_relation_facts(self, facts: Iterable[RelationFact])
@@ -133,11 +129,11 @@ direction TB
    
    class AbstractDataset{
       <<Abstract>>
-      +tokenizer
       +evaluation: bool
       +extract_labels: bool
-      +get_fact(self, doc_idx, fact_idx) AbstractFact
-      +fact_count(self, doc_idx) int
+      +tokenizer
+      +max_len
+      #_setup_len_attr(self, tokenizer)
       #_prepare_doc(self, doc: Document)
    }
 ```
@@ -162,8 +158,8 @@ direction TB
       <<Abstract>>
       +entities: Tuple[str]
       +relations: Tuple[str]
-      +no_ent_ind: str
-      +no_rel_ind: str
+      +no_ent_ind: int
+      +no_rel_ind: int
       +prepare_dataset(self, documents: Iterable[Document], extract_labels, evaluation)  AbstractDataset
    }
    
