@@ -9,7 +9,7 @@ from .torch_model import TorchModel
 class Score(NamedTuple):
     precision: float
     recall: float
-    f1_score: float
+    f_score: float
 
 
 class ModelScore(NamedTuple):

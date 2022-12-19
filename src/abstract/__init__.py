@@ -1,7 +1,7 @@
 from .examples import AbstractDataset, Document, PreparedDocument
 from .features import AbstractFact, EntityFact, FactType, RelationFact, Span
 from .helpers import AbstractConverter, collate_fn
-from .models import AbstractModel, TorchModel
+from .models import AbstractModel, ModelScore, Score, TorchModel
 
 __all__ = [
     "AbstractConverter",
@@ -12,8 +12,10 @@ __all__ = [
     "Document",
     "EntityFact",
     "FactType",
+    "ModelScore",
     "RelationFact",
     "PreparedDocument",
+    "Score",
     "Span",
     "TorchModel"
 ]

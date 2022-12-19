@@ -1,10 +1,9 @@
-from collections import defaultdict
 from typing import Any, Dict, Iterable, List
 
 import numpy as np
 import torch
 from sklearn.metrics import precision_recall_fscore_support
-from src.abstract import AbstractDataset, AbstractModel, Document
+from src.abstract import AbstractDataset, AbstractModel, Document, ModelScore, Score
 
 from .inner_models import get_inner_model
 
@@ -35,15 +34,12 @@ class SSANAdaptModel(AbstractModel):
 
     def forward(
             self,
-            input_ids=None,  # (bs, len)
-            ner_ids=None,  # (bs, len)
             dist_ids=None,  # (bs, max_ent, max_ent)
             ent_mask=None,  # (bs, max_ent, len)
-            attention_mask=None,  # (bs, len)
-            struct_matrix=None,  # (bs, 5, len, len)
+            **kwargs
     ) -> Any:
 
-        output = self._inner_model(input_ids=input_ids, ner_ids=ner_ids, attention_mask=attention_mask, struct_matrix=struct_matrix)
+        output = self._inner_model(**kwargs)
 
         # tensors for each token in the text
         tokens: torch.Tensor = output[0]  # (bs, len, dim)
@@ -96,7 +92,7 @@ class SSANAdaptModel(AbstractModel):
             self,
             logits: List[torch.Tensor],  # (1, max_ent, max_ent, num_link)
             gold_labels: List[Dict[str, torch.Tensor]]
-    ) -> Any:
+    ) -> ModelScore:
         num_links = len(self.relations)
 
         labels: List[torch.Tensor] = list(map(lambda x: x["labels"], gold_labels))  # (max_ent, max_ent, num_link)
@@ -120,14 +116,10 @@ class SSANAdaptModel(AbstractModel):
         labels = list(range(num_links))
         precision, recall, f_score, _ = precision_recall_fscore_support(pair_labels_ind, pair_logits_ind, average=None, labels=labels)
 
-        metrics = defaultdict(dict)
+        relations_score = dict()
         for ind, relation_name in enumerate(self.relations):
-            metrics[relation_name]["precision"] = precision[ind]
-            metrics[relation_name]["recall"] = recall[ind]
-            metrics[relation_name]["f_score"] = f_score[ind]
+            relations_score[relation_name] = Score(precision=precision[ind], recall=recall[ind], f_score=f_score[ind])
 
-        metrics["general_macro_scores"]["precision"] = np.mean(precision)
-        metrics["general_macro_scores"]["recall"] = np.mean(recall)
-        metrics["general_macro_scores"]["f_score"] = np.mean(f_score)
+        macro_score = Score(precision=np.mean(precision).item(), recall=np.mean(recall).item(), f_score=np.mean(f_score).item())
 
-        return metrics
+        return ModelScore(relations_score=relations_score, macro_score=macro_score)

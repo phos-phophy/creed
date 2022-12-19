@@ -26,7 +26,9 @@ class BaseSSANAdaptModel(AbstractModel):
 
     def forward(
             self,
+            input_ids=None,  # (bs, len)
             ner_ids=None,  # (bs, len)
+            attention_mask=None,  # (bs, len)
             struct_matrix=None,  # (bs, 5, len, len),
             **kwargs
     ) -> Any:
@@ -37,7 +39,7 @@ class BaseSSANAdaptModel(AbstractModel):
         for layer in self._model.encoder.layer:
             layer.attention.self.struct_matrix = struct_matrix
 
-        output = self._model(**kwargs)
+        output = self._model(input_ids=input_ids, attention_mask=attention_mask, **kwargs)
 
         del self._model.embeddings.ner_ids
         for layer in self._model.encoder.layer:
