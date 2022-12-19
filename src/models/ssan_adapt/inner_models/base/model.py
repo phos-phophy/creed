@@ -13,12 +13,23 @@ from .dataset import BaseSSANAdaptDataset
 
 
 class BaseSSANAdaptModel(AbstractModel):
-    def __init__(self, relations: Iterable[str], pretrained_model_path: str, tokenizer_path: str):
+    def __init__(self, entities: Iterable[str], relations: Iterable[str], no_ent_ind: int, pretrained_model_path: str, tokenizer_path: str):
         super(BaseSSANAdaptModel, self).__init__(relations)
+
+        self._entities = tuple(entities)
+        self._no_ent_ind = no_ent_ind
 
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
         self._model = AutoModel.from_pretrained(pretrained_model_path)
         self._redefine_model_structure()
+
+    @property
+    def entities(self):
+        return self._entities
+
+    @property
+    def no_ent_ind(self):
+        return self._no_ent_ind
 
     def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> BaseSSANAdaptDataset:
         return BaseSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations,
@@ -59,7 +70,7 @@ class BaseSSANAdaptModel(AbstractModel):
 
     def _redefine_attention(self):
         for layer in self._model.encoder.layer:
-            layer.attention = Attention(layer.attention.self)
+            layer.attention.self = Attention(layer.attention.self)
 
     def _redefine_embeddings(self):
         self._model.embeddings = Embeddings(self._model.embeddings, len(self.entities))

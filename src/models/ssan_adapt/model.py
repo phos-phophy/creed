@@ -29,7 +29,8 @@ class SSANAdaptModel(AbstractModel):
 
         super(SSANAdaptModel, self).__init__(relations)
 
-        self._inner_model: AbstractModel = get_inner_model(inner_model_type=inner_model_type, relations=relations, **kwargs)
+        self._inner_model: AbstractModel = get_inner_model(inner_model_type=inner_model_type, entities=entities, no_ent_ind=no_ent_ind,
+                                                           relations=relations, **kwargs)
 
         out_dim = next(module.out_features for module in list(self._inner_model.modules())[::-1] if "out_features" in module.__dict__)
 
@@ -119,7 +120,7 @@ class SSANAdaptModel(AbstractModel):
         labels_mask: torch.Tensor = torch.stack(labels_mask, dim=0)  # (bs, max_ent, max_ent)
 
         pair_logits = logits.view(-1, num_links)  # (bs * max_ent ^ 2, num_link)
-        pair_labels = labels.view(-1, num_links)  # (bs * max_ent ^ 2, num_link)
+        pair_labels = labels.float().view(-1, num_links)  # (bs * max_ent ^ 2, num_link)
         labels_mask = labels_mask.view(-1, 1)  # (bs * max_ent ^ 2, 1)
 
         # remove fake pairs
@@ -138,4 +139,7 @@ class SSANAdaptModel(AbstractModel):
 
         macro_score = Score(precision=np.mean(precision).item(), recall=np.mean(recall).item(), f_score=np.mean(f_score).item())
 
-        return ModelScore(relations_score=relations_score, macro_score=macro_score)
+        precision, recall, f_score, _ = precision_recall_fscore_support(pair_labels_ind, pair_logits_ind, average='micro', labels=labels)
+        micro_score = Score(precision=precision, recall=recall, f_score=f_score)
+
+        return ModelScore(relations_score=relations_score, macro_score=macro_score, micro_score=micro_score)

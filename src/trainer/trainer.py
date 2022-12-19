@@ -61,6 +61,10 @@ class Trainer:
             writer.add_scalar("macro / recall / train", dev_score.macro_score.recall, epoch)
             writer.add_scalar("macro / precision / train", dev_score.macro_score.precision, epoch)
 
+            writer.add_scalar("micro / f_score / train", dev_score.micro_score.f_score, epoch)
+            writer.add_scalar("micro / recall / train", dev_score.micro_score.recall, epoch)
+            writer.add_scalar("micro / precision / train", dev_score.micro_score.precision, epoch)
+
             for relation, relation_score in dev_score.relations_score.items():
                 writer.add_scalar(f"{relation} / f_score / train", relation_score.f_score, epoch)
                 writer.add_scalar(f"{relation} / recall / train", relation_score.recall, epoch)
@@ -82,6 +86,7 @@ class Trainer:
                 tokens = {key: token.cuda() for key, token in tokens.items()}
 
             logits: torch.Tensor = self.model(**tokens).detach().cpu()
+            torch.cuda.empty_cache()
 
             predictions.append(logits)
             gold_labels.append(labels)
