@@ -45,6 +45,12 @@ class BaseSSANAdaptModel(AbstractModel):
 
         return output
 
+    def compute_loss(self, *args, **kwargs) -> Any:
+        raise NotImplementedError
+
+    def score(self, *args, **kwargs) -> Any:
+        raise NotImplementedError
+
     def _redefine_model_structure(self):
         self._redefine_attention()
         self._redefine_embeddings()

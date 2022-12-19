@@ -25,7 +25,7 @@ class TorchModel(torch.nn.Module, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def score_model(self, *args, **kwargs) -> Any:
+    def score(self, *args, **kwargs) -> Any:
         pass
 
     def save(self, path: Path, *, rewrite: bool = False) -> None:
