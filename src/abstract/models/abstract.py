@@ -1,9 +1,20 @@
 from abc import ABCMeta, abstractmethod
-from typing import Iterable
+from typing import Any, Dict, Iterable, NamedTuple
 
 from src.abstract.examples import AbstractDataset, Document
 
 from .torch_model import TorchModel
+
+
+class Score(NamedTuple):
+    precision: float
+    recall: float
+    f1_score: float
+
+
+class ModelScore(NamedTuple):
+    relations_score: Dict[str, Score]
+    macro_score: Score
 
 
 class AbstractModel(TorchModel, metaclass=ABCMeta):
@@ -35,4 +46,16 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
 
     @abstractmethod
     def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> AbstractDataset:
+        pass
+
+    @abstractmethod
+    def forward(self, *args, **kwargs) -> Any:
+        pass
+
+    @abstractmethod
+    def compute_loss(self, *args, **kwargs) -> Any:
+        pass
+
+    @abstractmethod
+    def score(self, *args, **kwargs) -> ModelScore:
         pass
