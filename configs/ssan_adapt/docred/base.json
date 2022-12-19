@@ -1,5 +1,7 @@
 {
-  "converter": "docred",
+  "converter": {
+    "converter_type": "docred"
+  },
   "train_path": "etc/datasets/docred/train_annotated.json",
   "dev_path": "etc/datasets/docred/dev.json",
   "save_path": "etc/models/ssan_adapt/docred/base/model.pkl",
