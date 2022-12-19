@@ -14,7 +14,7 @@ def run_train(config_path: str):
     train_path = Path(config.pop("train_path"))
     dev_path = Path(config.pop("dev_path"))
 
-    converter = get_converter(converter_config)
+    converter = get_converter(**converter_config)
 
     train_documents = list(converter.convert(train_path))
     dev_documents = list(converter.convert(dev_path))
