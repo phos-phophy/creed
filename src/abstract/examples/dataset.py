@@ -1,10 +1,15 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, NamedTuple, Optional
 
 import torch
 from torch.utils.data import Dataset
 
 from .document import Document
+
+
+class PreparedDocument(NamedTuple):
+    features: Dict[str, torch.Tensor]
+    labels: Optional[Dict[str, torch.Tensor]]  # e.g. {"labels": ..., "labels_mask": ...}
 
 
 class AbstractDataset(Dataset, metaclass=ABCMeta):
@@ -17,11 +22,11 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
 
         self._setup_len_attr(tokenizer)
 
-        self._documents: List[Dict[str, torch.Tensor]] = []
+        self._documents: List[PreparedDocument] = []
         for doc in documents:
             self._prepare_document(doc)
 
-    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+    def __getitem__(self, idx: int) -> PreparedDocument:
         return self._documents[idx]
 
     def __len__(self):
