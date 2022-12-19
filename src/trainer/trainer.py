@@ -19,7 +19,7 @@ class Trainer:
         else:
             self.model: AbstractModel = get_model(**config["model"])
 
-    def train_model(self, train_dataset: AbstractDataset, dev_dataset: AbstractDataset):
+    def train_model(self, train_dataset: AbstractDataset, dev_dataset: AbstractDataset = None):
         writer = SummaryWriter(log_dir=self.params["log_dir"])
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.params["learning_rate"])
 
@@ -53,22 +53,23 @@ class Trainer:
             writer.add_scalar("loss / train", avg_loss, epoch)
             pbar.set_description(f'loss / train: {avg_loss}')
 
-            with torch.no_grad():
-                dev_score = self.score_model(dev_dataset)
-                self.model.train()
+            if dev_dataset:
+                with torch.no_grad():
+                    dev_score = self.score_model(dev_dataset)
+                    self.model.train()
 
-            writer.add_scalar("macro / f_score / train", dev_score.macro_score.f_score, epoch)
-            writer.add_scalar("macro / recall / train", dev_score.macro_score.recall, epoch)
-            writer.add_scalar("macro / precision / train", dev_score.macro_score.precision, epoch)
+                writer.add_scalar("macro / f_score / train", dev_score.macro_score.f_score, epoch)
+                writer.add_scalar("macro / recall / train", dev_score.macro_score.recall, epoch)
+                writer.add_scalar("macro / precision / train", dev_score.macro_score.precision, epoch)
 
-            writer.add_scalar("micro / f_score / train", dev_score.micro_score.f_score, epoch)
-            writer.add_scalar("micro / recall / train", dev_score.micro_score.recall, epoch)
-            writer.add_scalar("micro / precision / train", dev_score.micro_score.precision, epoch)
+                writer.add_scalar("micro / f_score / train", dev_score.micro_score.f_score, epoch)
+                writer.add_scalar("micro / recall / train", dev_score.micro_score.recall, epoch)
+                writer.add_scalar("micro / precision / train", dev_score.micro_score.precision, epoch)
 
-            for relation, relation_score in dev_score.relations_score.items():
-                writer.add_scalar(f"{relation} / f_score / train", relation_score.f_score, epoch)
-                writer.add_scalar(f"{relation} / recall / train", relation_score.recall, epoch)
-                writer.add_scalar(f"{relation} / precision / train", relation_score.precision, epoch)
+                for relation, relation_score in dev_score.relations_score.items():
+                    writer.add_scalar(f"{relation} / f_score / train", relation_score.f_score, epoch)
+                    writer.add_scalar(f"{relation} / recall / train", relation_score.recall, epoch)
+                    writer.add_scalar(f"{relation} / precision / train", relation_score.precision, epoch)
 
         self.model.save(path=self.save_path, rewrite=False)
 
