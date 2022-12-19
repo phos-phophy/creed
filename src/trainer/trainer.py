@@ -1,9 +1,11 @@
 from pathlib import Path
 
+import numpy as np
 import torch
-from src.abstract import AbstractDataset, AbstractModel, collate_fn
+from src.abstract import AbstractDataset, AbstractModel, ModelScore, collate_fn
 from src.models import get_model
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 
@@ -18,19 +20,18 @@ class Trainer:
             self.model: AbstractModel = get_model(**config["model"])
 
     def train_model(self, train_dataset: AbstractDataset, dev_dataset: AbstractDataset):
-
-        val_accuracy = []
-
+        writer = SummaryWriter(log_dir=self.params["log_dir"])
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.params["learning_rate"])
 
         train_dataloader = DataLoader(train_dataset, batch_size=self.params["batch_size"], shuffle=True, collate_fn=collate_fn)
 
         pbar = tqdm(range(self.params["epochs"]), total=self.params["epochs"])
 
-        for _ in pbar:
+        for epoch in pbar:
+            epoch_loss = []
             self.model.train()
 
-            for tokens, labels in train_dataloader:
+            for i, (tokens, labels) in enumerate(train_dataloader):
 
                 if torch.cuda.is_available():
                     tokens = {key: token.cuda() for key, token in tokens.items()}
@@ -43,16 +44,31 @@ class Trainer:
                 optimizer.step()
                 torch.cuda.empty_cache()
 
+                epoch_loss.append(loss)
+                writer.add_scalar(
+                    "batch loss / train", loss.item(), epoch * len(train_dataloader) + i
+                )
+
+            avg_loss = np.mean(epoch_loss)
+            writer.add_scalar("loss / train", avg_loss, epoch)
+            pbar.set_description(f'loss / train: {avg_loss}')
+
             with torch.no_grad():
-                acc = self.score_model(dev_dataset)
-                val_accuracy.append(acc)
+                dev_score = self.score_model(dev_dataset)
                 self.model.train()
 
-            pbar.set_description(f'Val accuracy {acc:.5f}')
+            writer.add_scalar("macro / f_score / train", dev_score.macro_score.f_score, epoch)
+            writer.add_scalar("macro / recall / train", dev_score.macro_score.recall, epoch)
+            writer.add_scalar("macro / precision / train", dev_score.macro_score.precision, epoch)
+
+            for relation, relation_score in dev_score.relations_score.items():
+                writer.add_scalar(f"{relation} / f_score / train", relation_score.f_score, epoch)
+                writer.add_scalar(f"{relation} / recall / train", relation_score.recall, epoch)
+                writer.add_scalar(f"{relation} / precision / train", relation_score.precision, epoch)
 
         self.model.save(path=self.save_path, rewrite=False)
 
-    def score_model(self, dataset: AbstractDataset):
+    def score_model(self, dataset: AbstractDataset) -> ModelScore:
         self.model.eval()
 
         predictions = []
@@ -60,17 +76,14 @@ class Trainer:
 
         for tokens, labels in dataset:
 
-            tokens = tokens.unsqueeze(0)
+            tokens = {key: token.unsqueeze(0) for key, token in tokens.items()}
 
             if torch.cuda.is_available():
                 tokens = {key: token.cuda() for key, token in tokens.items()}
-                labels = {key: label.cuda() for key, label in labels.items()}
 
-            logits = self.model(**tokens)
+            logits: torch.Tensor = self.model(**tokens).detach().cpu()
 
             predictions.append(logits)
             gold_labels.append(labels)
 
-        score = self.model.score(predictions, gold_labels)
-
-        return score
+        return self.model.score(predictions, gold_labels)

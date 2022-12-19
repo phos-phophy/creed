@@ -8,7 +8,6 @@ __all__ = [
     "AbstractDataset",
     "AbstractFact",
     "AbstractModel",
-    "collate_fn",
     "Document",
     "EntityFact",
     "FactType",
@@ -17,5 +16,6 @@ __all__ = [
     "PreparedDocument",
     "Score",
     "Span",
-    "TorchModel"
+    "TorchModel",
+    "collate_fn"
 ]
