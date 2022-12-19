@@ -25,15 +25,22 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, 0, 0)[0]
 
         expected_shapes = {
-            "input_ids": (185,),
-            "ner_ids": (185,),
-            "dist_ids": (14, 14),
-            "ent_mask": (14, 185),
-            "attention_mask": (185,),
-            "struct_matrix": (5, 185, 185),
-            "labels": (14, 14, 97),
-            "labels_mask": (14, 14)
+            "features": {
+                "input_ids": (185,),
+                "ner_ids": (185,),
+                "dist_ids": (14, 14),
+                "ent_mask": (14, 185),
+                "attention_mask": (185,),
+                "struct_matrix": (5, 185, 185),
+            },
+            "labels": {
+                "labels": (14, 14, 97),
+                "labels_mask": (14, 14)
+            }
         }
 
-        for key, shape in expected_shapes.items():
-            self.assertEqual(shape, document[key].shape)
+        for key, shape in expected_shapes["features"].items():
+            self.assertEqual(shape, document.features[key].shape)
+
+        for key, shape in expected_shapes["labels"].items():
+            self.assertEqual(shape, document.labels[key].shape)

@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Dict, Iterable, List, Tuple
 
 import torch
-from src.abstract import AbstractDataset, Document, EntityFact, FactType, RelationFact, Span
+from src.abstract import AbstractDataset, Document, EntityFact, FactType, PreparedDocument, RelationFact, Span
 
 
 class BaseSSANAdaptDataset(AbstractDataset):
@@ -88,11 +88,14 @@ class BaseSSANAdaptDataset(AbstractDataset):
             "struct_matrix": self._extract_struct_matrix(token_to_sentence_ind, token_to_coreference_id),
         }
 
+        labels = None
         if self.extract_labels:
-            link_facts = self._extract_link_facts(document)
-            features["labels"], features["labels_mask"] = self._extract_labels_and_mask(ner_facts, link_facts)
+            labels_tensors, labels_mask = self._extract_labels_and_mask(ner_facts, self._extract_link_facts(document))
+            labels = {"labels": labels_tensors, "labels_mask": labels_mask}
 
-        self._documents.append(features)
+        prepared_document = PreparedDocument(features=features, labels=labels)
+
+        self._documents.append(prepared_document)
 
     def _tokenize(self, document: Document):
 
