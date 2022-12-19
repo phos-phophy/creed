@@ -17,9 +17,17 @@ class SSANAdaptModel(AbstractModel):
             model_type: str,
             hidden_dim: int,
             dropout: float,
+            no_ent_ind: int = None,
             **kwargs
     ):
-        super(SSANAdaptModel, self).__init__(entities, relations)
+        if no_ent_ind is None:
+            no_ent_ind = 0
+            entities = ['<NO_ENT>'] + list(entities)
+
+        self._no_ent_ind = no_ent_ind
+        self._entities = tuple(entities)
+
+        super(SSANAdaptModel, self).__init__(relations)
 
         self._inner_model: AbstractModel = get_inner_model(model_type=model_type, entities=entities, relations=relations, **kwargs)
 
@@ -31,6 +39,14 @@ class SSANAdaptModel(AbstractModel):
         self._bili = torch.nn.Bilinear(hidden_dim + 20, hidden_dim + 20, len(self.relations))
 
         self._loss = torch.nn.BCEWithLogitsLoss(reduction="none")
+
+    @property
+    def entities(self):
+        return self._entities
+
+    @property
+    def no_ent_ind(self):
+        return self._no_ent_ind
 
     def forward(
             self,
