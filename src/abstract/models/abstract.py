@@ -15,6 +15,7 @@ class Score(NamedTuple):
 class ModelScore(NamedTuple):
     relations_score: Dict[str, Score]
     macro_score: Score
+    micro_score: Score
 
 
 class AbstractModel(TorchModel, metaclass=ABCMeta):
