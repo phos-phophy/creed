@@ -1,7 +1,7 @@
 import pickle
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Optional, Type, TypeVar
+from typing import Any, Type, TypeVar
 
 import torch
 
@@ -16,16 +16,17 @@ class TorchModel(torch.nn.Module, metaclass=ABCMeta):
         # used to obtain the device of torch module
         self._dummy_param = torch.nn.Parameter(torch.empty(0))
 
-    @property
-    def device(self) -> str:
-        return self._dummy_param.device
-
     @abstractmethod
     def forward(self, *args, **kwargs) -> Any:
         pass
 
-    def to_device(self, tensor: Optional[torch.Tensor]) -> Optional[torch.Tensor]:
-        return tensor.to(device=self.device) if tensor else None
+    @abstractmethod
+    def compute_loss(self, *args, **kwargs) -> Any:
+        pass
+
+    @abstractmethod
+    def score_model(self, *args, **kwargs) -> Any:
+        pass
 
     def save(self, path: Path, *, rewrite: bool = False) -> None:
         previous_device = self.device
