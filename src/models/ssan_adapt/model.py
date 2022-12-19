@@ -14,7 +14,7 @@ class SSANAdaptModel(AbstractModel):
             self,
             entities: Iterable[str],
             relations: Iterable[str],
-            model_type: str,
+            inner_model_type: str,
             hidden_dim: int,
             dropout: float,
             no_ent_ind: int = None,
@@ -29,7 +29,7 @@ class SSANAdaptModel(AbstractModel):
 
         super(SSANAdaptModel, self).__init__(relations)
 
-        self._inner_model: AbstractModel = get_inner_model(model_type=model_type, entities=entities, relations=relations, **kwargs)
+        self._inner_model: AbstractModel = get_inner_model(inner_model_type=inner_model_type, relations=relations, **kwargs)
 
         out_dim = next(module.out_features for module in list(self._inner_model.modules())[::-1] if "out_features" in module.__dict__)
 

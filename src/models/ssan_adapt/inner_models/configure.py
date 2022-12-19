@@ -17,5 +17,5 @@ INNER_MODELS = {
 }
 
 
-def get_inner_model(model_type: str, **kwargs) -> AbstractModel:
-    return INNER_MODELS[model_type](**kwargs)
+def get_inner_model(inner_model_type: str, **kwargs) -> AbstractModel:
+    return INNER_MODELS[inner_model_type](**kwargs)

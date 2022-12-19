@@ -13,8 +13,8 @@ from .dataset import BaseSSANAdaptDataset
 
 
 class BaseSSANAdaptModel(AbstractModel):
-    def __init__(self, entities: Iterable[str], relations: Iterable[str], pretrained_model_path: str, tokenizer_path: str):
-        super(BaseSSANAdaptModel, self).__init__(entities, relations)
+    def __init__(self, relations: Iterable[str], pretrained_model_path: str, tokenizer_path: str):
+        super(BaseSSANAdaptModel, self).__init__(relations)
 
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
         self._model = AutoModel.from_pretrained(pretrained_model_path)
