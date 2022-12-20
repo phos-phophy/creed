@@ -1,11 +1,17 @@
+import argparse
 import json
 from pathlib import Path
 
-from .datasets import get_converter
-from .trainer import Trainer
+from src.datasets import get_converter
+from src.trainer import Trainer
 
 
-def run_train(config_path: str):
+def run_train():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config_path", type=str, metavar="<path to config>", required=True)
+
+    arguments = parser.parse_args()
+    config_path = arguments.config_path
 
     with Path(config_path).open('r') as file:
         config: dict = json.load(file)
