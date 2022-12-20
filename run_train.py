@@ -6,7 +6,7 @@ from src.datasets import get_converter
 from src.trainer import Trainer
 
 
-def run_train():
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config_path", type=str, metavar="<path to config>", required=True)
 

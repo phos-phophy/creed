@@ -6,6 +6,7 @@ COPY configs configs
 COPY requirements requirements
 COPY scripts scripts
 COPY src src
+COPY run_train.py run_train.py
 
 RUN pip3 install -r requirements/requirements.txt
 RUN pip3 install src/
