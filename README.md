@@ -49,8 +49,6 @@ flowchart LR
    We are going to develop training methods that instill domain shift resistance in RE models and allow them to adapt to
    new types of entities.
 
-## Project structure
-
 ## Class diagrams
 
 The base classes are divided into 3 main categories:
@@ -61,7 +59,6 @@ The base classes are divided into 3 main categories:
   * AbstractFact
     * EntityFact
     * RelationFact
-  * CoreferenceChain
 * **_Examples_**:
   * Document
   * AbstractDataset
@@ -111,7 +108,7 @@ direction TB
 ### Examples
 ```mermaid
 classDiagram
-direction TB
+direction LR
    class Document{
       +doc_id: str
       +text: str
@@ -132,9 +129,19 @@ direction TB
       +evaluation: bool
       +extract_labels: bool
       +tokenizer
-      +max_len
+      +max_len: int
+      #_documents: List[PreparedDocument]
       #_setup_len_attr(self, tokenizer)
       #_prepare_doc(self, doc: Document)
+      +__getitem__(self, idx: int) PreparedDocument
+   }
+   AbstractDataset ..> Document : processes
+   AbstractDataset "1" --o "1..*" PreparedDocument : stores
+   
+   class PreparedDocument{
+      <<NamedTuple>>
+      +features: Dict[str, torch.Tensor]
+      +labels: Optional[Dict[str, torch.Tensor]]
    }
 ```
 
@@ -146,8 +153,6 @@ direction TB
    class TorchModel{
       <<Abstract>>
       +device: torch.device
-      +forward(self, *args, **kwargs) Any
-      +to_device(self, tensor: Tensor) Tensor
       +save(self, path: Path, *, rewrite: bool)
       +load(cls, path: Path) TorchModel
       +from_config(cls, config: dict) TorchModel
@@ -156,11 +161,46 @@ direction TB
    
    class AbstractModel{
       <<Abstract>>
-      +entities: Tuple[str]
       +relations: Tuple[str]
-      +no_ent_ind: int
       +no_rel_ind: int
+      +forward(self, *args, **kwargs) Any
+      +compute_loss(self, *args, **kwargs) Any
+      +score(self, *args, **kwargs) ModelScore
       +prepare_dataset(self, documents: Iterable[Document], extract_labels, evaluation)  AbstractDataset
    }
    
+   class Score{
+      <<NamedTuple>>
+      +precision: float
+      +recall: float
+      +f_score: float
+   }
+   
+   class ModelScore{
+      <<NamedTuple>>
+      +relations_score: Dict[str, Score]
+      +macro_score: Score
+      +micro_score: Score
+   }
+   
 ```
+
+## Run
+
+
+### Build docker container
+1) `cd path/to/project`
+2) `docker build ./`
+3) `docker run -it --gpus=all __image_id__ /bin/bash`
+
+### Dowload datasets
+
+`bash scripts/dowload_datasets.sh`
+
+### Start training
+
+`bash scripts/run_train.sh -c path/to/config -v __gpu_id__`
+
+or
+
+`bash scripts/run_train_large.sh -c path/to/config -v __gpu_id__ -l __limit__`
