@@ -19,7 +19,7 @@ setup(
     packages=find_packages(include=['src']),
     install_requires=[
         'numpy==1.23.5',
-        'torch==1.12.1',
+        'torch==1.13.0',
         'transformers==4.23.1',
         'tqdm==4.64.1',
         'scikit-learn==1.2.0'
