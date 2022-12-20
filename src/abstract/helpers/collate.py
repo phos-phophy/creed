@@ -1,23 +1,27 @@
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import torch
 from src.abstract.examples import PreparedDocument
 from torch.nn.utils.rnn import pad_sequence
 
 
-def collate_fn(items: List[PreparedDocument]) -> PreparedDocument:
+def collate_fn(documents: List[PreparedDocument]) -> PreparedDocument:
     document_dict = defaultdict(dict)
 
-    for field in items[0]._fields:
+    for field_name in documents[0]._fields:
 
-        keys = items[0].__getattribute__(field).keys()
+        feature_names = documents[0].__getattribute__(field_name).keys()
 
-        features: Dict[str, List[torch.Tensor]] = {key: [element[key] for element in items] for key in keys}
-        for key, feature in features.items():
-            document_dict[field][key] = collate(feature)
+        for feature_name in feature_names:
+            features = get_features(documents, field_name, feature_name)
+            document_dict[field_name][feature_name] = collate(features)
 
     return PreparedDocument(**document_dict)
+
+
+def get_features(documents: List[PreparedDocument], field_name, feature_name):
+    return [document.__getattribute__(field_name)[feature_name] for document in documents]
 
 
 def collate(tensors: Optional[List[torch.Tensor]]):

@@ -19,6 +19,9 @@ class Trainer:
         else:
             self.model: AbstractModel = get_model(**config["model"])
 
+        if torch.cuda.is_available():
+            self.model = self.model.cuda()
+
     def train_model(self, train_dataset: AbstractDataset, dev_dataset: AbstractDataset = None, rewrite: bool = False):
         writer = SummaryWriter(log_dir=self.params["log_dir"])
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.params["learning_rate"])

@@ -2,6 +2,7 @@ import argparse
 import json
 from pathlib import Path
 
+import numpy as np
 from src.datasets import get_converter
 from src.trainer import Trainer
 
@@ -9,7 +10,7 @@ from src.trainer import Trainer
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config_path", type=str, metavar="<path to config>", required=True)
-    parser.add_argument("-l", "--size_limit", type=str, metavar="<document number limit>", required=True)
+    parser.add_argument("-l", "--size_limit", type=int, metavar="<document number limit>", required=True)
 
     arguments = parser.parse_args()
     config_path = arguments.config_path
@@ -30,7 +31,7 @@ if __name__ == '__main__':
 
     total_len = len(train_documents)
 
-    for i in total_len[::size_limit]:
+    for i in np.arange(total_len, step=size_limit):
         print(f"Trained on {i} examples out of {total_len}")
         train_docs = train_documents[i: i + size_limit]
 
