@@ -19,7 +19,7 @@ class Trainer:
         else:
             self.model: AbstractModel = get_model(**config["model"])
 
-    def train_model(self, train_dataset: AbstractDataset, dev_dataset: AbstractDataset = None):
+    def train_model(self, train_dataset: AbstractDataset, dev_dataset: AbstractDataset = None, rewrite: bool = False):
         writer = SummaryWriter(log_dir=self.params["log_dir"])
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.params["learning_rate"])
 
@@ -71,7 +71,7 @@ class Trainer:
                     writer.add_scalar(f"{relation} / recall / train", relation_score.recall, epoch)
                     writer.add_scalar(f"{relation} / precision / train", relation_score.precision, epoch)
 
-        self.model.save(path=self.save_path, rewrite=False)
+        self.model.save(path=self.save_path, rewrite=rewrite)
 
     def score_model(self, dataset: AbstractDataset) -> ModelScore:
         self.model.eval()
