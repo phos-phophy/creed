@@ -47,7 +47,7 @@ class Trainer:
                 optimizer.step()
                 torch.cuda.empty_cache()
 
-                epoch_loss.append(loss)
+                epoch_loss.append(loss.item())
                 writer.add_scalar(
                     "batch loss / train", loss.item(), epoch * len(train_dataloader) + i
                 )
