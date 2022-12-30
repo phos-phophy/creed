@@ -61,18 +61,20 @@ class Trainer:
                     dev_score = self.score_model(dev_dataset)
                     self.model.train()
 
-                writer.add_scalar("macro / f_score / train", dev_score.macro_score.f_score, epoch)
-                writer.add_scalar("macro / recall / train", dev_score.macro_score.recall, epoch)
-                writer.add_scalar("macro / precision / train", dev_score.macro_score.precision, epoch)
+                writer.add_scalar("macro / f_score / dev", dev_score.macro_score.f_score, epoch)
+                writer.add_scalar("macro / recall / dev", dev_score.macro_score.recall, epoch)
+                writer.add_scalar("macro / precision / dev", dev_score.macro_score.precision, epoch)
 
-                writer.add_scalar("micro / f_score / train", dev_score.micro_score.f_score, epoch)
-                writer.add_scalar("micro / recall / train", dev_score.micro_score.recall, epoch)
-                writer.add_scalar("micro / precision / train", dev_score.micro_score.precision, epoch)
+                pbar.set_description(f'macro / f_score / dev: {dev_score.macro_score.f_score}')
+
+                writer.add_scalar("micro / f_score / dev", dev_score.micro_score.f_score, epoch)
+                writer.add_scalar("micro / recall / dev", dev_score.micro_score.recall, epoch)
+                writer.add_scalar("micro / precision / dev", dev_score.micro_score.precision, epoch)
 
                 for relation, relation_score in dev_score.relations_score.items():
-                    writer.add_scalar(f"{relation} / f_score / train", relation_score.f_score, epoch)
-                    writer.add_scalar(f"{relation} / recall / train", relation_score.recall, epoch)
-                    writer.add_scalar(f"{relation} / precision / train", relation_score.precision, epoch)
+                    writer.add_scalar(f"{relation} / f_score / dev", relation_score.f_score, epoch)
+                    writer.add_scalar(f"{relation} / recall / dev", relation_score.recall, epoch)
+                    writer.add_scalar(f"{relation} / precision / dev", relation_score.precision, epoch)
 
         self.model.save(path=self.save_path, rewrite=rewrite)
 
