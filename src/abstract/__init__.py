@@ -1,6 +1,6 @@
 from .examples import AbstractDataset, Document, PreparedDocument
 from .features import AbstractFact, EntityFact, FactType, RelationFact, Span
-from .helpers import AbstractConverter, collate_fn
+from .helpers import AbstractConverter, collate_fn, get_tokenizer_len_attribute
 from .models import AbstractModel, ModelScore, Score, TorchModel
 
 __all__ = [
@@ -17,5 +17,6 @@ __all__ = [
     "Score",
     "Span",
     "TorchModel",
-    "collate_fn"
+    "collate_fn",
+    "get_tokenizer_len_attribute"
 ]
