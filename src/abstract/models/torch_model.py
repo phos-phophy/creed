@@ -39,7 +39,3 @@ class TorchModel(torch.nn.Module, metaclass=ABCMeta):
         if not isinstance(model, cls):
             raise Exception(f"Model at {path} is not an instance of {cls}")
         return model
-
-    @classmethod
-    def from_config(cls, config: dict) -> _Model:
-        return type(cls)(**config)
