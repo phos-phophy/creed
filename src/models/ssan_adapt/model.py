@@ -5,7 +5,7 @@ import torch
 from sklearn.metrics import precision_recall_fscore_support
 from src.abstract import AbstractDataset, AbstractModel, Document, ModelScore, Score
 
-from .inner_models import get_inner_model
+from .inner_models import AbstractSSANAdaptInnerModel, get_inner_model
 
 
 class SSANAdaptModel(AbstractModel):
@@ -29,15 +29,18 @@ class SSANAdaptModel(AbstractModel):
 
         super(SSANAdaptModel, self).__init__(relations)
 
-        self._inner_model: AbstractModel = get_inner_model(inner_model_type=inner_model_type, entities=entities, no_ent_ind=no_ent_ind,
-                                                           relations=relations, **kwargs)
+        self._inner_model: AbstractSSANAdaptInnerModel = get_inner_model(inner_model_type=inner_model_type, entities=entities,
+                                                                         no_ent_ind=no_ent_ind, relations=relations, **kwargs)
+
+        self._dist_ceil = self._inner_model.dist_ceil
+        self._dist_emb_dim = self._dist_ceil * 2
 
         out_dim = next(module.out_features for module in list(self._inner_model.modules())[::-1] if "out_features" in module.__dict__)
 
         self._dim_reduction = torch.nn.Linear(out_dim, hidden_dim)
         self._dropout = torch.nn.Dropout(dropout)
-        self._rel_dist_embeddings = torch.nn.Embedding(20, 20, padding_idx=10)
-        self._bili = torch.nn.Bilinear(hidden_dim + 20, hidden_dim + 20, len(self.relations))
+        self._rel_dist_embeddings = torch.nn.Embedding(self._dist_emb_dim, self._dist_emb_dim, padding_idx=self._dist_ceil)
+        self._bili = torch.nn.Bilinear(hidden_dim + self._dist_emb_dim, hidden_dim + self._dist_emb_dim, len(self.relations))
 
         self._loss = torch.nn.BCEWithLogitsLoss(reduction="none")
 
@@ -70,13 +73,14 @@ class SSANAdaptModel(AbstractModel):
         t_entity: torch.Tensor = entity[:, None, :, :].repeat(1, ent_mask.size()[1], 1, 1)  # (bs, max_ent, max_ent, r_dim)
 
         # add information about the relative distance between entities
+        dist_ids += self._dist_ceil
         h_entity = torch.cat([h_entity, self._rel_dist_embeddings(dist_ids)], dim=-1)
-        t_entity = torch.cat([t_entity, self._rel_dist_embeddings((20 - dist_ids) % 20)], dim=-1)
+        t_entity = torch.cat([t_entity, self._rel_dist_embeddings((self._dist_emb_dim - dist_ids) % self._dist_emb_dim)], dim=-1)
 
         h_entity: torch.Tensor = self._dropout(h_entity)
         t_entity: torch.Tensor = self._dropout(t_entity)
 
-        # get prediction
+        # get prediction  (without function activation)
         logits: torch.Tensor = self._bili(h_entity, t_entity)  # (bs, max_ent, max_ent, num_links)
 
         return logits

@@ -1,14 +1,14 @@
-from src.abstract import AbstractModel
+from .abstract import AbstractSSANAdaptInnerModel
 
 
 def get_base():
-    from .base import BaseSSANAdaptModel
-    return BaseSSANAdaptModel
+    from .base import BaseSSANAdaptInnerModel
+    return BaseSSANAdaptInnerModel
 
 
 def get_wo_entities():
-    from .wo_types import WOTypesSSANAdaptModel
-    return WOTypesSSANAdaptModel
+    from .wo_types import WOTypesSSANAdaptInnerModel
+    return WOTypesSSANAdaptInnerModel
 
 
 INNER_MODELS = {
@@ -17,5 +17,5 @@ INNER_MODELS = {
 }
 
 
-def get_inner_model(inner_model_type: str, **kwargs) -> AbstractModel:
+def get_inner_model(inner_model_type: str, **kwargs) -> AbstractSSANAdaptInnerModel:
     return INNER_MODELS[inner_model_type](**kwargs)

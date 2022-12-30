@@ -1,8 +1,9 @@
 from collections import defaultdict
 from typing import Dict, Iterable, List, Tuple
 
+import numpy as np
 import torch
-from src.abstract import AbstractDataset, Document, EntityFact, FactType, PreparedDocument, RelationFact, Span
+from src.abstract import AbstractDataset, Document, EntityFact, FactType, PreparedDocument, RelationFact, Span, get_tokenizer_len_attribute
 
 
 class BaseSSANAdaptDataset(AbstractDataset):
@@ -15,7 +16,9 @@ class BaseSSANAdaptDataset(AbstractDataset):
             entities: Iterable[str],
             relations: Iterable[str],
             no_ent_ind: int,
-            no_rel_ind: int
+            no_rel_ind: int,
+            dist_base: int,
+            dist_ceil: int
     ):
         self._max_ent = self._count_max_ent(documents) if extract_labels and evaluation else None
         self._entities = tuple(entities)
@@ -28,8 +31,10 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         self._usual_token = "<USUAL_TOKEN>"
 
-        self._setup_len_attr(tokenizer)
+        self._len_attr = get_tokenizer_len_attribute(tokenizer)
         self._distance_encoder = self._init_distance_encoder(tokenizer.__getattribute__(self._len_attr))
+
+        self._dist_bins = torch.tensor([dist_base ** i for i in range(dist_ceil)], dtype=torch.long)
 
         super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, extract_labels, evaluation)
 
@@ -175,7 +180,6 @@ class BaseSSANAdaptDataset(AbstractDataset):
     def _extract_dist_ids(self, ent_mask: torch.Tensor):
         max_ent = ent_mask.shape[0]
         first_appearance = [-1] * max_ent
-        dist_ids = torch.zeros(max_ent, max_ent, dtype=torch.long)
 
         for ind in range(max_ent):
             if torch.all(ent_mask[ind] == 0):
@@ -183,14 +187,17 @@ class BaseSSANAdaptDataset(AbstractDataset):
             else:
                 first_appearance[ind] = torch.where(ent_mask[ind] == 1)[0][0]
 
-        for i in range(max_ent):
-            for j in range(max_ent):
-                if first_appearance[i] != -1 and first_appearance[j] != -1:
-                    diff = first_appearance[i] - first_appearance[j]
-                    dist_ids[i][j] = self._distance_encoder[abs(diff)]
-                    dist_ids[i][j] = dist_ids[i][j] * (-1) if diff < 0 else dist_ids[i][j]
+        i = first_appearance.view(1, -1)  # (1, max_ent)
+        j = first_appearance.view(-1, 1)  # (max_ent, 1)
 
-        return dist_ids + 10
+        ent_dist = j - i  # (max_ent, max_ent)
+
+        ent_dist[(i == -1) | (j == -1)] = 0
+
+        dist_ids = torch.tensor(np.digitize(torch.abs(ent_dist), self._dist_bins, right=False), dtype=torch.long)
+        dist_ids[ent_dist < 0] *= -1
+
+        return dist_ids
 
     def _extract_labels_and_mask(self, ner_facts: Tuple[EntityFact, ...], link_facts: Tuple[RelationFact, ...]):
         max_ent = self.max_ent if self.max_ent else len(ner_facts)

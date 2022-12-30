@@ -2,38 +2,33 @@ import math
 from typing import Any, Iterable, Tuple
 
 import torch
-from src.abstract import AbstractModel, Document
-from transformers import AutoModel, AutoTokenizer
+from src.abstract import Document
 from transformers.models.bert.modeling_bert import (
     BertEmbeddings,
     BertSelfAttention
 )
 
 from .dataset import BaseSSANAdaptDataset
+from ..abstract import AbstractSSANAdaptInnerModel
 
 
-class BaseSSANAdaptModel(AbstractModel):
-    def __init__(self, entities: Iterable[str], relations: Iterable[str], no_ent_ind: int, pretrained_model_path: str, tokenizer_path: str):
-        super(BaseSSANAdaptModel, self).__init__(relations)
+class BaseSSANAdaptInnerModel(AbstractSSANAdaptInnerModel):
+    def __init__(
+            self,
+            entities: Iterable[str],
+            relations: Iterable[str],
+            no_ent_ind: int,
+            pretrained_model_path: str,
+            tokenizer_path: str,
+            dist_base: int
+    ):
+        super(BaseSSANAdaptInnerModel, self).__init__(entities, relations, no_ent_ind, pretrained_model_path, tokenizer_path, dist_base)
 
-        self._entities = tuple(entities)
-        self._no_ent_ind = no_ent_ind
-
-        self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-        self._model = AutoModel.from_pretrained(pretrained_model_path)
         self._redefine_model_structure()
-
-    @property
-    def entities(self):
-        return self._entities
-
-    @property
-    def no_ent_ind(self):
-        return self._no_ent_ind
 
     def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> BaseSSANAdaptDataset:
         return BaseSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations,
-                                    self.no_ent_ind, self.no_rel_ind)
+                                    self.no_ent_ind, self.no_rel_ind, self._dist_base, self._dist_ceil)
 
     def forward(
             self,

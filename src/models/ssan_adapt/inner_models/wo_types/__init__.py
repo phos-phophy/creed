@@ -1,5 +1,5 @@
-from .model import WOTypesSSANAdaptModel
+from .model import WOTypesSSANAdaptInnerModel
 
 __all__ = [
-    "WOTypesSSANAdaptModel"
+    "WOTypesSSANAdaptInnerModel"
 ]
