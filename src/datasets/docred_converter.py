@@ -1,9 +1,9 @@
 import json
 from itertools import chain
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Tuple
+from typing import Any, Dict, Iterator, List
 
-from src.abstract import AbstractConverter, AbstractFact, CoreferenceChain, Document, EntityFact, RelationFact, Span
+from src.abstract import AbstractConverter, AbstractFact, Document, EntityFact, RelationFact, Span
 
 
 """
@@ -48,7 +48,7 @@ class DocREDConverter(AbstractConverter):
         facts: List[AbstractFact] = entity_facts
         facts.extend(self._extract_rel_facts(example.get("labels", []), coref_chains))
 
-        return Document(example["title"], text, sentences, facts, coref_chains)
+        return Document(example["title"], text, sentences, facts)
 
     @staticmethod
     def _extract_sentences(example: Dict):
@@ -70,25 +70,25 @@ class DocREDConverter(AbstractConverter):
     def _extract_entity_facts(vertex_set: List[List[Dict]], sentences: List[List[Span]]):
 
         facts: List[EntityFact] = []
-        coref_chains: List[CoreferenceChain] = []
+        coref_chains: List[List[EntityFact]] = []
 
-        def build_entity_fact(desc: dict):
+        def build_entity_fact(desc: dict, coref_id: int):
             mention_spans = [sentences[desc["sent_id"]][span_id] for span_id in range(desc["pos"][0], desc["pos"][1], 1)]
-            return EntityFact("", desc["type"], tuple(mention_spans))
+            return EntityFact("", desc["type"], str(coref_id), tuple(mention_spans))
 
-        for coref_facts_desc in vertex_set:
-            coref_chain = CoreferenceChain(build_entity_fact(fact_desc) for fact_desc in coref_facts_desc)
-            facts.extend(coref_chain.facts)
-            coref_chains.append(coref_chain)
+        for ind, coref_facts_desc in enumerate(vertex_set):
+            coref_facts = [build_entity_fact(fact_desc, ind) for fact_desc in coref_facts_desc]
+            facts.extend(coref_facts)
+            coref_chains.append(coref_facts)
 
-        return facts, tuple(coref_chains)
+        return facts, coref_chains
 
-    def _extract_rel_facts(self, labels: List[Dict], coref_facts: Tuple[CoreferenceChain, ...]):
+    def _extract_rel_facts(self, labels: List[Dict], coref_facts: List[List[EntityFact]]):
 
         def build_rel_fact(desc: dict):
             rel_type = self.rel_info.get(desc["r"], desc["r"])
-            from_facts = coref_facts[desc["h"]].facts
-            to_facts = coref_facts[desc["t"]].facts
+            from_facts = coref_facts[desc["h"]]
+            to_facts = coref_facts[desc["t"]]
             return [RelationFact("", rel_type, from_fact, to_fact) for from_fact in from_facts for to_fact in to_facts]
 
         return list(chain.from_iterable(build_rel_fact(rel_desc) for rel_desc in labels))

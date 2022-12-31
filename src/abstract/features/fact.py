@@ -40,8 +40,9 @@ class AbstractFact(metaclass=ABCMeta):
 
 
 class EntityFact(AbstractFact):
-    def __init__(self, fact_id: str, fact_type_id: str, mentions: Tuple[Span, ...]):
+    def __init__(self, fact_id: str, fact_type_id: str, coreference_id: str, mentions: Tuple[Span, ...]):
         super().__init__(fact_id, fact_type_id, FactType.ENTITY)
+        self._coreference_id = coreference_id
         self._mentions = mentions
         self._validate_mentions()
 
@@ -50,6 +51,10 @@ class EntityFact(AbstractFact):
 
     def __hash__(self):
         return hash((self.fact_id, self.fact_type_id, self.fact_type, self.mentions))
+
+    @property
+    def coreference_id(self):
+        return self._coreference_id
 
     @property
     def mentions(self):
