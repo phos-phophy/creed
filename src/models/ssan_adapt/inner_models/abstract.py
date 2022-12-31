@@ -31,7 +31,7 @@ class AbstractSSANAdaptInnerModel(AbstractModel, metaclass=ABCMeta):
         len_attr = get_tokenizer_len_attribute(self._tokenizer)
 
         self._dist_ceil = math.ceil(math.log(self._tokenizer.__getattribute__(len_attr), self._dist_base)) + 1
-        self._dist_emb_dim = self._ceil * 2
+        self._dist_emb_dim = self._dist_ceil * 2
 
     @property
     def entities(self):

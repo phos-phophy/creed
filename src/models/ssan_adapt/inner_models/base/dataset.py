@@ -179,7 +179,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
     def _extract_dist_ids(self, ent_mask: torch.Tensor):
         max_ent = ent_mask.shape[0]
-        first_appearance = [-1] * max_ent
+        first_appearance = -1 * torch.ones(max_ent)
 
         for ind in range(max_ent):
             if torch.all(ent_mask[ind] == 0):
