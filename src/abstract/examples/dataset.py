@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import Dataset
 
 from .document import Document
-from ..helpers import get_tokenizer_len_attribute
+from .helpers import get_tokenizer_len_attribute
 
 
 class PreparedDocument(NamedTuple):
