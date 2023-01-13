@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, AbstractModel, ModelScore, collate_fn
+from src.abstract import AbstractDataset, AbstractModel, ModelScore, Score, collate_fn
 from src.models import get_model
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -54,29 +54,29 @@ class Trainer:
 
             avg_loss = np.mean(epoch_loss)
             writer.add_scalar("loss / train", avg_loss, epoch)
-            pbar.set_description(f'loss / train: {avg_loss}')
 
-            if dev_dataset:
+            if dev_dataset is None:
+                pbar.set_description(f'loss / train: {avg_loss}')
+            else:
                 with torch.no_grad():
                     dev_score = self.score_model(dev_dataset)
                     self.model.train()
 
-                writer.add_scalar("macro / f_score / dev", dev_score.macro_score.f_score, epoch)
-                writer.add_scalar("macro / recall / dev", dev_score.macro_score.recall, epoch)
-                writer.add_scalar("macro / precision / dev", dev_score.macro_score.precision, epoch)
-
                 pbar.set_description(f'macro / f_score / dev: {dev_score.macro_score.f_score}')
 
-                writer.add_scalar("micro / f_score / dev", dev_score.micro_score.f_score, epoch)
-                writer.add_scalar("micro / recall / dev", dev_score.micro_score.recall, epoch)
-                writer.add_scalar("micro / precision / dev", dev_score.micro_score.precision, epoch)
+                self.save_results(writer, dev_score.macro_score, "macro", epoch)
+                self.save_results(writer, dev_score.micro_score, "micro", epoch)
 
                 for relation, relation_score in dev_score.relations_score.items():
-                    writer.add_scalar(f"{relation} / f_score / dev", relation_score.f_score, epoch)
-                    writer.add_scalar(f"{relation} / recall / dev", relation_score.recall, epoch)
-                    writer.add_scalar(f"{relation} / precision / dev", relation_score.precision, epoch)
+                    self.save_results(writer, relation_score, relation, epoch)
 
         self.model.save(path=self.save_path, rewrite=rewrite)
+
+    @staticmethod
+    def save_results(writer: SummaryWriter, score: Score, score_type: str, epoch: int):
+        writer.add_scalar(f"{score_type} / f_score / dev", score.f_score, epoch)
+        writer.add_scalar(f"{score_type} / recall / dev", score.recall, epoch)
+        writer.add_scalar(f"{score_type} / precision / dev", score.precision, epoch)
 
     def score_model(self, dataset: AbstractDataset) -> ModelScore:
         self.model.eval()

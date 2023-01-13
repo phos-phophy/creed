@@ -135,7 +135,8 @@ class SSANAdaptModel(AbstractModel):
         pair_labels_ind = torch.argmax(pair_labels, dim=-1)  # (bs * max_ent ^ 2)
 
         labels = list(range(num_links))
-        precision, recall, f_score, _ = precision_recall_fscore_support(pair_labels_ind, pair_logits_ind, average=None, labels=labels)
+        precision, recall, f_score, _ = precision_recall_fscore_support(pair_labels_ind, pair_logits_ind, average=None, labels=labels,
+                                                                        zero_division=0)
 
         relations_score = dict()
         for ind, relation_name in enumerate(self.relations):
