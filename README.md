@@ -23,26 +23,26 @@ There are several ways to deal with the changing types of entyties:
    In the case of the unambiguous mapping, we can try all suitable mappings, but if there are $N$ entities and $M$
    candidates for each of them, $M^N$ model runs are required.
 
-```mermaid
-flowchart LR
-    subgraph a["Unknown domain"]
-        direction TB
-        subgraph b[" "]
-            direction LR
-            NUM1(["NUM"])-- Date of birth --->PER1(["PER"])
-            NUM2(["NUM"])-- Age --->PER2(["PER"])
+    ```mermaid
+    flowchart LR
+        subgraph a["New unknown domain"]
+            direction TB
+            subgraph b[" "]
+                direction LR
+                NUM1(["NUM"])-- Date of birth --->PER1(["PER"])
+                NUM2(["NUM"])-- Age --->PER2(["PER"])
+            end
         end
-    end
-    subgraph c["Model's domain"]
-        direction TB
-        subgraph d[" "]
-            direction LR
-            time([TIME])-- Date of birth --->person1(["PERSON"])
-            number([NUMBER])-- Age --->person2(["PERSON"])
+        subgraph c["Model's domain"]
+            direction TB
+            subgraph d[" "]
+                direction LR
+                time([TIME])-- Date of birth --->person1(["PERSON"])
+                number([NUMBER])-- Age --->person2(["PERSON"])
+            end
         end
-    end
-    a ==> c 
-```
+        a ==> c 
+    ```
 
 3) Adapting
 
@@ -155,7 +155,6 @@ direction TB
       +device: torch.device
       +save(self, path: Path, *, rewrite: bool)
       +load(cls, path: Path) TorchModel
-      +from_config(cls, config: dict) TorchModel
    }
    TorchModel <|-- AbstractModel
    

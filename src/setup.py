@@ -18,16 +18,16 @@ setup(
     maintainer_email='akudisov@ispras.ru',
     packages=find_packages(include=['src']),
     install_requires=[
-        'numpy==1.23.5',
+        'numpy==1.21.6',
         'torch==1.13.0',
         'transformers==4.23.1',
         'tqdm==4.64.1',
-        'scikit-learn==1.2.0'
+        'scikit-learn==1.0.2'
     ],
     entry_points={
         'creed.plugins': ['src = src']
     },
     data_files=[('', ['VERSION'])],
-    python_requires='>=3.10',
+    python_requires='>=3.8',
     license='MIT License',
 )
