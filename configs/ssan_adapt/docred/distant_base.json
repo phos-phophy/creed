@@ -17,6 +17,7 @@
     "tokenizer_path": "bert-base-uncased",
     "hidden_dim": 256,
     "dropout": 0.1,
+    "dist_base": 2,
     "no_ent_ind": 0,
     "entities": [
       "BLANK",
