@@ -1,7 +1,7 @@
 from .collate import collate_fn
-from .converter import AbstractConverter
+from .loader import AbstractLoader
 
 __all__ = [
-    "AbstractConverter",
+    "AbstractLoader",
     "collate_fn"
 ]

@@ -3,7 +3,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Any, Dict, Iterator, List
 
-from src.abstract import AbstractConverter, AbstractFact, Document, EntityFact, RelationFact, Span
+from src.abstract import AbstractFact, AbstractLoader, Document, EntityFact, RelationFact, Span
 
 
 """
@@ -23,7 +23,7 @@ Example from DocRED consists of the following fields:
 """
 
 
-class DocREDConverter(AbstractConverter):
+class DocREDLoader(AbstractLoader):
 
     def __init__(self, rel_info: Dict[str, str] = None):
         self._rel_info = rel_info if rel_info else {}
@@ -32,7 +32,7 @@ class DocREDConverter(AbstractConverter):
     def rel_info(self):
         return self._rel_info
 
-    def convert(self, path: Path) -> Iterator[Document]:
+    def load(self, path: Path) -> Iterator[Document]:
         with path.open('r') as file:
             examples = json.load(file)
 

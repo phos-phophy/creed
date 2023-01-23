@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from src.abstract import get_tokenizer_len_attribute
-from src.datasets import DocREDConverter
+from src.datasets import DocREDLoader
 from src.models.ssan_adapt.inner_models.base.dataset import BaseSSANAdaptDataset
 from transformers import AutoTokenizer
 
@@ -12,7 +12,7 @@ from transformers import AutoTokenizer
 class BaseSSANAdaptDatasetTest(unittest.TestCase):
 
     def setUp(self):
-        self.converter = DocREDConverter()
+        self.loader = DocREDLoader()
         self.tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 
         self.len_attr = get_tokenizer_len_attribute(self.tokenizer)
@@ -29,7 +29,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
-        documents = list(self.converter.convert(Path("tests/datasets/data/docred.json")))
+        documents = list(self.loader.load(Path("tests/datasets/data/docred.json")))
         document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, 0, 0, dist_base, dist_ceil)[0]
 
         expected_shapes = {

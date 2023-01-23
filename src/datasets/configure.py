@@ -1,15 +1,15 @@
-from src.abstract import AbstractConverter
+from src.abstract import AbstractLoader
 
 
-def get_docred_converter():
-    from .docred_converter import DocREDConverter
-    return DocREDConverter
+def get_docred_loader():
+    from .docred_loader import DocREDLoader
+    return DocREDLoader
 
 
-CONVERTERS = {
-    "docred": get_docred_converter(),
+LOADERS = {
+    "docred": get_docred_loader(),
 }
 
 
-def get_converter(converter_type: str, **kwargs) -> AbstractConverter:
-    return CONVERTERS[converter_type](**kwargs)
+def get_loader(loader_type: str, **kwargs) -> AbstractLoader:
+    return LOADERS[loader_type](**kwargs)

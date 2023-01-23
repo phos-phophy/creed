@@ -2,12 +2,12 @@ import unittest
 from pathlib import Path
 
 from src.abstract import Document, EntityFact, RelationFact, Span
-from src.datasets import DocREDConverter
+from src.datasets import DocREDLoader
 
 from .helpers import equal_docs
 
 
-class DocREDConverterTest(unittest.TestCase):
+class DocREDLoaderTest(unittest.TestCase):
     def setUp(self) -> None:
         doc_id = "Skai TV"
         text = "Skai TV is a Greek free - to - air television network based in Piraeus . It is part of the Skai Group , one of the " \
@@ -88,8 +88,8 @@ class DocREDConverterTest(unittest.TestCase):
         ])
 
         self.document = Document(doc_id, text, sentences, tuple(facts))
-        self.converter = DocREDConverter()
+        self.loader = DocREDLoader()
 
     def test(self):
-        document = list(self.converter.convert(Path("tests/datasets/data/docred.json")))[0]
+        document = list(self.loader.load(Path("tests/datasets/data/docred.json")))[0]
         equal_docs(self, self.document, document)

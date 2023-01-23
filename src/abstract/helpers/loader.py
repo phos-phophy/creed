@@ -5,8 +5,8 @@ from typing import Iterator
 from src.abstract.examples.document import Document
 
 
-class AbstractConverter(metaclass=ABCMeta):
+class AbstractLoader(metaclass=ABCMeta):
 
     @abstractmethod
-    def convert(self, path: Path) -> Iterator[Document]:
+    def load(self, path: Path) -> Iterator[Document]:
         pass
