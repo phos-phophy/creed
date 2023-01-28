@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable
 
 import numpy as np
 import torch
@@ -111,40 +111,39 @@ class SSANAdaptModel(AbstractModel):
 
     def score(
             self,
-            logits: List[torch.Tensor],  # (1, max_ent, max_ent, num_link)
-            gold_labels: List[Dict[str, torch.Tensor]]
+            logits: torch.Tensor,  # (N, max_ent, max_ent, num_link)
+            gold_labels: Dict[str, torch.Tensor]
     ) -> ModelScore:
         num_links = len(self.relations)
 
-        labels: List[torch.Tensor] = list(map(lambda x: x["labels"], gold_labels))  # (max_ent, max_ent, num_link)
-        labels_mask: List[torch.Tensor] = list(map(lambda x: x["labels_mask"], gold_labels))  # (max_ent, max_ent)
+        labels: torch.Tensor = gold_labels["labels"]  # (N, max_ent, max_ent, num_link)
+        labels_mask: torch.Tensor = gold_labels["labels_mask"]  # (N, max_ent, max_ent)
 
-        logits: torch.Tensor = torch.cat(logits, dim=0)  # (bs, max_ent, max_ent, num_link)
-        labels: torch.Tensor = torch.stack(labels, dim=0)  # (bs, max_ent, max_ent, num_link)
-        labels_mask: torch.Tensor = torch.stack(labels_mask, dim=0)  # (bs, max_ent, max_ent)
+        if logits.shape != labels.shape:
+            raise ValueError(f"Logits and gold labels have incompatible shapes: {logits.shape} and {labels.shape} respectively")
 
-        pair_logits = logits.view(-1, num_links)  # (bs * max_ent ^ 2, num_link)
-        pair_labels = labels.float().view(-1, num_links)  # (bs * max_ent ^ 2, num_link)
-        labels_mask = labels_mask.view(-1, 1)  # (bs * max_ent ^ 2, 1)
+        labels_mask = labels_mask.view(-1, 1)  # (N * max_ent ^ 2, 1)
+        pair_logits = logits.view(-1, num_links)  # (N * max_ent ^ 2, num_link)
+        pair_labels = labels.float().view(-1, num_links)  # (N * max_ent ^ 2, num_link)
 
         # remove fake pairs
         pair_logits = pair_logits * labels_mask
         pair_labels = pair_labels * labels_mask
 
-        pair_logits_ind = torch.argmax(pair_logits, dim=-1)  # (bs * max_ent ^ 2)
-        pair_labels_ind = torch.argmax(pair_labels, dim=-1)  # (bs * max_ent ^ 2)
+        pair_logits_ind = torch.argmax(pair_logits, dim=-1)  # (N * max_ent ^ 2)
+        pair_labels_ind = torch.argmax(pair_labels, dim=-1)  # (N * max_ent ^ 2)
 
-        labels = list(range(num_links))
-        precision, recall, f_score, _ = precision_recall_fscore_support(pair_labels_ind, pair_logits_ind, average=None, labels=labels,
-                                                                        zero_division=0)
+        pr, r, f, _ = precision_recall_fscore_support(
+            pair_labels_ind, pair_logits_ind, average=None, labels=list(range(num_links)), zero_division=0
+        )
 
         relations_score = dict()
         for ind, relation_name in enumerate(self.relations):
-            relations_score[relation_name] = Score(precision=precision[ind], recall=recall[ind], f_score=f_score[ind])
+            relations_score[relation_name] = Score(precision=pr[ind], recall=r[ind], f_score=f[ind])
 
-        macro_score = Score(precision=np.mean(precision).item(), recall=np.mean(recall).item(), f_score=np.mean(f_score).item())
+        macro_score = Score(precision=np.mean(pr).item(), recall=np.mean(r).item(), f_score=np.mean(f).item())
 
-        precision, recall, f_score, _ = precision_recall_fscore_support(pair_labels_ind, pair_logits_ind, average='micro', labels=labels)
-        micro_score = Score(precision=precision, recall=recall, f_score=f_score)
+        pr, r, f, _ = precision_recall_fscore_support(pair_labels_ind, pair_logits_ind, average='micro', labels=list(range(num_links)))
+        micro_score = Score(precision=pr, recall=r, f_score=f)
 
         return ModelScore(relations_score=relations_score, macro_score=macro_score, micro_score=micro_score)

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +12,25 @@ from tqdm import tqdm
 
 class Trainer:
     def __init__(self, config):
+        """
+        Config's structure:
+        {
+            "trainer": {
+                "log_dir": str
+                "learning_rate": float
+                "batch_size": int
+                "epochs": int
+            },
+
+            "save_path": str,
+
+            "model": {
+                "load_path": str (optional if other parameters are not specified)
+                ...
+            }
+        }
+        """
+
         self.save_path = Path(config["save_path"])
         self.params = config["trainer"]
 
@@ -27,6 +47,7 @@ class Trainer:
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.params["learning_rate"])
 
         train_dataloader = DataLoader(train_dataset, batch_size=self.params["batch_size"], shuffle=True, collate_fn=collate_fn)
+        dev_dataloader = dev_dataset and DataLoader(dev_dataset, batch_size=self.params["batch_size"], shuffle=True, collate_fn=collate_fn)
 
         pbar = tqdm(range(self.params["epochs"]), total=self.params["epochs"])
 
@@ -48,9 +69,7 @@ class Trainer:
                 torch.cuda.empty_cache()
 
                 epoch_loss.append(loss.item())
-                writer.add_scalar(
-                    "batch loss / train", loss.item(), epoch * len(train_dataloader) + i
-                )
+                writer.add_scalar("batch loss / train", loss.item(), epoch * len(train_dataloader) + i)
 
             avg_loss = np.mean(epoch_loss)
             writer.add_scalar("loss / train", avg_loss, epoch)
@@ -58,35 +77,37 @@ class Trainer:
             if dev_dataset is None:
                 pbar.set_description(f'loss / train: {avg_loss}')
             else:
-                with torch.no_grad():
-                    dev_score = self.score_model(dev_dataset)
-                    self.model.train()
-
+                dev_score = self.score_model(dataloader=dev_dataloader)
                 pbar.set_description(f'macro / f_score / dev: {dev_score.macro_score.f_score}')
-
-                self.save_results(writer, dev_score.macro_score, "macro", epoch)
-                self.save_results(writer, dev_score.micro_score, "micro", epoch)
-
-                for relation, relation_score in dev_score.relations_score.items():
-                    self.save_results(writer, relation_score, relation, epoch)
+                self.save_dev_results(writer, dev_score, epoch)
 
         self.model.save(path=self.save_path, rewrite=rewrite)
 
     @staticmethod
-    def save_results(writer: SummaryWriter, score: Score, score_type: str, epoch: int):
-        writer.add_scalar(f"{score_type} / f_score / dev", score.f_score, epoch)
-        writer.add_scalar(f"{score_type} / recall / dev", score.recall, epoch)
-        writer.add_scalar(f"{score_type} / precision / dev", score.precision, epoch)
+    def save_dev_results(writer: SummaryWriter, dev_score: ModelScore, epoch: int):
+        def save_results(score_type: str, score: Score):
+            writer.add_scalar(f"{score_type} / f_score / dev", score.f_score, epoch)
+            writer.add_scalar(f"{score_type} / recall / dev", score.recall, epoch)
+            writer.add_scalar(f"{score_type} / precision / dev", score.precision, epoch)
 
-    def score_model(self, dataset: AbstractDataset) -> ModelScore:
-        self.model.eval()
+        save_results("macro", dev_score.macro_score)
+        save_results("micro", dev_score.micro_score)
+
+        for relation, relation_score in dev_score.relations_score.items():
+            save_results(relation, relation_score)
+
+    @torch.no_grad()
+    def score_model(self, dataset: AbstractDataset = None, dataloader: DataLoader = None) -> ModelScore:
+        if dataloader is None and dataset is None:
+            raise ValueError("")
+
+        dataloader = dataloader or DataLoader(dataset, batch_size=self.params["batch_size"], shuffle=True, collate_fn=collate_fn)
 
         predictions = []
-        gold_labels = []
+        gold_labels = defaultdict(list)
 
-        for tokens, labels in dataset:
-
-            tokens = {key: token.unsqueeze(0) for key, token in tokens.items()}
+        self.model.eval()
+        for tokens, labels in dataloader:
 
             if torch.cuda.is_available():
                 tokens = {key: token.cuda() for key, token in tokens.items()}
@@ -95,6 +116,7 @@ class Trainer:
             torch.cuda.empty_cache()
 
             predictions.append(logits)
-            gold_labels.append(labels)
+            for key, item in labels:
+                gold_labels[key].append(item)
 
-        return self.model.score(predictions, gold_labels)
+        return self.model.score(torch.cat(predictions, dim=0), {key: torch.cat(item, dim=0) for key, item in gold_labels.items()})

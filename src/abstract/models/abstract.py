@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, Iterable, NamedTuple
 
+import torch
 from src.abstract.examples import AbstractDataset, Document
 
 from .torch_model import TorchModel
@@ -48,5 +49,5 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def score(self, *args, **kwargs) -> ModelScore:
+    def score(self, logits: torch.Tensor, gold_labels: Dict[str, torch.Tensor]) -> ModelScore:
         pass
