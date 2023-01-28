@@ -212,11 +212,13 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         for fact in link_facts:
 
-            if fact.fact_type_id in self._relations and fact.from_fact in ner_facts and fact.to_fact in ner_facts:
-                source_fact_ind = fact_to_ind[fact.from_fact]
-                target_fact_ind = fact_to_ind[fact.to_fact]
+            if fact.fact_type_id not in self._relations or fact.from_fact not in ner_facts or fact.to_fact not in ner_facts:
+                continue
 
-                labels[source_fact_ind][target_fact_ind][self._rel_to_ind[fact.fact_type_id]] = True
-                labels[source_fact_ind][target_fact_ind][self._no_rel_ind] = False
+            source_fact_ind = fact_to_ind[fact.from_fact]
+            target_fact_ind = fact_to_ind[fact.to_fact]
+
+            labels[source_fact_ind][target_fact_ind][self._rel_to_ind[fact.fact_type_id]] = True
+            labels[source_fact_ind][target_fact_ind][self._no_rel_ind] = False
 
         return labels, labels_mask
