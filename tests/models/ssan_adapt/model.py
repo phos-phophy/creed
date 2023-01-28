@@ -39,14 +39,14 @@ class SSANAdaptModelTest(unittest.TestCase):
         ]])  # (1, 5, 5, 3)
 
         gold_labels = {
-            "labels": torch.tensor([
+            "labels": torch.tensor([[
                 [[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [0, 0, 1]],  # 4 0 1
                 [[0, 1, 0], [0, 1, 0], [0, 1, 0], [1, 0, 0], [1, 0, 0]],  # 2 3 0
                 [[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]],  # 5 0 0
                 [[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]],  # 5 0 0
                 [[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [0, 0, 1]]   # 4 0 1
-            ],
-                dtype=torch.float),  # (5, 5, 3)
+            ]],
+                dtype=torch.float),  # (1, 5, 5, 3)
             "labels_mask": torch.ones(5, 5)
         }
 
@@ -72,7 +72,7 @@ class SSANAdaptModelTest(unittest.TestCase):
             self.model.relations[2]: score_3
         }
 
-        model_score: ModelScore = self.model.score([logits], [gold_labels])
+        model_score: ModelScore = self.model.score(logits, gold_labels)
 
         self.assertEqual(gold_macro_score, model_score.macro_score)
         self.assertEqual(gold_micro_score, model_score.micro_score)
