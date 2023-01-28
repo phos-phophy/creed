@@ -53,7 +53,7 @@ There are several ways to deal with the changing types of entyties:
 
 The base classes are divided into 3 main categories:
 
-* **_Features_**:
+* **_Examples' features_**:
   * Span
   * FactType
   * AbstractFact
@@ -61,12 +61,15 @@ The base classes are divided into 3 main categories:
     * RelationFact
 * **_Examples_**:
   * Document
+  * PreparedDocument
   * AbstractDataset
-* **_Models_**:
+* **_Models and scores_**:
   * TorchModel
   * AbstractModel
+  * Score
+  * ModelScore
 
-### Features
+### Examples' features
 ```mermaid
 classDiagram
 direction TB
@@ -145,7 +148,7 @@ direction LR
    }
 ```
 
-### Models
+### Models and scores
 ```mermaid
 classDiagram
 direction TB
