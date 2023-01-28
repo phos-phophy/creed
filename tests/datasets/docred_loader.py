@@ -3,8 +3,7 @@ from pathlib import Path
 
 from src.abstract import Document, EntityFact, RelationFact, Span
 from src.datasets import DocREDLoader
-
-from .helpers import equal_docs
+from tests.helpers import equal_docs
 
 
 class DocREDLoaderTest(unittest.TestCase):
