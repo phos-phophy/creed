@@ -29,8 +29,9 @@ class SSANAdaptModel(AbstractModel):
 
         super(SSANAdaptModel, self).__init__(relations)
 
-        self._inner_model: AbstractSSANAdaptInnerModel = get_inner_model(inner_model_type=inner_model_type, entities=entities,
-                                                                         no_ent_ind=no_ent_ind, relations=relations, **kwargs)
+        self._inner_model: AbstractSSANAdaptInnerModel = get_inner_model(
+            inner_model_type=inner_model_type, entities=entities, no_ent_ind=no_ent_ind, relations=relations, **kwargs
+        )
 
         self._dist_ceil = self._inner_model.dist_ceil
         self._dist_emb_dim = self._dist_ceil * 2

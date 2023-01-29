@@ -69,6 +69,8 @@ The base classes are divided into 3 main categories:
   * Score
   * ModelScore
 
+And `Trainer` class that are responsible for model training and scoring 
+
 ### Examples' features
 ```mermaid
 classDiagram
@@ -167,7 +169,7 @@ direction TB
       +no_rel_ind: int
       +forward(self, *args, **kwargs) Any
       +compute_loss(self, *args, **kwargs) Any
-      +score(self, *args, **kwargs) ModelScore
+      +score(self, logits: torch.Tensor, gold_labels: Dict[str, torch.Tensor]) ModelScore
       +prepare_dataset(self, documents: Iterable[Document], extract_labels, evaluation)  AbstractDataset
    }
    
