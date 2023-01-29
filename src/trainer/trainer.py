@@ -46,10 +46,8 @@ class Trainer:
         writer = SummaryWriter(log_dir=self.params["log_dir"])
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.params["learning_rate"])
 
-        train_dataloader = DataLoader(train_dataset, batch_size=self.params["batch_size"], shuffle=True, collate_fn=collate_fn)
-        dev_dataloader = dev_dataset and DataLoader(dev_dataset, batch_size=self.params["batch_size"], shuffle=True, collate_fn=collate_fn)
-
         pbar = tqdm(range(self.params["epochs"]), total=self.params["epochs"])
+        train_dataloader = DataLoader(train_dataset, batch_size=self.params["batch_size"], shuffle=True, collate_fn=collate_fn)
 
         for epoch in pbar:
             epoch_loss = []
@@ -77,7 +75,7 @@ class Trainer:
             if dev_dataset is None:
                 pbar.set_description(f'loss / train: {avg_loss}')
             else:
-                dev_score = self.score_model(dataloader=dev_dataloader)
+                dev_score = self.score_model(dev_dataset)
                 pbar.set_description(f'macro / f_score / dev: {dev_score.macro_score.f_score}')
                 self.save_dev_results(writer, dev_score, epoch)
 
@@ -97,17 +95,15 @@ class Trainer:
             save_results(relation, relation_score)
 
     @torch.no_grad()
-    def score_model(self, dataset: AbstractDataset = None, dataloader: DataLoader = None) -> ModelScore:
-        if dataloader is None and dataset is None:
-            raise ValueError("")
-
-        dataloader = dataloader or DataLoader(dataset, batch_size=self.params["batch_size"], shuffle=True, collate_fn=collate_fn)
+    def score_model(self, dataset: AbstractDataset) -> ModelScore:
 
         predictions = []
         gold_labels = defaultdict(list)
 
         self.model.eval()
-        for tokens, labels in dataloader:
+        for tokens, labels in dataset:
+
+            tokens = {key: token.unsqueeze(0) for key, token in tokens.items()}
 
             if torch.cuda.is_available():
                 tokens = {key: token.cuda() for key, token in tokens.items()}
@@ -116,7 +112,7 @@ class Trainer:
             torch.cuda.empty_cache()
 
             predictions.append(logits)
-            for key, item in labels:
+            for key, item in labels.items():
                 gold_labels[key].append(item)
 
-        return self.model.score(torch.cat(predictions, dim=0), {key: torch.cat(item, dim=0) for key, item in gold_labels.items()})
+        return self.model.score(torch.cat(predictions, dim=0), {key: torch.stack(item, dim=0) for key, item in gold_labels.items()})
