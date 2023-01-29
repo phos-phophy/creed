@@ -1,42 +1,210 @@
 # Change of Relation Extraction's Entity Domain
 
-Relation extraction (RE) is the task of discovering entities' relations in weakly structured text. There is a lot of applications for RE such as knowledge-base population, question answering, summarization and so on. However, despite the increasing number of studies, there is a lack of cross-domain evaluation researches. The purpose of this work is to explore how models can be adapted to the changing types of entities.
+Relation extraction (RE) is the task of discovering entities' relations in weakly structured text. There is a lot of
+applications for RE such as knowledge-base population, question answering, summarization and so on. However, despite the
+increasing number of studies, there is a lack of cross-domain evaluation researches. The purpose of this work is to
+explore how models can be adapted to the changing types of entities.
 
 ## Motivation
+
 There are several ways to deal with the changing types of entyties:
+
 1) Ignoring (our baseline)
-   
+
     * Build a model that does not use any information of entities' types (and get lower results);
     * Or don't pay any attention to the domain shift during inference (and also get lower results).
-    
+
 2) Mapping
 
-   Another way is to build a mapping from the model's entity types to another domain ones. But there may be situations when it is impossible to build the unambiguous mapping (e.g. diagram below, where `PER` correspond only to `PERSON`, but `NUM` is `NUMBER` and `TIME` concurrently).
-   
-   In the case of the unambiguous mapping, we can try all suitable mappings, but if there are $N$  entities and $M$ candidates for each of them, $M^N$ model runs are required.
+   Another way is to build a mapping from the model's entity types to another domain ones. But there may be situations
+   when it is impossible to build the unambiguous mapping (e.g. diagram below, where `PER` correspond only to `PERSON`,
+   but `NUM` is `NUMBER` and `TIME` concurrently).
 
+   In the case of the unambiguous mapping, we can try all suitable mappings, but if there are $N$ entities and $M$
+   candidates for each of them, $M^N$ model runs are required.
 
 ```mermaid
 flowchart LR
-   subgraph a["Unknown domain"]
-      direction TB
-      subgraph b[" "]
-         direction LR
-         NUM1(["NUM"])-- Date of birth --->PER1(["PER"])
-         NUM2(["NUM"])-- Age --->PER2(["PER"])
-      end
-   end
-   subgraph c["Model's domain"]
-      direction TB
-      subgraph d[" "]
-         direction LR
-         time([TIME])-- Date of birth --->person1(["PERSON"])
-         number([NUMBER])-- Age --->person2(["PERSON"])
-      end
-   end
-   a ==> c 
+    subgraph a["New unknown domain"]
+        direction TB
+        subgraph b[" "]
+            direction LR
+            NUM1(["NUM"])-- Date of birth --->PER1(["PER"])
+            NUM2(["NUM"])-- Age --->PER2(["PER"])
+        end
+    end
+    subgraph c["Model's domain"]
+        direction TB
+        subgraph d[" "]
+            direction LR
+            time([TIME])-- Date of birth --->person1(["PERSON"])
+            number([NUMBER])-- Age --->person2(["PERSON"])
+        end
+    end
+    a ==> c 
 ```
 
 3) Adapting
 
-   We are going to develop training methods that instill domain shift resistance in RE models and allow them to adapt to new types of entities.
+   We are going to develop training methods that instill domain shift resistance in RE models and allow them to adapt to
+   new types of entities.
+
+## Class diagrams
+
+The base classes are divided into 3 main categories:
+
+* **_Examples' features_**:
+  * Span
+  * FactType
+  * AbstractFact
+    * EntityFact
+    * RelationFact
+* **_Examples_**:
+  * Document
+  * PreparedDocument
+  * AbstractDataset
+* **_Models and scores_**:
+  * TorchModel
+  * AbstractModel
+  * Score
+  * ModelScore
+
+And `Trainer` class that are responsible for model training and scoring 
+
+### Examples' features
+```mermaid
+classDiagram
+direction TB
+
+   AbstractFact <|-- EntityFact
+   AbstractFact <|-- RelationFact
+   EntityFact "1" --> "1..*" Span : is mentioned in
+   AbstractFact "1" --> "1" FactType : is a
+   
+   class Span:::rect{
+      +start_idx: int
+      +end_idx: int
+   }
+   
+   class FactType{
+      <<Enumeration>>
+      ENTITY
+      RELATION
+   }
+
+   class AbstractFact{
+      <<Abstract>> 
+      +fact_id: str
+      +fact_type_id: FactType
+      +fact_type: str
+   }
+   
+   class EntityFact{
+      +coreference_id: str
+      +mentions: Tuple[Span]
+      -validate_mentions(self)
+   }
+   
+   class RelationFact{
+      +from_fact: EntityFact
+      +to_fact: EntityFact
+   }
+```
+### Examples
+```mermaid
+classDiagram
+direction LR
+   class Document{
+      +doc_id: str
+      +text: str
+      +words: Tuple[Span]
+      +sentences: Tuple[Tuple[Span]]
+      +facts: Tuple[AbstractFact]
+      +coreference_chains: Dict[str, Tuple[EntityFact]]
+      #_build_coreference_chains(facts)
+      #_validate_span(text_span: Span, span: Span)
+      #_validate_spans(self, spans: Tuple[Span])
+      #_validate_facts(self)
+      +get_word(self, span: Span)
+      +add_relation_facts(self, facts: Iterable[RelationFact])
+   }
+   
+   class AbstractDataset{
+      <<Abstract>>
+      +evaluation: bool
+      +extract_labels: bool
+      +tokenizer
+      +max_len: int
+      #_documents: List[PreparedDocument]
+      #_setup_len_attr(self, tokenizer)
+      #_prepare_doc(self, doc: Document)
+      +__getitem__(self, idx: int) PreparedDocument
+   }
+   AbstractDataset ..> Document : processes
+   AbstractDataset "1" --o "1..*" PreparedDocument : stores
+   
+   class PreparedDocument{
+      <<NamedTuple>>
+      +features: Dict[str, torch.Tensor]
+      +labels: Optional[Dict[str, torch.Tensor]]
+   }
+```
+
+### Models and scores
+```mermaid
+classDiagram
+direction TB
+
+   class TorchModel{
+      <<Abstract>>
+      +device: torch.device
+      +save(self, path: Path, *, rewrite: bool)
+      +load(cls, path: Path) TorchModel
+   }
+   TorchModel <|-- AbstractModel
+   
+   class AbstractModel{
+      <<Abstract>>
+      +relations: Tuple[str]
+      +no_rel_ind: int
+      +forward(self, *args, **kwargs) Any
+      +compute_loss(self, *args, **kwargs) Any
+      +score(self, logits: torch.Tensor, gold_labels: Dict[str, torch.Tensor]) ModelScore
+      +prepare_dataset(self, documents: Iterable[Document], extract_labels, evaluation)  AbstractDataset
+   }
+   
+   class Score{
+      <<NamedTuple>>
+      +precision: float
+      +recall: float
+      +f_score: float
+   }
+   
+   class ModelScore{
+      <<NamedTuple>>
+      +relations_score: Dict[str, Score]
+      +macro_score: Score
+      +micro_score: Score
+   }
+   
+```
+
+## Run
+
+
+### Build docker container
+1) `cd path/to/project`
+2) `docker build ./`
+3) `docker run -it --gpus=all __image_id__ /bin/bash`
+
+### Dowload datasets
+
+`bash scripts/dowload_datasets.sh`
+
+### Start training
+
+`bash scripts/run_train.sh -c path/to/config -v __gpu_id__`
+
+or
+
+`bash scripts/run_train_large.sh -c path/to/config -v __gpu_id__ -l __limit__`

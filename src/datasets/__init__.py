@@ -1,5 +1,7 @@
-from .docred_converter import DocREDConverter
+from .configure import get_loader
+from .docred_loader import DocREDLoader
 
 __all__ = [
-    "DocREDConverter"
+    "DocREDLoader",
+    "get_loader"
 ]
