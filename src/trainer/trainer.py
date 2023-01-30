@@ -35,7 +35,7 @@ class Trainer:
         self.params = config["trainer"]
 
         if "load_path" in config["model"]:
-            self.model: AbstractModel = AbstractModel.load(config["model"]["load_path"])
+            self.model: AbstractModel = AbstractModel.load(Path(config["model"]["load_path"]))
         else:
             self.model: AbstractModel = get_model(**config["model"])
 
