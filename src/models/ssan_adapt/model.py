@@ -57,6 +57,8 @@ class SSANAdaptModel(AbstractModel):
             self,
             dist_ids=None,  # (bs, max_ent, max_ent)
             ent_mask=None,  # (bs, max_ent, len)
+            labels=None,
+            labels_mask=None,
             **kwargs
     ) -> Any:
 
@@ -84,12 +86,15 @@ class SSANAdaptModel(AbstractModel):
         # get prediction  (without function activation)
         logits: torch.Tensor = self._bili(h_entity, t_entity)  # (bs, max_ent, max_ent, num_links)
 
+        if labels:
+            return self._compute_loss(logits, labels, labels_mask), torch.sigmoid(logits)
+
         return logits
 
     def prepare_dataset(self, document: Iterable[Document], extract_labels=False, evaluation=False) -> AbstractDataset:
         return self._inner_model.prepare_dataset(document, extract_labels, evaluation)
 
-    def compute_loss(
+    def _compute_loss(
             self,
             logits: torch.Tensor,  # (bs, max_ent, max_ent, num_link)
             labels: torch.Tensor,  # (bs, max_ent, max_ent, num_link)

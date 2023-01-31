@@ -45,9 +45,5 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def compute_loss(self, *args, **kwargs) -> Any:
-        pass
-
-    @abstractmethod
     def score(self, logits: torch.Tensor, gold_labels: Dict[str, torch.Tensor]) -> ModelScore:
         pass
