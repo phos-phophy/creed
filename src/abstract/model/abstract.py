@@ -1,21 +1,9 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Iterable, NamedTuple
+from typing import Any, Iterable
 
 from src.abstract.example import AbstractDataset, Document
 
 from .torch_model import TorchModel
-
-
-class Score(NamedTuple):
-    precision: float
-    recall: float
-    f_score: float
-
-
-class ModelScore(NamedTuple):
-    relations_score: Dict[str, Score]
-    macro_score: Score
-    micro_score: Score
 
 
 class AbstractModel(TorchModel, metaclass=ABCMeta):

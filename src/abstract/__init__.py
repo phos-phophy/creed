@@ -1,7 +1,7 @@
 from .example import AbstractDataset, Document, PreparedDocument, get_tokenizer_len_attribute
 from .feature import AbstractFact, EntityFact, FactType, RelationFact, Span
 from .loader import AbstractLoader
-from .model import AbstractModel, ModelScore, Score, TorchModel
+from .model import AbstractModel, TorchModel
 
 __all__ = [
     "AbstractDataset",
@@ -11,10 +11,8 @@ __all__ = [
     "Document",
     "EntityFact",
     "FactType",
-    "ModelScore",
     "RelationFact",
     "PreparedDocument",
-    "Score",
     "Span",
     "TorchModel",
     "get_tokenizer_len_attribute"

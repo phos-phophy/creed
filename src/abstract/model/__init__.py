@@ -1,9 +1,7 @@
-from .abstract import AbstractModel, ModelScore, Score
+from .abstract import AbstractModel
 from .torch_model import TorchModel
 
 __all__ = [
     "AbstractModel",
-    "ModelScore",
-    "Score",
     "TorchModel"
 ]
