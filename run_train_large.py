@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 from src.datasets import get_loader
-from src.trainer import Trainer
+from src.trainer import ModelManager
 
 
 if __name__ == '__main__':
@@ -27,13 +27,11 @@ if __name__ == '__main__':
 
     train_documents = list(loader.load(Path(train_path)))
 
-    trainer = Trainer(config)
+    trainer = ModelManager(config)
 
     total_len = len(train_documents)
 
     for i in np.arange(total_len, step=size_limit):
         print(f"Trained on {i} examples out of {total_len}")
         train_docs = train_documents[i: i + size_limit]
-
-        train_dataset = trainer.model.prepare_dataset(train_docs, True, False)
-        trainer.train_model(train_dataset, rewrite=True)
+        trainer.train_model(train_docs, rewrite=True)

@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from src.datasets import get_loader
-from src.trainer import Trainer
+from src.trainer import ModelManager
 
 
 if __name__ == '__main__':
@@ -25,9 +25,5 @@ if __name__ == '__main__':
     train_documents = list(loader.load(Path(train_path)))
     dev_documents = list(loader.load(Path(dev_path))) if dev_path else None
 
-    trainer = Trainer(config)
-
-    train_dataset = trainer.model.prepare_dataset(train_documents, True, False)
-    dev_dataset = trainer.model.prepare_dataset(dev_documents, True, True) if dev_documents else None
-
-    trainer.train_model(train_dataset, dev_dataset)
+    trainer = ModelManager(config)
+    trainer.train_model(train_documents, dev_documents)

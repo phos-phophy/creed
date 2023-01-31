@@ -1,25 +1,25 @@
-from collections import defaultdict
+from functools import partial
 from pathlib import Path
+from typing import List
 
-import numpy as np
 import torch
-from src.abstract import AbstractDataset, AbstractModel, ModelScore, Score, collate_fn
+from src.abstract import AbstractDataset, AbstractModel, Document
 from src.models import get_model
-from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
+from transformers import Trainer, TrainingArguments
+
+from .collate import collate_fn
+from .score import score_model
 
 
-class Trainer:
+class ModelManager:
     def __init__(self, config):
         """
         Config's structure:
         {
-            "trainer": {
-                "log_dir": str
-                "learning_rate": float
-                "batch_size": int
-                "epochs": int
+            "training_arguments": {
+                ...
+                See https://huggingface.co/docs/transformers/v4.23.1/en/main_classes/trainer#transformers.TrainingArguments
+                ...
             },
 
             "save_path": str,
@@ -32,87 +32,32 @@ class Trainer:
         """
 
         self.save_path = Path(config["save_path"])
-        self.params = config["trainer"]
+        self.train_params = TrainingArguments(**config["training_arguments"])
+        self.model_config = config["model"]
 
-        if "load_path" in config["model"]:
-            self.model: AbstractModel = AbstractModel.load(Path(config["model"]["load_path"]))
-        else:
-            self.model: AbstractModel = get_model(**config["model"])
+    def init_model(self) -> AbstractModel:
+        load_path = self.model_config.get("load_path", None)
+        model = AbstractModel.load(Path(load_path)) if load_path else get_model(**self.model_config)
 
-        if torch.cuda.is_available():
-            self.model = self.model.cuda()
+        return model.cuda() if torch.cuda.is_available() else model
 
-    def train_model(self, train_dataset: AbstractDataset, dev_dataset: AbstractDataset = None, rewrite: bool = False):
-        writer = SummaryWriter(log_dir=self.params["log_dir"])
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.params["learning_rate"])
+    def train_model(self, train_documents: List[Document], dev_documents: List[Document] = None, rewrite: bool = False):
 
-        pbar = tqdm(range(self.params["epochs"]), total=self.params["epochs"])
-        train_dataloader = DataLoader(train_dataset, batch_size=self.params["batch_size"], shuffle=True, collate_fn=collate_fn)
+        model = self.init_model()
 
-        for epoch in pbar:
-            epoch_loss = []
-            self.model.train()
+        train_dataset: AbstractDataset = model.prepare_dataset(train_documents, True, False)
+        dev_dataset: AbstractDataset = model.prepare_dataset(dev_documents, True, True) if dev_documents else None
 
-            for i, (tokens, labels) in enumerate(train_dataloader):
+        trainer = Trainer(
+            model=model,
+            args=self.train_params,
+            train_dataset=train_dataset,
+            eval_dataset=dev_dataset,
+            data_collator=collate_fn,
+            compute_metrics=partial(score_model, relations=model.relations)
+        )
 
-                if torch.cuda.is_available():
-                    tokens = {key: token.cuda() for key, token in tokens.items()}
-                    labels = {key: label.cuda() for key, label in labels.items()}
+        trainer.train()
 
-                self.model.zero_grad()
-                logits = self.model(**tokens)
-                loss = self.model.compute_loss(logits=logits, **labels)
-                loss.backward()
-                optimizer.step()
-                torch.cuda.empty_cache()
-
-                epoch_loss.append(loss.item())
-                writer.add_scalar("batch loss / train", loss.item(), epoch * len(train_dataloader) + i)
-
-            avg_loss = np.mean(epoch_loss)
-            writer.add_scalar("loss / train", avg_loss, epoch)
-
-            if dev_dataset is None:
-                pbar.set_description(f'loss / train: {avg_loss}')
-            else:
-                dev_score = self.score_model(dev_dataset)
-                pbar.set_description(f'macro / f_score / dev: {dev_score.macro_score.f_score}')
-                self.save_dev_results(writer, dev_score, epoch)
-
-        self.model.save(path=self.save_path, rewrite=rewrite)
-
-    @staticmethod
-    def save_dev_results(writer: SummaryWriter, dev_score: ModelScore, epoch: int):
-        def save_results(score_type: str, score: Score):
-            writer.add_scalar(f"{score_type} / f_score / dev", score.f_score, epoch)
-            writer.add_scalar(f"{score_type} / recall / dev", score.recall, epoch)
-            writer.add_scalar(f"{score_type} / precision / dev", score.precision, epoch)
-
-        save_results("macro", dev_score.macro_score)
-        save_results("micro", dev_score.micro_score)
-
-        for relation, relation_score in dev_score.relations_score.items():
-            save_results(relation, relation_score)
-
-    @torch.no_grad()
-    def score_model(self, dataset: AbstractDataset) -> ModelScore:
-
-        predictions = []
-        gold_labels = defaultdict(list)
-
-        self.model.eval()
-        for tokens, labels in dataset:
-
-            tokens = {key: token.unsqueeze(0) for key, token in tokens.items()}
-
-            if torch.cuda.is_available():
-                tokens = {key: token.cuda() for key, token in tokens.items()}
-
-            logits: torch.Tensor = self.model(**tokens).detach().cpu()
-            torch.cuda.empty_cache()
-
-            predictions.append(logits)
-            for key, item in labels.items():
-                gold_labels[key].append(item)
-
-        return self.model.score(torch.cat(predictions, dim=0), {key: torch.stack(item, dim=0) for key, item in gold_labels.items()})
+        model.save(path=self.save_path, rewrite=rewrite)
+        return model

@@ -1,5 +1,5 @@
-from .trainer import Trainer
+from .trainer import ModelManager
 
 __all__ = [
-    "Trainer"
+    "ModelManager"
 ]
