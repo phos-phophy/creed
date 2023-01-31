@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, Iterable, NamedTuple
 
 import torch
-from src.abstract.examples import AbstractDataset, Document
+from src.abstract.example import AbstractDataset, Document
 
 from .torch_model import TorchModel
 

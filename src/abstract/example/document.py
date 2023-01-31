@@ -2,7 +2,7 @@ from collections import defaultdict
 from itertools import chain
 from typing import Dict, Iterable, Tuple
 
-from src.abstract.features import (
+from src.abstract.feature import (
     AbstractFact,
     EntityFact,
     FactType,
