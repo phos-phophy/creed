@@ -63,6 +63,25 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         for key, shape in expected_shapes["labels"].items():
             self.assertEqual(shape, document.labels[key].shape)
 
+    def test_consistency(self):
+
+        dist_base = 2
+        dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
+
+        documents = list(self.loader.load(Path("tests/datasets/data/docred.json")))
+        document1 = BaseSSANAdaptDataset(
+            documents, self.tokenizer, True, True, self.entities, self.relations, self.no_ent_ind, self.no_rel_ind, dist_base, dist_ceil
+        )[0]
+        document2 = BaseSSANAdaptDataset(
+            documents, self.tokenizer, True, True, self.entities, self.relations, self.no_ent_ind, self.no_rel_ind, dist_base, dist_ceil
+        )[0]
+
+        for key, tensor in document1.features.items():
+            equal_tensors(self, tensor.long(), document2.features[key].long())
+
+        for key, tensor in document1.labels.items():
+            equal_tensors(self, tensor.long(), document2.labels[key].long())
+
     def test_labels(self):
 
         dist_base = 2
