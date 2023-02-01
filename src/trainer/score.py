@@ -6,6 +6,13 @@ from sklearn.metrics import precision_recall_fscore_support
 from transformers import EvalPrediction
 
 
+MACRO = "MACRO"
+MICRO = "MICRO"
+PRECISION = "precision"
+RECALL = "recall"
+F_SCORE = "f_score"
+
+
 def score_model(eval_prediction: EvalPrediction, relations: Sequence[str]) -> Dict[str, float]:
 
     labels: torch.Tensor = torch.from_numpy(eval_prediction.label_ids[0])  # (N, max_ent, max_ent, num_link)
@@ -33,25 +40,24 @@ def score_model(eval_prediction: EvalPrediction, relations: Sequence[str]) -> Di
 
     score = dict()
 
+    def save_results(precision, recall, f_score, name):
+        score[f"{name} / {PRECISION}"] = precision
+        score[f"{name} / {RECALL}"] = recall
+        score[f"{name} / {F_SCORE}"] = f_score
+
     pr, r, f, _ = precision_recall_fscore_support(
         pair_labels_ind, pair_logits_ind, average=None, labels=list(range(num_links)), zero_division=0
     )
 
     for ind, relation_name in enumerate(relations):
-        score[f"{relation_name} / precision"] = pr[ind]
-        score[f"{relation_name} / recall"] = r[ind]
-        score[f"{relation_name} / f_score"] = f[ind]
+        save_results(pr[ind], r[ind], f[ind], relation_name)
 
-    score["macro / precision"] = np.mean(pr).item()
-    score["macro / recall"] = np.mean(r).item()
-    score["macro / f_score"] = np.mean(f).item()
+    save_results(np.mean(pr).item(), np.mean(r).item(), np.mean(f).item(), MACRO)
 
     pr, r, f, _ = precision_recall_fscore_support(
         pair_labels_ind, pair_logits_ind, average='micro', labels=list(range(num_links)), zero_division=0
     )
 
-    score["micro / precision"] = pr
-    score["micro / recall"] = r
-    score["micro / f_score"] = f
+    save_results(pr, r, f, MICRO)
 
     return score
