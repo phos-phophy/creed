@@ -1,4 +1,4 @@
-from .trainer import ModelManager
+from .manager import ModelManager
 
 __all__ = [
     "ModelManager"

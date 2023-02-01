@@ -3,7 +3,7 @@ from typing import Tuple
 
 import numpy as np
 import torch
-from src.trainer.score import F_SCORE, MACRO, MICRO, PRECISION, RECALL, score_model
+from src.manager.score import F_SCORE, MACRO, MICRO, PRECISION, RECALL, score_model
 from transformers import EvalPrediction
 
 
