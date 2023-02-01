@@ -102,7 +102,7 @@
   },
   "train_path": "etc/datasets/docred/train_distant.json",
   "save_path": "etc/models/ssan_adapt/docred/distant_base/model.pkl",
-  "trainer": {
+  "training_arguments": {
     "logging_dir": "etc/models/ssan_adapt/docred/distant_base/log_dir",
     "output_dir": "etc/models/ssan_adapt/docred/distant_base/output",
     "num_train_epochs": 10,
