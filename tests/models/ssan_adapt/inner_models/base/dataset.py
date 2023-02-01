@@ -113,3 +113,21 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
 
         equal_tensors(self, expected_labels.long(), document.labels["labels"].long())
         equal_tensors(self, expected_labels_mask.long(), document.labels["labels_mask"].long())
+
+    def test_labels_num(self):
+        dist_base = 2
+        dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
+
+        documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
+
+        gold_document = documents[0]
+        pred_document = BaseSSANAdaptDataset(
+            documents, self.tokenizer, True, True, self.entities, self.relations, self.no_ent_ind, self.no_rel_ind, dist_base, dist_ceil
+        )[0]
+
+        gold_labels_num = len(list(filter(lambda fact: isinstance(fact, RelationFact), gold_document.facts)))
+
+        labels: torch.Tensor = pred_document.labels["labels"]
+        pred_labels_num = torch.sum(labels[:, :, 1:], dtype=torch.int).item()  # without NO_REL link
+
+        self.assertEqual(gold_labels_num, pred_labels_num)
