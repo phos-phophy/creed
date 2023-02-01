@@ -103,10 +103,17 @@
   "train_path": "etc/datasets/docred/train_distant.json",
   "save_path": "etc/models/ssan_adapt/docred/distant_base/model.pkl",
   "trainer": {
-    "log_dir": "etc/models/ssan_adapt/docred/distant_base/log_dir",
-    "learning_rate": 0.00002,
-    "batch_size": 5,
-    "epochs": 10
+    "logging_dir": "etc/models/ssan_adapt/docred/distant_base/log_dir",
+    "output_dir": "etc/models/ssan_adapt/docred/distant_base/output",
+    "num_train_epochs": 10,
+    "evaluation_strategy": "no",
+    "save_total_limit": 1,
+    "do_train": true,
+    "do_eval": false,
+    "no_cuda": false,
+    "per_device_train_batch_size": 5,
+    "warmup_steps": 200,
+    "learning_rate": 0.00002
   },
   "model": {
     "model_type": "ssan_adapt",
@@ -114,7 +121,7 @@
     "pretrained_model_path": "bert-base-uncased",
     "tokenizer_path": "bert-base-uncased",
     "hidden_dim": 256,
-    "dropout": 0.1,
+    "dropout": 0.2,
     "dist_base": 2,
     "no_ent_ind": 0,
     "entities": [
