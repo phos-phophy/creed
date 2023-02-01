@@ -2,12 +2,45 @@ import unittest
 from pathlib import Path
 
 from src.abstract import Document, EntityFact, RelationFact, Span
-from src.datasets import DocREDLoader
+from src.loader import DocREDLoader
 from tests.helpers import equal_docs
 
 
 class DocREDLoaderTest(unittest.TestCase):
     def setUp(self) -> None:
+        self.loader = DocREDLoader()
+
+    def test(self):
+
+        example = {
+            "title": "title",
+            "sents": [["First", "sentence", '.'], ["End", "of", "text", '!']],
+            "vertexSet": [
+                [{"pos": [0, 1], "sent_id": 0, "type": "NUM", "name": "First"}],
+                [{"pos": [0, 1], "sent_id": 1, "type": "POS", "name": "End"}],
+                [{"pos": [2, 3], "sent_id": 1, "type": "MISC", "name": "text"}]
+            ],
+            "labels": [{"r": "P17", "h": 1, "t": 2, "evidence": []}]
+        }
+
+        doc_id = example["title"]
+        text = ' '.join(word for sent in example["sents"] for word in sent)
+        sentences = [[Span(0, 5), Span(6, 14), Span(15, 16)],
+                     [Span(17, 20), Span(21, 23), Span(24, 28), Span(29, 30)]]
+        facts = [
+            EntityFact("", "NUM", "0", (Span(0, 5),)),
+            EntityFact("", "POS", "1", (Span(17, 20),)),
+            EntityFact("", "MISC", "2", (Span(24, 28),))
+        ]
+        facts.extend([RelationFact("", "P17", facts[1], facts[2])])
+
+        gold_doc = Document(doc_id, text, sentences, tuple(facts))
+
+        document = self.loader._build_document(example)
+        equal_docs(self, gold_doc, document)
+
+    def test_real_example(self):
+
         doc_id = "Skai TV"
         text = "Skai TV is a Greek free - to - air television network based in Piraeus . It is part of the Skai Group , one of the " \
                "largest media groups in the country . It was relaunched in its present form on 1st of April 2006 in the Athens " \
@@ -86,9 +119,7 @@ class DocREDLoaderTest(unittest.TestCase):
             RelationFact("", "P17", facts[2], facts[12])
         ])
 
-        self.document = Document(doc_id, text, sentences, tuple(facts))
-        self.loader = DocREDLoader()
+        gold_document = Document(doc_id, text, sentences, tuple(facts))
 
-    def test(self):
-        document = list(self.loader.load(Path("tests/datasets/data/docred.json")))[0]
-        equal_docs(self, self.document, document)
+        document = list(self.loader.load(Path("tests/loader/data/docred.json")))[0]
+        equal_docs(self, gold_document, document)

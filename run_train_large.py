@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 import numpy as np
-from src.datasets import get_loader
+from src.loader import get_loader
 from src.manager import ModelManager
 
 

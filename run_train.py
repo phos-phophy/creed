@@ -2,7 +2,7 @@ import argparse
 import json
 from pathlib import Path
 
-from src.datasets import get_loader
+from src.loader import get_loader
 from src.manager import ModelManager
 
 

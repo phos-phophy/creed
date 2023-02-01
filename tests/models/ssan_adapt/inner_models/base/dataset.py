@@ -5,7 +5,7 @@ from pathlib import Path
 
 import torch
 from src.abstract import EntityFact, RelationFact, get_tokenizer_len_attribute
-from src.datasets import DocREDLoader
+from src.loader import DocREDLoader
 from src.models.ssan_adapt.inner_models.base.dataset import BaseSSANAdaptDataset
 from tests.helpers import equal_tensors
 from transformers import AutoTokenizer
@@ -37,7 +37,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
-        documents = list(self.loader.load(Path("tests/datasets/data/docred.json")))
+        documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
         document = BaseSSANAdaptDataset(
             documents, self.tokenizer, True, True, self.entities, self.relations, self.no_ent_ind, self.no_rel_ind, dist_base, dist_ceil
         )[0]
@@ -68,7 +68,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
-        documents = list(self.loader.load(Path("tests/datasets/data/docred.json")))
+        documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
         document1 = BaseSSANAdaptDataset(
             documents, self.tokenizer, True, True, self.entities, self.relations, self.no_ent_ind, self.no_rel_ind, dist_base, dist_ceil
         )[0]
@@ -87,7 +87,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
-        documents = list(self.loader.load(Path("tests/datasets/data/docred.json")))
+        documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
         document = BaseSSANAdaptDataset(
             documents, self.tokenizer, True, True, self.entities, self.relations, self.no_ent_ind, self.no_rel_ind, dist_base, dist_ceil
         )[0]

@@ -2,7 +2,7 @@ from src.abstract import AbstractLoader
 
 
 def get_docred_loader():
-    from .docred_loader import DocREDLoader
+    from .docred import DocREDLoader
     return DocREDLoader
 
 
