@@ -10,7 +10,7 @@ class DocREDLoaderTest(unittest.TestCase):
     def setUp(self) -> None:
         self.loader = DocREDLoader()
 
-    def test(self):
+    def test_simple_example(self):
 
         example = {
             "title": "title",
@@ -33,6 +33,36 @@ class DocREDLoaderTest(unittest.TestCase):
             EntityFact("", "MISC", "2", (Span(24, 28),))
         ]
         facts.extend([RelationFact("", "P17", facts[1], facts[2])])
+
+        gold_doc = Document(doc_id, text, sentences, tuple(facts))
+
+        document = self.loader._build_document(example)
+        equal_docs(self, gold_doc, document)
+
+    def test_labels(self):
+
+        example = {
+            "title": "title",
+            "sents": [["First", "sentence", '.'], ["End", "of", "text", '!']],
+            "vertexSet": [
+                [{"pos": [0, 1], "sent_id": 0, "type": "NUM", "name": "First"}],
+                [{"pos": [0, 1], "sent_id": 1, "type": "POS", "name": "End"}],
+                [{"pos": [1, 2], "sent_id": 1, "type": "MISC", "name": "of"}, {"pos": [2, 3], "sent_id": 1, "type": "MISC", "name": "text"}]
+            ],
+            "labels": [{"r": "P17", "h": 1, "t": 2, "evidence": []}]
+        }
+
+        doc_id = example["title"]
+        text = ' '.join(word for sent in example["sents"] for word in sent)
+        sentences = [[Span(0, 5), Span(6, 14), Span(15, 16)],
+                     [Span(17, 20), Span(21, 23), Span(24, 28), Span(29, 30)]]
+        facts = [
+            EntityFact("", "NUM", "0", (Span(0, 5),)),
+            EntityFact("", "POS", "1", (Span(17, 20),)),
+            EntityFact("", "MISC", "2", (Span(21, 23),)),
+            EntityFact("", "MISC", "2", (Span(24, 28),))
+        ]
+        facts.extend([RelationFact("", "P17", facts[1], facts[2]), RelationFact("", "P17", facts[1], facts[3])])
 
         gold_doc = Document(doc_id, text, sentences, tuple(facts))
 

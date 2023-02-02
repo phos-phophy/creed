@@ -70,8 +70,9 @@ class SSANAdaptModel(AbstractModel):
         entity: torch.Tensor = torch.matmul(ent_mask.float(), tokens)  # (bs, max_ent, r_dim)
 
         # define head and tail entities (head --|relation|--> tail)
-        h_entity: torch.Tensor = entity[:, :, None, :].repeat(1, 1, ent_mask.size()[1], 1)  # (bs, max_ent, max_ent, r_dim)
-        t_entity: torch.Tensor = entity[:, None, :, :].repeat(1, ent_mask.size()[1], 1, 1)  # (bs, max_ent, max_ent, r_dim)
+        max_ent = ent_mask.size()[1]
+        h_entity: torch.Tensor = entity[:, :, None, :].repeat(1, 1, max_ent, 1)  # (bs, max_ent, max_ent, r_dim)
+        t_entity: torch.Tensor = entity[:, None, :, :].repeat(1, max_ent, 1, 1)  # (bs, max_ent, max_ent, r_dim)
 
         # add information about the relative distance between entities
         dist_ids += self._dist_ceil
