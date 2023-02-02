@@ -63,13 +63,11 @@ The base classes are divided into 3 main categories:
   * Document
   * PreparedDocument
   * AbstractDataset
-* **_Models and scores_**:
+* **_Models_**:
   * TorchModel
   * AbstractModel
-  * Score
-  * ModelScore
 
-And `Trainer` class that are responsible for model training and scoring 
+And `ModelManager` class that are responsible for model training and scoring 
 
 ### Examples' features
 ```mermaid
@@ -150,7 +148,7 @@ direction LR
    }
 ```
 
-### Models and scores
+### Models
 ```mermaid
 classDiagram
 direction TB
@@ -168,23 +166,7 @@ direction TB
       +relations: Tuple[str]
       +no_rel_ind: int
       +forward(self, *args, **kwargs) Any
-      +compute_loss(self, *args, **kwargs) Any
-      +score(self, logits: torch.Tensor, gold_labels: Dict[str, torch.Tensor]) ModelScore
       +prepare_dataset(self, documents: Iterable[Document], extract_labels, evaluation)  AbstractDataset
-   }
-   
-   class Score{
-      <<NamedTuple>>
-      +precision: float
-      +recall: float
-      +f_score: float
-   }
-   
-   class ModelScore{
-      <<NamedTuple>>
-      +relations_score: Dict[str, Score]
-      +macro_score: Score
-      +micro_score: Score
    }
    
 ```
