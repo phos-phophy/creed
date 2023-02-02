@@ -20,7 +20,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
             dist_base: int,
             dist_ceil: int
     ):
-        self._max_ent = self._count_max_ent(documents) if extract_labels and evaluation else None
+        self._max_ent = self._count_max_ent(documents) if (extract_labels and evaluation) else None
         self._entities = tuple(entities)
         self._relations = tuple(relations)
         self._ent_to_ind = {ent: ind for ind, ent in enumerate(entities)}
@@ -147,7 +147,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
                 for token_ind in span_to_token_ind.get(span, []):
                     ner_ids[token_ind] = fact_type
                     ent_mask[ind][token_ind] = True
-                    token_to_coreference_id[ind] = fact.coreference_id
+                    token_to_coreference_id[token_ind] = fact.coreference_id
 
         return ner_ids, ent_mask, token_to_coreference_id
 
@@ -165,12 +165,12 @@ class BaseSSANAdaptDataset(AbstractDataset):
                 if token_to_sentence_ind[i] != token_to_sentence_ind[j]:
                     if token_to_coreference_id[i] == token_to_coreference_id[j]:
                         struct_mask[0][i][j] = True  # inter-coref
-                    elif token_to_coreference_id[j] != 0:
+                    elif token_to_coreference_id[j] != self._usual_token:
                         struct_mask[1][i][j] = True  # inter-relate
                 else:
                     if token_to_coreference_id[i] == token_to_coreference_id[j]:
                         struct_mask[2][i][j] = True  # intra-coref
-                    elif token_to_coreference_id[j] != 0:
+                    elif token_to_coreference_id[j] != self._usual_token:
                         struct_mask[3][i][j] = True  # intra-relate
                     else:
                         struct_mask[4][i][j] = True  # intra-NA
