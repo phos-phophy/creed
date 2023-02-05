@@ -20,6 +20,13 @@ Example from DocRED consists of the following fields:
     * h: int - head (source) entity index in vertexSet
     * t: int - tail (target) entity index in vertexSet
     * evidence:  List[int] - ???
+
+WARNING: There are erroneous examples in DocRED in which the same coreference etities (from vertexSet) are used several times.
+But there are also documents with the nested entities that are ok (in the case they have identical types)
+
+E.g. in the ../docred/train_annotated.json file there are:
+* 'Nabacalis' document where second fact is embedded in the first one - it's ok
+* 'Eclipse Aviation' document where 9th set of coreference facts contains 2 identical facts (about Vern Raburn) - it is not ok
 """
 
 
@@ -77,9 +84,9 @@ class DocREDLoader(AbstractLoader):
             return EntityFact("", desc["type"], str(coref_id), tuple(mention_spans))
 
         for ind, coref_facts_desc in enumerate(vertex_set):
-            coref_facts = [build_entity_fact(fact_desc, ind) for fact_desc in coref_facts_desc]
+            coref_facts = {build_entity_fact(fact_desc, ind) for fact_desc in coref_facts_desc}
             facts.extend(coref_facts)
-            coref_chains.append(coref_facts)
+            coref_chains.append(list(coref_facts))
 
         return facts, coref_chains
 
