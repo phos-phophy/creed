@@ -108,7 +108,9 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         for ind, sentence in enumerate(document.sentences):
             for span in sentence:
-                tokens = self.tokenizer(document.get_word(span))['input_ids'][1:-1]  # crop tokens of the beginning and the end
+                tokens = self.tokenizer.encode(document.get_word(span))[1:-1]  # crop tokens of the beginning and the end
+
+                tokens = tokens if len(tokens) else [self.tokenizer.unk_token_id]
 
                 input_ids.extend(tokens)
                 token_to_sentence_ind += [ind] * len(tokens)
