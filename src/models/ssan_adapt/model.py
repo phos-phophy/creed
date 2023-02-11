@@ -41,8 +41,6 @@ class SSANAdaptModel(AbstractModel):
         self._rel_dist_embeddings = torch.nn.Embedding(self._dist_emb_dim, self._dist_emb_dim, padding_idx=self._dist_ceil)
         self._bili = torch.nn.Bilinear(hidden_dim + self._dist_emb_dim, hidden_dim + self._dist_emb_dim, len(self.relations))
 
-        self._loss = torch.nn.BCEWithLogitsLoss(reduction="none")
-
     @property
     def entities(self):
         return self._entities
@@ -105,7 +103,9 @@ class SSANAdaptModel(AbstractModel):
         pair_logits = logits.view(-1, num_links)  # (bs * max_ent ^ 2, num_link)
         pair_labels = labels.float().view(-1, num_links)  # (bs * max_ent ^ 2, num_link)
 
-        pair_loss = self._loss(pair_logits, pair_labels)  # (bs * max_ent ^ 2, num_link)
+        loss_function = torch.nn.BCEWithLogitsLoss(reduction="none")
+
+        pair_loss = loss_function(pair_logits, pair_labels)  # (bs * max_ent ^ 2, num_link)
         mean_pair_loss = pair_loss.view(-1, max_ent, max_ent, num_links)  # (bs, max_ent, max_ent, num_link)
         mean_pair_loss = torch.mean(mean_pair_loss, dim=-1)  # (bs, max_ent, max_ent)
 
