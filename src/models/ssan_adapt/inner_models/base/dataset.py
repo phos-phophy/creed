@@ -149,6 +149,11 @@ class BaseSSANAdaptDataset(AbstractDataset):
                     ent_mask[ind][token_ind] = True
                     token_to_coreference_id[token_ind] = fact.coreference_id
 
+        # normalization
+        tmp = ent_mask.sum(dim=-1)
+        tmp = tmp + (tmp == 0)
+        ent_mask = ent_mask / tmp.unsqueeze(1)
+
         return ner_ids, ent_mask, token_to_coreference_id
 
     def _extract_struct_matrix(self, token_to_sentence_ind: List[int], token_to_coreference_id: List[str]):
