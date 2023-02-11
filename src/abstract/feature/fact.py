@@ -47,7 +47,10 @@ class EntityFact(AbstractFact):
         self._validate_mentions()
 
     def __eq__(self, other: 'AbstractFact'):
-        return isinstance(other, EntityFact) and super().__eq__(other) and self.mentions == other.mentions
+        return isinstance(other, EntityFact) \
+            and super().__eq__(other) \
+            and self.coreference_id == other.coreference_id \
+            and self.mentions == other.mentions
 
     def __hash__(self):
         return hash((self.fact_id, self.fact_type_id, self.fact_type, self.mentions))
