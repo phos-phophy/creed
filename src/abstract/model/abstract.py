@@ -24,9 +24,17 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
         return self._no_rel_ind
 
     @abstractmethod
-    def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> AbstractDataset:
+    def prepare_dataset(self, documents: Iterable[Document], extract_labels: bool = False, evaluation: bool = False) -> AbstractDataset:
         pass
 
     @abstractmethod
     def forward(self, *args, **kwargs) -> Any:
+        pass
+
+    @abstractmethod
+    def evaluate(self, documents: Iterable[Document], output_path: str = None) -> Any:
+        pass
+
+    @abstractmethod
+    def predict(self, documents: Iterable[Document], output_path: str = None) -> Any:
         pass
