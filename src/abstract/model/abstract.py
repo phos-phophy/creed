@@ -30,11 +30,3 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
     @abstractmethod
     def forward(self, *args, **kwargs) -> Any:
         pass
-
-    @abstractmethod
-    def evaluate(self, documents: Iterable[Document], output_path: str = None) -> Any:
-        pass
-
-    @abstractmethod
-    def predict(self, documents: Iterable[Document], output_path: str = None) -> Any:
-        pass
