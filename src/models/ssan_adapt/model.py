@@ -1,6 +1,7 @@
 import json
+from itertools import takewhile
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, List
 
 import numpy as np
 import torch
@@ -40,7 +41,7 @@ class SSANAdaptModel(AbstractWrapperModel):
         self._rel_dist_embeddings = torch.nn.Embedding(self._dist_emb_dim, self._dist_emb_dim, padding_idx=self._dist_ceil)
         self._bili = torch.nn.Bilinear(hidden_dim + self._dist_emb_dim, hidden_dim + self._dist_emb_dim, len(self.relations))
 
-        self.threshold = None
+        self._threshold = None
 
     @property
     def entities(self):
@@ -111,12 +112,12 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         return mean_batch_loss
 
-    def evaluate(self, dataloader: DataLoader, output_path: str = None):
+    def _get_preds(self, dataloader: DataLoader, desc: str):
 
         loss = 0.0
         preds, ent_masks, labels_ids = [], [], []
 
-        for _, inputs in tqdm(dataloader, desc='Evaluating'):
+        for _, inputs in tqdm(dataloader, desc=desc):
             self.model.eval()
             inputs = {key: token.cuda() for key, token in inputs.items()} if torch.cuda.is_available() else inputs
 
@@ -126,34 +127,30 @@ class SSANAdaptModel(AbstractWrapperModel):
 
             preds.append(logits.detach().cpu().numpy())
             ent_masks.append(inputs["ent_mask"].detach().cpu().numpy())
-            labels_ids.append(inputs["labels"].detach().cpu().numpy())
+            labels_ids.append(inputs["labels"].detach().cpu().numpy() if "labels" in inputs else None)
 
         loss /= len(dataloader)
-        preds, ent_masks, labels_ids = np.vstack(preds), np.vstack(ent_masks), np.vstack(labels_ids)
+        preds = np.vstack(preds)  # (N, ent, ent, num_link)
+        ent_masks = np.vstack(ent_masks)  # (N, ent, len)
+        labels_ids = np.vstack(labels_ids)  # (N, ent, ent, num_link)
+
+        return loss, preds, ent_masks, labels_ids
+
+    def evaluate(self, dataloader: DataLoader, output_path: str = None):
+
+        loss, preds, ent_masks, labels_ids = self._get_preds(dataloader, 'Evaluating')
 
         total_labels = torch.sum(labels_ids[:, :, :, 1:]).item()
         output_preds = []
 
-        # pred: (ent, ent, num_link)
-        # ent_mask: (ent, len)
-        # labels: (ent, ent, num_link)
-        for (pred, ent_mask, labels) in zip(preds, ent_masks, labels_ids):
+        for pred, ent_mask, labels in zip(preds, ent_masks, labels_ids):
 
             # don't take into account <NO_REL> relation
-            gold_relations = [(h, t, r + 1) for (h, t, r) in zip(*np.where(labels[:, :, 1:]))]
+            gold_relations = [(h, t, r + 1) for h, t, r in zip(*np.where(labels[:, :, 1:]))]
 
-            for h in range(pred.shape[0]):
-                for t in range(pred.shape[0]):
-
-                    if h == t or np.all(ent_mask[h] == 0) or np.all(ent_mask[t] == 0):
-                        continue
-
-                    for predicate_id, logit in enumerate(pred[h][t]):
-                        if predicate_id == 0:
-                            continue
-
-                        is_right_relation = (h, t, predicate_id) in gold_relations
-                        output_preds.append((is_right_relation, logit, h, t, predicate_id))
+            for h, t, logit, predicate_id in iter_over_pred(pred, ent_mask):
+                is_right_relation = (h, t, predicate_id) in gold_relations
+                output_preds.append((is_right_relation, logit, h, t, predicate_id))
 
         output_preds.sort(key=lambda x: x[1], reverse=True)
 
@@ -180,11 +177,44 @@ class SSANAdaptModel(AbstractWrapperModel):
             "threshold": threshold
         }
 
-        with open(Path(output_path), 'r') as file:
+        with open(Path(output_path), 'w') as file:
             json.dump(result, file)
 
-        self.threshold = threshold
+        self._threshold = threshold
 
-    def predict(self, dataloader: DataLoader, output_path: str = None):
+    def predict(self, documents: List[Document], dataloader: DataLoader, output_path: str = None):
         if self.threshold is None:
             raise ValueError("First calculate the threshold value using evaluate function (on dev dataset)!")
+
+        loss, preds, ent_masks, _ = self._get_preds(dataloader, 'Predicting')
+
+        output_preds = []
+
+        for document, pred, ent_mask in zip(documents, preds, ent_masks):
+            for h, t, logit, predicate_id in iter_over_pred(pred, ent_mask):
+                output_preds.append((logit, document.doc_id, h, t, self.relations[predicate_id]))
+
+        output_preds.sort(key=lambda x: x[0], reverse=True)
+
+        def build_docred_pred(d_pred: tuple):
+            return {"title": d_pred[1], "h_idx": d_pred[2], "t_idx": d_pred[3], "r": d_pred[4], "evidence": []}
+
+        threshold_preds = takewhile(lambda t_pred: t_pred[0] >= self._threshold, output_preds)
+        docred_preds = [build_docred_pred(pred) for pred in threshold_preds]
+
+        with open(Path(output_path), 'w') as file:
+            json.dump(docred_preds, file)
+
+
+def iter_over_pred(pred, ent_mask):
+    for h in range(pred.shape[0]):
+        for t in range(pred.shape[0]):
+
+            if h == t or np.all(ent_mask[h] == 0) or np.all(ent_mask[t] == 0):
+                continue
+
+            for predicate_id, logit in enumerate(pred[h][t]):
+                if predicate_id == 0:
+                    continue
+
+                yield h, t, logit, predicate_id
