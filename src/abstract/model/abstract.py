@@ -5,6 +5,9 @@ from src.abstract.example import AbstractDataset, Document
 
 from .torch_model import TorchModel
 
+NO_REL_IND = 0
+NO_ENT_IND = 0
+
 
 class AbstractModel(TorchModel, metaclass=ABCMeta):
 
@@ -13,15 +16,9 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
 
         self._relations = tuple(['NO_REL'] + list(relations))
 
-        self._no_rel_ind = 0
-
     @property
     def relations(self):
         return self._relations
-
-    @property
-    def no_rel_ind(self):
-        return self._no_rel_ind
 
     @abstractmethod
     def prepare_dataset(self, documents: Iterable[Document], extract_labels: bool = False, evaluation: bool = False) -> AbstractDataset:

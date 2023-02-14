@@ -13,7 +13,6 @@ class AbstractSSANAdaptInnerModel(AbstractModel, metaclass=ABCMeta):
             self,
             entities: Iterable[str],
             relations: Iterable[str],
-            no_ent_ind: int,
             pretrained_model_path: str,
             tokenizer_path: str,
             dist_base: int
@@ -21,7 +20,6 @@ class AbstractSSANAdaptInnerModel(AbstractModel, metaclass=ABCMeta):
         super(AbstractSSANAdaptInnerModel, self).__init__(relations)
 
         self._entities = tuple(entities)
-        self._no_ent_ind = no_ent_ind
 
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
         self._model = AutoModel.from_pretrained(pretrained_model_path)
@@ -36,10 +34,6 @@ class AbstractSSANAdaptInnerModel(AbstractModel, metaclass=ABCMeta):
     @property
     def entities(self):
         return self._entities
-
-    @property
-    def no_ent_ind(self):
-        return self._no_ent_ind
 
     @property
     def dist_ceil(self):

@@ -3,10 +3,13 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, Document, EntityFact, FactType, PreparedDocument, RelationFact, Span, get_tokenizer_len_attribute
+from src.abstract import AbstractDataset, Document, EntityFact, FactType, NO_REL_IND, PreparedDocument, RelationFact, Span, \
+    get_tokenizer_len_attribute
 
 
 class BaseSSANAdaptDataset(AbstractDataset):
+    USUAL_TOKEN = "<USUAL_TOKEN>"
+
     def __init__(
             self,
             documents: Iterable[Document],
@@ -15,8 +18,6 @@ class BaseSSANAdaptDataset(AbstractDataset):
             evaluation: bool,
             entities: Iterable[str],
             relations: Iterable[str],
-            no_ent_ind: int,
-            no_rel_ind: int,
             dist_base: int,
             dist_ceil: int
     ):
@@ -25,11 +26,6 @@ class BaseSSANAdaptDataset(AbstractDataset):
         self._relations = tuple(relations)
         self._ent_to_ind = {ent: ind for ind, ent in enumerate(entities)}
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}
-
-        self._no_ent_ind = no_ent_ind
-        self._no_rel_ind = no_rel_ind
-
-        self._usual_token = "<USUAL_TOKEN>"
 
         self._len_attr = get_tokenizer_len_attribute(tokenizer)
         self._distance_encoder = self._init_distance_encoder(tokenizer.__getattribute__(self._len_attr))
@@ -46,6 +42,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
     def _count_max_ent(documents: Iterable[Document]):
         def get_ner_count(doc: Document):
             return len(list(filter(lambda fact: fact.fact_type is FactType.ENTITY, doc.facts)))
+
         doc2ner_count = [1] + list(map(lambda document: get_ner_count(document), documents))
         return max(doc2ner_count)
 
@@ -140,7 +137,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         ner_ids = torch.zeros(seq_len, dtype=torch.long)
         ent_mask = torch.zeros(max_ent, seq_len, dtype=torch.bool)
-        token_to_coreference_id = [self._usual_token] * seq_len
+        token_to_coreference_id = [type(self).USUAL_TOKEN] * seq_len
 
         for ind, fact in enumerate(ner_facts):
             fact_type = self._ent_to_ind[fact.fact_type_id]
@@ -158,13 +155,14 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         return ner_ids, ent_mask, token_to_coreference_id
 
-    def _extract_struct_matrix(self, token_to_sentence_ind: List[int], token_to_coreference_id: List[str]):
+    @classmethod
+    def _extract_struct_matrix(cls, token_to_sentence_ind: List[int], token_to_coreference_id: List[str]):
         length = len(token_to_sentence_ind)
         struct_mask = torch.zeros((5, length, length), dtype=torch.bool)
 
         for i in range(length):
 
-            if token_to_coreference_id[i] == self._usual_token:
+            if token_to_coreference_id[i] == cls.USUAL_TOKEN:
                 continue
 
             for j in range(length):
@@ -172,12 +170,12 @@ class BaseSSANAdaptDataset(AbstractDataset):
                 if token_to_sentence_ind[i] != token_to_sentence_ind[j]:
                     if token_to_coreference_id[i] == token_to_coreference_id[j]:
                         struct_mask[0][i][j] = True  # inter-coref
-                    elif token_to_coreference_id[j] != self._usual_token:
+                    elif token_to_coreference_id[j] != cls.USUAL_TOKEN:
                         struct_mask[1][i][j] = True  # inter-relate
                 else:
                     if token_to_coreference_id[i] == token_to_coreference_id[j]:
                         struct_mask[2][i][j] = True  # intra-coref
-                    elif token_to_coreference_id[j] != self._usual_token:
+                    elif token_to_coreference_id[j] != cls.USUAL_TOKEN:
                         struct_mask[3][i][j] = True  # intra-relate
                     else:
                         struct_mask[4][i][j] = True  # intra-NA
@@ -212,7 +210,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         fact_to_ind = {fact: ind for ind, fact in enumerate(ner_facts)}
 
         labels = torch.zeros(max_ent, max_ent, len(self._relations), dtype=torch.bool)
-        labels[:len(ner_facts), :len(ner_facts), self._no_rel_ind] = True
+        labels[:len(ner_facts), :len(ner_facts), NO_REL_IND] = True
 
         labels_mask = torch.zeros(max_ent, max_ent, dtype=torch.bool)
         labels_mask[:len(ner_facts), :len(ner_facts)] = True
@@ -226,6 +224,6 @@ class BaseSSANAdaptDataset(AbstractDataset):
             target_fact_ind = fact_to_ind[fact.to_fact]
 
             labels[source_fact_ind][target_fact_ind][self._rel_to_ind[fact.fact_type_id]] = True
-            labels[source_fact_ind][target_fact_ind][self._no_rel_ind] = False
+            labels[source_fact_ind][target_fact_ind][NO_REL_IND] = False
 
         return labels, labels_mask

@@ -3,8 +3,9 @@ from pathlib import Path
 from typing import List, NamedTuple
 
 import torch
-from src.abstract import AbstractDataset, AbstractModel, Document
+from src.abstract import AbstractDataset, AbstractWrapperModel, Document
 from src.models import get_model
+from torch.utils.data import DataLoader
 from transformers import Trainer, TrainingArguments
 
 from .collate import collate_fn
@@ -29,7 +30,7 @@ class ModelManager:
         """
 
         load_path = config.get("load_path", None)
-        model = AbstractModel.load(Path(load_path)) if load_path else get_model(**config)
+        model = AbstractWrapperModel.load(Path(load_path)) if load_path else get_model(**config)
         self.model = model.cuda() if torch.cuda.is_available() else model
 
     def train(
@@ -39,7 +40,6 @@ class ModelManager:
             dev_documents: List[Document] = None,
             rewrite: bool = False
     ):
-
         save_path = Path(config.save_path)
         train_params = TrainingArguments(**config.training_arguments)
         compute_metrics = config.compute_metrics
@@ -62,10 +62,12 @@ class ModelManager:
 
         self.model.save(path=save_path, rewrite=rewrite)
 
-    def evaluate(self, documents: List[Document], output_path: str = None):
+    def evaluate(self, documents: List[Document], batch_size: int = 5, output_path: str = None):
         dataset: AbstractDataset = self.model.prepare_dataset(documents, True, True)
-        self.model.evaluate(dataset, output_path)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+        self.model.evaluate(dataloader, output_path)
 
-    def predict(self, documents: List[Document], output_path: str = None):
+    def predict(self, documents: List[Document], batch_size: int = 5, output_path: str = None):
         dataset: AbstractDataset = self.model.prepare_dataset(documents, False, False)
-        self.model.predict(dataset, output_path)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+        self.model.predict(dataloader, output_path)
