@@ -1,8 +1,9 @@
 from abc import ABCMeta, abstractmethod
+from typing import List
 
 from torch.utils.data import DataLoader
 
-from .abstract import AbstractModel
+from .abstract import AbstractModel, Document
 
 
 class AbstractWrapperModel(AbstractModel, metaclass=ABCMeta):
@@ -12,5 +13,5 @@ class AbstractWrapperModel(AbstractModel, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def predict(self, dataloader: DataLoader, output_path: str = None) -> None:
+    def predict(self, documents: List[Document], dataloader: DataLoader, output_path: str = None) -> None:
         pass

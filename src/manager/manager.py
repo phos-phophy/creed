@@ -70,4 +70,4 @@ class ModelManager:
     def predict(self, documents: List[Document], batch_size: int = 5, output_path: str = None):
         dataset: AbstractDataset = self.model.prepare_dataset(documents, False, False)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
-        self.model.predict(dataloader, output_path)
+        self.model.predict(documents, dataloader, output_path)
