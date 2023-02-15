@@ -24,7 +24,8 @@ class AbstractFact(metaclass=ABCMeta):
         return hash((self.name, self.type_id, self.fact_class))
 
     def __repr__(self):
-        return f"{self.name=}, {self.type_id=}, {self.fact_class=}"
+        name, type_id, fact_class = self.name, self.type_id, self.fact_class
+        return f"AbstractFact({name=}, {type_id=}, {fact_class=})"
 
     @property
     def name(self):
@@ -36,14 +37,14 @@ class AbstractFact(metaclass=ABCMeta):
 
     @property
     def fact_class(self):
-        return self.fact_class
+        return self._fact_class
 
 
 class EntityFact(AbstractFact):
     def __init__(self, name: str, type_id: str, coreference_id: str, mentions: Tuple[Span, ...]):
         super().__init__(name, type_id, FactClass.ENTITY)
         self._coreference_id = coreference_id
-        self._mentions = mentions
+        self._mentions = tuple(set(mentions))
         self._validate_mentions()
 
     def __eq__(self, other: 'AbstractFact'):
@@ -56,8 +57,8 @@ class EntityFact(AbstractFact):
         return hash((self.name, self.type_id, self.fact_class, self.mentions))
 
     def __repr__(self):
-        mentions_num = len(self.mentions)
-        return super().__repr__() + f"{self.coreference_id=}, {mentions_num=}"
+        name, type_id, fact_class, coreference_id, mentions = self.name, self.type_id, self.fact_class, self.coreference_id, self.mentions
+        return f"EntityFact({name=}, {type_id=}, {fact_class=}, {coreference_id=}, {mentions=})"
 
     @property
     def coreference_id(self):
@@ -87,9 +88,9 @@ class RelationFact(AbstractFact):
         return hash((self.name, self.type_id, self.fact_class, self.from_fact, self.to_fact))
 
     def __repr__(self):
-        from_fact_type_id = self.from_fact.type_id
-        to_fact_type_id = self.to_fact.type_id
-        return super().__repr__() + f"{from_fact_type_id=}, {to_fact_type_id=}"
+        name, type_id, fact_class = self.name, self.type_id, self.fact_class
+        from_fact_type_id, to_fact_type_id = self.from_fact.type_id, self.to_fact.type_id
+        return f"RelationFact({name=}, {type_id=}, {fact_class=}, {from_fact_type_id=}, {to_fact_type_id=})"
 
     @property
     def from_fact(self):

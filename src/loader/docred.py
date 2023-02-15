@@ -76,7 +76,7 @@ class DocREDLoader(AbstractLoader):
         def build_entity_fact(facts_desc: List[dict], coref_id: int):
             type_id = facts_desc[0]["type"]
             mention_spans = chain.from_iterable(get_mention_spans(mention) for mention in facts_desc)
-            return EntityFact("", type_id, str(coref_id), tuple(mention_spans))
+            return EntityFact("", type_id, str(coref_id), tuple(set(mention_spans)))
 
         return [build_entity_fact(coref_facts_desc, ind) for ind, coref_facts_desc in enumerate(vertex_set)]
 
