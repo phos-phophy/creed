@@ -44,8 +44,7 @@ class EntityFact(AbstractFact):
     def __init__(self, name: str, type_id: str, coreference_id: str, mentions: Tuple[Span, ...]):
         super().__init__(name, type_id, FactClass.ENTITY)
         self._coreference_id = coreference_id
-        self._mentions = tuple(set(mentions))
-        self._validate_mentions()
+        self._mentions = frozenset(mentions)
 
     def __eq__(self, other: 'AbstractFact'):
         return isinstance(other, EntityFact) \
@@ -67,10 +66,6 @@ class EntityFact(AbstractFact):
     @property
     def mentions(self):
         return self._mentions
-
-    def _validate_mentions(self):
-        if len(self.mentions) != len(set(self.mentions)):
-            raise ValueError(f"EntityFact ({self}) has identical mentions!")
 
 
 class RelationFact(AbstractFact):
