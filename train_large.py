@@ -65,4 +65,4 @@ if __name__ == '__main__':
     if output_pred_path and output_pred_path:
         manager.predict(dev_documents, output_pred_path, training_config.training_arguments.get("per_device_eval_batch_size", 5))
 
-    manager.save(save_path, True)
+    manager.save(save_path, rewrite=True)
