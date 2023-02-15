@@ -92,7 +92,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
             documents, self.tokenizer, True, True, self.entities, self.relations, self.no_ent_ind, self.no_rel_ind, dist_base, dist_ceil
         )[0]
 
-        rel_facts = tuple(filter(lambda fact: isinstance(fact, RelationFact) and fact.fact_type_id in self.relations, documents[0].facts))
+        rel_facts = tuple(filter(lambda fact: isinstance(fact, RelationFact) and fact.type_id in self.relations, documents[0].facts))
         ent_facts = tuple(filter(lambda fact: isinstance(fact, EntityFact), documents[0].facts))
         fact_to_ind = {fact: ind for ind, fact in enumerate(ent_facts)}
 
@@ -108,7 +108,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
             source_fact_ind = fact_to_ind[rel_fact.from_fact]
             target_fact_ind = fact_to_ind[rel_fact.to_fact]
 
-            expected_labels[source_fact_ind][target_fact_ind][self.rel_to_ind[rel_fact.fact_type_id]] = True
+            expected_labels[source_fact_ind][target_fact_ind][self.rel_to_ind[rel_fact.type_id]] = True
             expected_labels[source_fact_ind][target_fact_ind][self.no_rel_ind] = False
 
         equal_tensors(self, expected_labels.long(), document.labels["labels"].long())

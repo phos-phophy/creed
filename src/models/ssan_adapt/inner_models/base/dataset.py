@@ -140,7 +140,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         token_to_coreference_id = [type(self).USUAL_TOKEN] * seq_len
 
         for ind, fact in enumerate(ner_facts):
-            fact_type = self._ent_to_ind[fact.fact_type_id]
+            fact_type = self._ent_to_ind[fact.type_id]
 
             for span in fact.mentions:
                 for token_ind in span_to_token_ind.get(span, []):
@@ -217,13 +217,13 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         for fact in link_facts:
 
-            if fact.fact_type_id not in self._relations or fact.from_fact not in ner_facts or fact.to_fact not in ner_facts:
+            if fact.type_id not in self._relations or fact.from_fact not in ner_facts or fact.to_fact not in ner_facts:
                 continue
 
             source_fact_ind = fact_to_ind[fact.from_fact]
             target_fact_ind = fact_to_ind[fact.to_fact]
 
-            labels[source_fact_ind][target_fact_ind][self._rel_to_ind[fact.fact_type_id]] = True
+            labels[source_fact_ind][target_fact_ind][self._rel_to_ind[fact.type_id]] = True
             labels[source_fact_ind][target_fact_ind][NO_REL_IND] = False
 
         return labels, labels_mask
