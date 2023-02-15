@@ -2,6 +2,7 @@ import argparse
 import json
 from pathlib import Path
 
+import numpy as np
 from src.loader import get_loader
 from src.manager import InitConfig, ModelManager, TrainingConfig
 
@@ -18,16 +19,19 @@ from src.manager import InitConfig, ModelManager, TrainingConfig
 }
 """
 
+
 if __name__ == '__main__':
 
     # parse arguments and load main config
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config_path", type=str, metavar="<path to config>", required=True)
+    parser.add_argument("-l", "--size_limit", type=int, metavar="<document number limit>", required=True)
 
     arguments = parser.parse_args()
     config_path = arguments.config_path
+    size_limit = arguments.size_limit
 
-    with Path(arguments.config_path).open('r') as file:
+    with Path(config_path).open('r') as file:
         config: dict = json.load(file)
 
     # parse main config
@@ -46,8 +50,14 @@ if __name__ == '__main__':
     dev_documents = list(loader.load(Path(dev_dataset_path))) if dev_dataset_path else None
 
     # train, evaluate, predict and save
+    total_len = len(train_documents)
     manager = ModelManager(init_config)
-    manager.train(training_config, train_documents, dev_documents)
+
+    for i in np.arange(total_len, step=size_limit):
+        print(f"Trained on {i} examples out of {total_len}")
+        train_docs = train_documents[i: i + size_limit]
+        manager.train(training_config, train_docs, dev_documents)
+        manager.save(save_path, rewrite=True)
 
     if dev_documents and output_eval_path:
         manager.evaluate(dev_documents, output_eval_path, training_config.training_arguments.get("per_device_eval_batch_size", 5))
@@ -55,4 +65,4 @@ if __name__ == '__main__':
     if output_pred_path and output_pred_path:
         manager.predict(dev_documents, output_pred_path, training_config.training_arguments.get("per_device_eval_batch_size", 5))
 
-    manager.save(save_path, False)
+    manager.save(save_path, True)
