@@ -12,6 +12,11 @@ from .collate import collate_fn
 from .score import score_model
 
 
+class InitConfig(NamedTuple):
+    load_path: str = None
+    model_params: dict = {}  # load_path and model_params are mutually exclusive
+
+
 # See https://huggingface.co/docs/transformers/v4.23.1/en/main_classes/trainer#transformers.TrainingArguments
 class TrainingConfig(NamedTuple):
     training_arguments: dict
@@ -19,17 +24,9 @@ class TrainingConfig(NamedTuple):
 
 
 class ModelManager:
-    def __init__(self, config):
-        """
-        Config's structure:
-        {
-            "load_path": str (optional if other parameters are not specified)
-            ...
-        }
-        """
-
-        load_path = config.get("load_path", None)
-        model = AbstractWrapperModel.load(Path(load_path)) if load_path else get_model(**config)
+    def __init__(self, config: InitConfig):
+        load_path = config.load_path
+        model = AbstractWrapperModel.load(Path(load_path)) if load_path else get_model(**config.model_params)
         self.model = model.cuda() if torch.cuda.is_available() else model
 
     def train(
