@@ -177,12 +177,13 @@ class SSANAdaptModel(AbstractWrapperModel):
             "threshold": threshold
         }
 
-        with open(Path(output_path), 'w') as file:
-            json.dump(result, file)
+        if output_path:
+            with open(Path(output_path), 'w') as file:
+                json.dump(result, file)
 
         self._threshold = threshold
 
-    def predict(self, documents: List[Document], dataloader: DataLoader, output_path: str = None):
+    def predict(self, documents: List[Document], dataloader: DataLoader, output_path: str):
         if self.threshold is None:
             raise ValueError("First calculate the threshold value using evaluate function (on dev dataset)!")
 

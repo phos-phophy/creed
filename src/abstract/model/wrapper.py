@@ -13,5 +13,5 @@ class AbstractWrapperModel(AbstractModel, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def predict(self, documents: List[Document], dataloader: DataLoader, output_path: str = None) -> None:
+    def predict(self, documents: List[Document], dataloader: DataLoader, output_path: str) -> None:
         pass

@@ -54,12 +54,12 @@ class ModelManager:
 
         trainer.train()
 
-    def evaluate(self, documents: List[Document], batch_size: int = 5, output_path: str = None):
+    def evaluate(self, documents: List[Document], output_path: str = None, batch_size: int = 5):
         dataset: AbstractDataset = self.model.prepare_dataset(documents, True, True)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
         self.model.evaluate(dataloader, output_path)
 
-    def predict(self, documents: List[Document], batch_size: int = 5, output_path: str = None):
+    def predict(self, documents: List[Document], output_path: str, batch_size: int = 5):
         dataset: AbstractDataset = self.model.prepare_dataset(documents, False, False)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
         self.model.predict(documents, dataloader, output_path)
