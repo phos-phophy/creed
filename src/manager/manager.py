@@ -15,7 +15,6 @@ from .score import score_model
 # See https://huggingface.co/docs/transformers/v4.23.1/en/main_classes/trainer#transformers.TrainingArguments
 class TrainingConfig(NamedTuple):
     training_arguments: dict
-    save_path: str
     compute_metrics: bool = True
 
 
@@ -37,10 +36,8 @@ class ModelManager:
             self,
             config: TrainingConfig,
             train_documents: List[Document],
-            dev_documents: List[Document] = None,
-            rewrite: bool = False
+            dev_documents: List[Document] = None
     ):
-        save_path = Path(config.save_path)
         train_params = TrainingArguments(**config.training_arguments)
         compute_metrics = config.compute_metrics
 
@@ -60,8 +57,6 @@ class ModelManager:
 
         trainer.train()
 
-        self.model.save(path=save_path, rewrite=rewrite)
-
     def evaluate(self, documents: List[Document], batch_size: int = 5, output_path: str = None):
         dataset: AbstractDataset = self.model.prepare_dataset(documents, True, True)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
@@ -71,3 +66,6 @@ class ModelManager:
         dataset: AbstractDataset = self.model.prepare_dataset(documents, False, False)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
         self.model.predict(documents, dataloader, output_path)
+
+    def save(self, save_path: Path, rewrite: bool = False):
+        self.model.save(path=save_path, rewrite=rewrite)

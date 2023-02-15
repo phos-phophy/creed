@@ -1,5 +1,6 @@
-from .manager import ModelManager
+from .manager import ModelManager, TrainingConfig
 
 __all__ = [
-    "ModelManager"
+    "ModelManager",
+    "TrainingConfig"
 ]
