@@ -41,7 +41,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
     @staticmethod
     def _count_max_ent(documents: Iterable[Document]):
         def get_ner_count(doc: Document):
-            return len(list(filter(lambda fact: fact.fact_type is FactClass.ENTITY, doc.facts)))
+            return len(list(filter(lambda fact: fact.fact_class is FactClass.ENTITY, doc.facts)))
 
         doc2ner_count = [1] + list(map(lambda document: get_ner_count(document), documents))
         return max(doc2ner_count)
@@ -124,12 +124,12 @@ class BaseSSANAdaptDataset(AbstractDataset):
         return torch.tensor(input_ids, dtype=torch.long), token_to_sentence_ind, span_to_token_ind
 
     def _extract_ner_facts(self, document: Document, span_to_token_ind: Dict[Span, List[int]]):
-        ent_facts = tuple(filter(lambda fact: fact.fact_type is FactClass.ENTITY, document.facts))
+        ent_facts = tuple(filter(lambda fact: fact.fact_class is FactClass.ENTITY, document.facts))
         return tuple(filter(lambda fact: any((span in span_to_token_ind) for span in fact.mentions), ent_facts))[:self.max_ent]
 
     @staticmethod
     def _extract_link_facts(document: Document):
-        return tuple(filter(lambda fact: fact.fact_type is FactClass.RELATION, document.facts))
+        return tuple(filter(lambda fact: fact.fact_class is FactClass.RELATION, document.facts))
 
     def _extract_ner_types(self, ner_facts: Tuple[EntityFact, ...], span_to_token_ind: Dict[Span, List[int]], seq_len: int):
 
@@ -140,11 +140,11 @@ class BaseSSANAdaptDataset(AbstractDataset):
         token_to_coreference_id = [type(self).USUAL_TOKEN] * seq_len
 
         for ind, fact in enumerate(ner_facts):
-            fact_type = self._ent_to_ind[fact.type_id]
+            ind_of_type_id = self._ent_to_ind[fact.type_id]
 
             for span in fact.mentions:
                 for token_ind in span_to_token_ind.get(span, []):
-                    ner_ids[token_ind] = fact_type
+                    ner_ids[token_ind] = ind_of_type_id
                     ent_mask[ind][token_ind] = True
                     token_to_coreference_id[token_ind] = fact.coreference_id
 

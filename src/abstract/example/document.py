@@ -53,7 +53,7 @@ class Document:
     def _build_coreference_chains(facts) -> Dict[str, Tuple[EntityFact]]:
         coreference_chains = defaultdict(list)
         for fact in facts:
-            if fact.fact_type is FactClass.ENTITY:
+            if fact.fact_class is FactClass.ENTITY:
                 fact: EntityFact
                 coreference_chains[fact.coreference_id].append(fact)
         return {key: tuple(item) for key, item in coreference_chains.items()}

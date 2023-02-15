@@ -94,7 +94,7 @@ direction TB
       <<Abstract>> 
       +name: str
       +type_id: str
-      +fact_type: FactClass
+      +fact_class: FactClass
    }
    
    class EntityFact{
