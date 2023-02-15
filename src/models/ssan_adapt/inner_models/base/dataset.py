@@ -70,6 +70,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         if len(document.sentences) == 0:
             return
 
+        # 1st stage: tokenize text, get input_ids and extract entity facts
         # token_to_sentence - map token_ind to the corresponding sentence_ind
         # span_to_token_ind - map span to the corresponding token_ind's
         input_ids, token_to_sentence_ind, span_to_token_ind = self._tokenize(document)
@@ -78,20 +79,30 @@ class BaseSSANAdaptDataset(AbstractDataset):
         if len(ner_facts) == 0:
             return
 
+        # 2nd stage: get ner_ids and ent_mask
         # token_to_coreference_id - map token_ind to the coreference_id of the corresponding fact
         ner_ids, ent_mask, token_to_coreference_id = self._extract_ner_types(ner_facts, span_to_token_ind, input_ids.shape[0])
+
+        # 3rd stage: get dist_ids and struct_matrix
+        dist_ids = self._extract_dist_ids(ent_mask)
+        struct_matrix = self._extract_struct_matrix(token_to_sentence_ind, token_to_coreference_id)
+
+        # 4th stage: normalize ent_mask
+        tmp = ent_mask.sum(dim=-1)
+        tmp = tmp + (tmp == 0)
+        ent_mask = ent_mask / tmp.unsqueeze(1)
 
         features = {
             "input_ids": input_ids,
             "ner_ids": ner_ids,
-            "dist_ids": self._extract_dist_ids(ent_mask),
+            "dist_ids": dist_ids,
             "ent_mask": ent_mask,
             "attention_mask": torch.ones(input_ids.shape[0]).bool(),
-            "struct_matrix": self._extract_struct_matrix(token_to_sentence_ind, token_to_coreference_id),
+            "struct_matrix": struct_matrix,
         }
 
         labels = None
-        if self.extract_labels:
+        if self.extract_labels:  # 5th stage: extract labels and labels_mask
             labels_tensors, labels_mask = self._extract_labels_and_mask(ner_facts, self._extract_link_facts(document))
             labels = {"labels": labels_tensors, "labels_mask": labels_mask}
 
@@ -147,11 +158,6 @@ class BaseSSANAdaptDataset(AbstractDataset):
                     ner_ids[token_ind] = ind_of_type_id
                     ent_mask[ind][token_ind] = True
                     token_to_coreference_id[token_ind] = fact.coreference_id
-
-        # normalization
-        tmp = ent_mask.sum(dim=-1)
-        tmp = tmp + (tmp == 0)
-        ent_mask = ent_mask / tmp.unsqueeze(1)
 
         return ner_ids, ent_mask, token_to_coreference_id
 
