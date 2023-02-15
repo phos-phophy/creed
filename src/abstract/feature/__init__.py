@@ -1,10 +1,10 @@
-from .fact import AbstractFact, EntityFact, FactType, RelationFact
+from .fact import AbstractFact, EntityFact, FactClass, RelationFact
 from .span import Span
 
 __all__ = [
     "AbstractFact",
     "EntityFact",
-    "FactType",
+    "FactClass",
     "RelationFact",
     "Span"
 ]

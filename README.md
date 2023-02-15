@@ -55,7 +55,7 @@ The base classes are divided into 3 main categories:
 
 * **_Examples' features_**:
   * Span
-  * FactType
+  * FactClass
   * AbstractFact
     * EntityFact
     * RelationFact
@@ -77,14 +77,14 @@ direction TB
    AbstractFact <|-- EntityFact
    AbstractFact <|-- RelationFact
    EntityFact "1" --> "1..*" Span : is mentioned in
-   AbstractFact "1" --> "1" FactType : is a
+   AbstractFact "1" --> "1" FactClass : is a
    
    class Span:::rect{
       +start_idx: int
       +end_idx: int
    }
    
-   class FactType{
+   class FactClass{
       <<Enumeration>>
       ENTITY
       RELATION
@@ -93,7 +93,7 @@ direction TB
    class AbstractFact{
       <<Abstract>> 
       +fact_id: str
-      +fact_type_id: FactType
+      +fact_type_id: FactClass
       +fact_type: str
    }
    

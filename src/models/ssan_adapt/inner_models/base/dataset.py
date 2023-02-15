@@ -3,7 +3,7 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, Document, EntityFact, FactType, NO_REL_IND, PreparedDocument, RelationFact, Span, \
+from src.abstract import AbstractDataset, Document, EntityFact, FactClass, NO_REL_IND, PreparedDocument, RelationFact, Span, \
     get_tokenizer_len_attribute
 
 
@@ -41,7 +41,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
     @staticmethod
     def _count_max_ent(documents: Iterable[Document]):
         def get_ner_count(doc: Document):
-            return len(list(filter(lambda fact: fact.fact_type is FactType.ENTITY, doc.facts)))
+            return len(list(filter(lambda fact: fact.fact_type is FactClass.ENTITY, doc.facts)))
 
         doc2ner_count = [1] + list(map(lambda document: get_ner_count(document), documents))
         return max(doc2ner_count)
@@ -124,12 +124,12 @@ class BaseSSANAdaptDataset(AbstractDataset):
         return torch.tensor(input_ids, dtype=torch.long), token_to_sentence_ind, span_to_token_ind
 
     def _extract_ner_facts(self, document: Document, span_to_token_ind: Dict[Span, List[int]]):
-        ent_facts = tuple(filter(lambda fact: fact.fact_type is FactType.ENTITY, document.facts))
+        ent_facts = tuple(filter(lambda fact: fact.fact_type is FactClass.ENTITY, document.facts))
         return tuple(filter(lambda fact: any((span in span_to_token_ind) for span in fact.mentions), ent_facts))[:self.max_ent]
 
     @staticmethod
     def _extract_link_facts(document: Document):
-        return tuple(filter(lambda fact: fact.fact_type is FactType.RELATION, document.facts))
+        return tuple(filter(lambda fact: fact.fact_type is FactClass.RELATION, document.facts))
 
     def _extract_ner_types(self, ner_facts: Tuple[EntityFact, ...], span_to_token_ind: Dict[Span, List[int]], seq_len: int):
 

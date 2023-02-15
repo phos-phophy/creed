@@ -1,5 +1,5 @@
 from .example import AbstractDataset, Document, PreparedDocument, get_tokenizer_len_attribute
-from .feature import AbstractFact, EntityFact, FactType, RelationFact, Span
+from .feature import AbstractFact, EntityFact, FactClass, RelationFact, Span
 from .loader import AbstractLoader
 from .model import AbstractModel, AbstractWrapperModel, NO_ENT_IND, NO_REL_IND, TorchModel
 
@@ -11,7 +11,7 @@ __all__ = [
     "AbstractWrapperModel",
     "Document",
     "EntityFact",
-    "FactType",
+    "FactClass",
     "NO_ENT_IND",
     "NO_REL_IND",
     "RelationFact",
