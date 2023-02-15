@@ -92,9 +92,9 @@ direction TB
 
    class AbstractFact{
       <<Abstract>> 
-      +fact_id: str
-      +fact_type_id: FactClass
-      +fact_type: str
+      +name: str
+      +type_id: str
+      +fact_type: FactClass
    }
    
    class EntityFact{
