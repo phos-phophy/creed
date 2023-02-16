@@ -10,6 +10,9 @@ def collate_fn(documents: List[PreparedDocument]) -> Dict[str, torch.Tensor]:
 
     for field_name in documents[0]._fields:
 
+        if documents[0].__getattribute__(field_name) is None:
+            continue
+
         feature_names = documents[0].__getattribute__(field_name).keys()
 
         for feature_name in feature_names:

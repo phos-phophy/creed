@@ -5,7 +5,7 @@ from typing import Any, Iterable, List
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, AbstractWrapperModel, Document
+from src.abstract import AbstractDataset, AbstractWrapperModel, Document, NO_REL_IND
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -122,18 +122,22 @@ class SSANAdaptModel(AbstractWrapperModel):
             inputs = {key: token.cuda() for key, token in inputs.items()} if torch.cuda.is_available() else inputs
 
             with torch.no_grad():
-                batch_loss, logits = self(**inputs)
-                loss += batch_loss.mean().item()
+                outputs = self(**inputs)
+                if isinstance(outputs, tuple):
+                    batch_loss, logits = outputs
+                    loss += batch_loss.mean().item()
+                else:
+                    logits = outputs
 
             preds.append(logits.detach().cpu().numpy())
             ent_masks.append(inputs["ent_mask"].detach().cpu().numpy())
             labels_ids.append(inputs["labels"].detach().cpu().numpy() if "labels" in inputs else None)
 
         def zero_array(array: np.ndarray, length: int):
-            return np.zeros(array.shape[0], array.shape[1], length - array.shape[2])
+            return np.zeros((array.shape[0], array.shape[1], length - array.shape[2]))
 
-        max_len = max(ent_masks, key=lambda ent_mask: ent_mask.shape[2])
-        ent_masks = [np.concatenate([ent_mask, zero_array(ent_mask, max_len)]) for ent_mask in ent_masks]
+        max_len = max(map(lambda ent_mask: ent_mask.shape[2], ent_masks))
+        ent_masks = [np.concatenate((ent_mask, zero_array(ent_mask, max_len)), axis=-1) for ent_mask in ent_masks]
 
         loss /= len(dataloader)
         preds = np.vstack(preds)  # (N, ent, ent, num_link)
@@ -146,7 +150,7 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         loss, preds, ent_masks, labels_ids = self._get_preds(dataloader, 'Evaluating')
 
-        total_labels = torch.sum(labels_ids[:, :, :, 1:]).item()
+        total_labels = np.sum(labels_ids[:, :, :, NO_REL_IND + 1:]) + np.sum(labels_ids[:, :, :, :NO_REL_IND])
         output_preds = []
 
         for pred, ent_mask, labels in zip(preds, ent_masks, labels_ids):
@@ -176,11 +180,11 @@ class SSANAdaptModel(AbstractWrapperModel):
         threshold = output_preds[f1_pos][1]
 
         result = {
-            "loss": loss,
-            "precision": pr_y[f1_pos],
-            "recall": pr_x[f1_pos],
-            "f1": f1,
-            "threshold": threshold
+            "loss": float(loss),
+            "precision": float(pr_y[f1_pos]),
+            "recall": float(pr_x[f1_pos]),
+            "f1": float(f1),
+            "threshold": float(threshold)
         }
 
         if output_path:
@@ -191,10 +195,10 @@ class SSANAdaptModel(AbstractWrapperModel):
         self._threshold = threshold
 
     def predict(self, documents: List[Document], dataloader: DataLoader, output_path: Path):
-        if self.threshold is None:
+        if self._threshold is None:
             raise ValueError("First calculate the threshold value using evaluate function (on dev dataset)!")
 
-        loss, preds, ent_masks, _ = self._get_preds(dataloader, 'Predicting')
+        _, preds, ent_masks, _ = self._get_preds(dataloader, 'Predicting')
 
         output_preds = []
 

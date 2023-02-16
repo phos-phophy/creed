@@ -57,7 +57,7 @@ if __name__ == '__main__':
         print(f"Trained on {i} examples out of {total_len}")
         train_docs = train_documents[i: i + size_limit]
         manager.train(training_config, train_docs, dev_documents)
-        manager.save(save_path, rewrite=True)
+        manager.save(Path(save_path), rewrite=True)
 
     batch_size = training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
@@ -67,4 +67,4 @@ if __name__ == '__main__':
     if output_pred_path and output_pred_path:
         manager.predict(dev_documents, Path(output_pred_path), batch_size)
 
-    manager.save(save_path, rewrite=True)
+    manager.save(Path(save_path), rewrite=True)
