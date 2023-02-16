@@ -136,7 +136,7 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         return loss, preds, ent_masks, labels_ids
 
-    def evaluate(self, dataloader: DataLoader, output_path: str = None):
+    def evaluate(self, dataloader: DataLoader, output_path: Path = None):
 
         loss, preds, ent_masks, labels_ids = self._get_preds(dataloader, 'Evaluating')
 
@@ -178,12 +178,13 @@ class SSANAdaptModel(AbstractWrapperModel):
         }
 
         if output_path:
-            with open(Path(output_path), 'w') as file:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with output_path.open('w') as file:
                 json.dump(result, file)
 
         self._threshold = threshold
 
-    def predict(self, documents: List[Document], dataloader: DataLoader, output_path: str):
+    def predict(self, documents: List[Document], dataloader: DataLoader, output_path: Path):
         if self.threshold is None:
             raise ValueError("First calculate the threshold value using evaluate function (on dev dataset)!")
 
@@ -203,7 +204,8 @@ class SSANAdaptModel(AbstractWrapperModel):
         threshold_preds = takewhile(lambda t_pred: t_pred[0] >= self._threshold, output_preds)
         docred_preds = [build_docred_pred(pred) for pred in threshold_preds]
 
-        with open(Path(output_path), 'w') as file:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open('w') as file:
             json.dump(docred_preds, file)
 
 

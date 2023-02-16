@@ -49,10 +49,12 @@ if __name__ == '__main__':
     manager = ModelManager(init_config)
     manager.train(training_config, train_documents, dev_documents)
 
+    batch_size = training_config.training_arguments.get("per_device_eval_batch_size", 5)
+
     if dev_documents and output_eval_path:
-        manager.evaluate(dev_documents, output_eval_path, training_config.training_arguments.get("per_device_eval_batch_size", 5))
+        manager.evaluate(dev_documents, Path(output_eval_path), batch_size)
 
     if output_pred_path and output_pred_path:
-        manager.predict(dev_documents, output_pred_path, training_config.training_arguments.get("per_device_eval_batch_size", 5))
+        manager.predict(dev_documents, Path(output_pred_path), batch_size)
 
     manager.save(save_path, False)

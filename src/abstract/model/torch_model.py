@@ -27,6 +27,7 @@ class TorchModel(torch.nn.Module, metaclass=ABCMeta):
         if path.exists() and not rewrite:
             raise Exception(f"Model saving path already exists: {path}")
 
+        path.parent.mkdir(parents=True, exist_ok=True)
         with path.open('wb') as f:
             pickle.dump(self, f, protocol=4)  # fixed protocol version to avoid issues with serialization on Python 3.6+ versions
 
