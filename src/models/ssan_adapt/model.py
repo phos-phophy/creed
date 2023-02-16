@@ -117,17 +117,23 @@ class SSANAdaptModel(AbstractWrapperModel):
         loss = 0.0
         preds, ent_masks, labels_ids = [], [], []
 
-        for _, inputs in tqdm(dataloader, desc=desc):
-            self.model.eval()
+        for inputs in tqdm(dataloader, desc=desc):
+            self.eval()
             inputs = {key: token.cuda() for key, token in inputs.items()} if torch.cuda.is_available() else inputs
 
             with torch.no_grad():
-                batch_loss, logits = self.model(**inputs)
+                batch_loss, logits = self(**inputs)
                 loss += batch_loss.mean().item()
 
             preds.append(logits.detach().cpu().numpy())
             ent_masks.append(inputs["ent_mask"].detach().cpu().numpy())
             labels_ids.append(inputs["labels"].detach().cpu().numpy() if "labels" in inputs else None)
+
+        def zero_array(array: np.ndarray, length: int):
+            return np.zeros(array.shape[0], array.shape[1], length - array.shape[2])
+
+        max_len = max(ent_masks, key=lambda ent_mask: ent_mask.shape[2])
+        ent_masks = [np.concatenate([ent_mask, zero_array(ent_mask, max_len)]) for ent_mask in ent_masks]
 
         loss /= len(dataloader)
         preds = np.vstack(preds)  # (N, ent, ent, num_link)

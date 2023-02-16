@@ -21,7 +21,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
             dist_base: int,
             dist_ceil: int
     ):
-        self._max_ent = self._count_max_ent(documents) if (extract_labels and evaluation) else None
+        self._max_ent = self._count_max_ent(documents) if evaluation else None
         self._entities = tuple(entities)
         self._relations = tuple(relations)
         self._ent_to_ind = {ent: ind for ind, ent in enumerate(entities)}
