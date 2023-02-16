@@ -99,8 +99,7 @@ direction TB
    
    class EntityFact{
       +coreference_id: str
-      +mentions: Tuple[Span]
-      -validate_mentions(self)
+      +mentions: FrozenSet[Span]
    }
    
    class RelationFact{
@@ -160,13 +159,19 @@ direction TB
       +load(cls, path: Path) TorchModel
    }
    TorchModel <|-- AbstractModel
+   AbstractModel <|-- AbstractWrapperModel
    
    class AbstractModel{
       <<Abstract>>
       +relations: Tuple[str]
-      +no_rel_ind: int
       +forward(self, *args, **kwargs) Any
       +prepare_dataset(self, documents: Iterable[Document], extract_labels, evaluation)  AbstractDataset
+   }
+   
+   class AbstractWrapperModel{
+      <<Abstract>>
+      +evaluate(self, dataloader: DataLoader, output_path: str)
+      +predict(self, documents: Iterable[Document], dataloader: DataLoader, output_path: str)
    }
    
 ```
@@ -185,8 +190,8 @@ direction TB
 
 ### Start training
 
-`bash scripts/run_train.sh -c path/to/config -v __gpu_id__`
+`bash scripts/train.sh -c path/to/config -v __gpu_id__`
 
 or
 
-`bash scripts/run_train_large.sh -c path/to/config -v __gpu_id__ -l __limit__`
+`bash scripts/train_large.sh -c path/to/config -v __gpu_id__ -l __limit__`
