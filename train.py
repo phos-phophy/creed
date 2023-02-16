@@ -37,8 +37,8 @@ if __name__ == '__main__':
     save_path = config["save_path"]
     train_dataset_path = config["train_dataset_path"]
     dev_dataset_path = config.get("dev_dataset_path", None)
-    output_eval_path = config_path.get("output_eval_path", None)
-    output_pred_path = config_path.get("output_pred_path", None)
+    output_eval_path = config.get("output_eval_path", None)
+    output_pred_path = config.get("output_pred_path", None)
 
     # get documents
     loader = get_loader(**loader_config)
