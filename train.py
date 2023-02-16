@@ -13,6 +13,7 @@ from src.manager import InitConfig, ModelManager, TrainingConfig
     "save_path": str,
     "train_dataset_path": str,
     "dev_dataset_path": str (optional),
+    "test_dataset_path": str(optional),
     "output_eval_path": str (optional),
     "output_pred_path": str (optional)
 }
@@ -37,6 +38,7 @@ if __name__ == '__main__':
     save_path = config["save_path"]
     train_dataset_path = config["train_dataset_path"]
     dev_dataset_path = config.get("dev_dataset_path", None)
+    test_dataset_path = config.get("test_dataset_path", None)
     output_eval_path = config.get("output_eval_path", None)
     output_pred_path = config.get("output_pred_path", None)
 
@@ -56,7 +58,8 @@ if __name__ == '__main__':
     if dev_documents and output_eval_path:
         manager.evaluate(dev_documents, Path(output_eval_path), batch_size)
 
-    if output_pred_path and output_pred_path:
-        manager.predict(dev_documents, Path(output_pred_path), batch_size)
+    if test_dataset_path and output_pred_path:
+        test_documents = list(loader.load(Path(test_dataset_path)))
+        manager.predict(test_documents, Path(output_pred_path), batch_size)
 
     manager.save(Path(save_path), True)
