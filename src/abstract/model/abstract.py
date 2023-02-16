@@ -13,8 +13,7 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
 
     def __init__(self, relations: Iterable[str]):
         super(AbstractModel, self).__init__()
-
-        self._relations = tuple(['NO_REL'] + list(relations))
+        self._relations = tuple(relations)
 
     @property
     def relations(self):

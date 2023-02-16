@@ -16,7 +16,7 @@
       "warmup_steps": 200,
       "learning_rate": 0.00002
     }
-  }
+  },
   "init_config": {
     "model_params": {
       "model_type": "ssan_adapt",
@@ -37,6 +37,7 @@
         "NUM"
       ],
       "relations": [
+        "NO_REL",
         "head of government",
         "country",
         "place of birth",
@@ -237,4 +238,4 @@
       "P3373": "sibling"
     }
   }
-},
+}
