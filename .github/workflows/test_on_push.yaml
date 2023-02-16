@@ -17,4 +17,4 @@ jobs:
     - name: Install dependencies
       run: pip install -r requirements/requirements.txt
     - name: Run tests
-      run: bash scripts/run_tests.sh
+      run: bash scripts/run_src_tests.sh
