@@ -26,7 +26,6 @@
       "hidden_dim": 256,
       "dropout": 0.2,
       "dist_base": 2,
-      "no_ent_ind": 0,
       "entities": [
         "BLANK",
         "ORG",
