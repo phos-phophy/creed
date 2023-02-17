@@ -38,3 +38,7 @@ class AbstractSSANAdaptInnerModel(AbstractModel, metaclass=ABCMeta):
     @property
     def dist_ceil(self):
         return self._dist_ceil
+
+    @property
+    def config(self):
+        return self._model.config
