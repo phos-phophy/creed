@@ -20,7 +20,6 @@ class SSANAdaptModel(AbstractWrapperModel):
             relations: Iterable[str],
             inner_model_type: str,
             hidden_dim: int,
-            dropout: float,
             **kwargs
     ):
         self._entities = tuple(entities)
@@ -37,7 +36,7 @@ class SSANAdaptModel(AbstractWrapperModel):
         out_dim = next(module.out_features for module in list(self._inner_model.modules())[::-1] if "out_features" in module.__dict__)
 
         self._dim_reduction = torch.nn.Linear(out_dim, hidden_dim)
-        self._dropout = torch.nn.Dropout(dropout)
+        self._dropout = torch.nn.Dropout(self._inner_model.config.hidden_dropout_prob)
         self._rel_dist_embeddings = torch.nn.Embedding(self._dist_emb_dim, self._dist_emb_dim, padding_idx=self._dist_ceil)
         self._bili = torch.nn.Bilinear(hidden_dim + self._dist_emb_dim, hidden_dim + self._dist_emb_dim, len(self.relations))
 

@@ -13,7 +13,7 @@
       "do_eval": false,
       "no_cuda": false,
       "per_device_train_batch_size": 5,
-      "warmup_steps": 200,
+      "warmup_ratio": 0.1,
       "learning_rate": 0.00002
     }
   },
@@ -23,8 +23,7 @@
       "inner_model_type": "base",
       "pretrained_model_path": "bert-base-uncased",
       "tokenizer_path": "bert-base-uncased",
-      "hidden_dim": 256,
-      "dropout": 0.2,
+      "hidden_dim": 128,
       "dist_base": 2,
       "entities": [
         "BLANK",
