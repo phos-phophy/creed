@@ -27,6 +27,9 @@ class BaseSSANAdaptDataset(AbstractDataset):
         self._ent_to_ind = {ent: ind for ind, ent in enumerate(entities)}
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}
 
+        self._bos_token = tokenizer.cls_token_id
+        self._eos_token = tokenizer.sep_token_id
+
         self._len_attr = get_tokenizer_len_attribute(tokenizer)
         self._distance_encoder = self._init_distance_encoder(tokenizer.__getattribute__(self._len_attr))
 
@@ -124,12 +127,15 @@ class BaseSSANAdaptDataset(AbstractDataset):
                 token_to_sentence_ind += [ind] * len(tokens)
                 token_to_span += [span] * len(tokens)
 
-        input_ids = input_ids[:self.max_len]
-        token_to_sentence_ind = token_to_sentence_ind[:self.max_len]
-        token_to_span = token_to_span[:self.max_len]
+        input_ids = input_ids[:self.max_len - 2]
+        token_to_sentence_ind = token_to_sentence_ind[:self.max_len - 2]
+        token_to_span = token_to_span[:self.max_len - 2]
+
+        input_ids = [self._bos_token] + input_ids + [self._eos_token]
+        token_to_sentence_ind = [None] + token_to_sentence_ind + [None]
 
         span_to_token_ind = defaultdict(list)
-        for token_ind, span in enumerate(token_to_span):
+        for token_ind, span in enumerate(token_to_span, start=1):
             span_to_token_ind[span].append(token_ind)
 
         return torch.tensor(input_ids, dtype=torch.long), token_to_sentence_ind, span_to_token_ind

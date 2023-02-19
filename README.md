@@ -66,8 +66,9 @@ The base classes are divided into 3 main categories:
 * **_Models_**:
   * TorchModel
   * AbstractModel
+  * AbstractWrapperModel
 
-And `ModelManager` class that are responsible for model training and scoring 
+And `ModelManager` class that is responsible for model training and scoring 
 
 ### Examples' features
 ```mermaid
