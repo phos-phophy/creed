@@ -39,12 +39,12 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
 
         expected_shapes = {
             "features": {
-                "input_ids": (185,),
-                "ner_ids": (185,),
+                "input_ids": (187,),
+                "ner_ids": (187,),
                 "dist_ids": (11, 11),
-                "ent_mask": (11, 185),
-                "attention_mask": (185,),
-                "struct_matrix": (5, 185, 185),
+                "ent_mask": (11, 187),
+                "attention_mask": (187,),
+                "struct_matrix": (5, 187, 187),
             },
             "labels": {
                 "labels": (11, 11, 97),
