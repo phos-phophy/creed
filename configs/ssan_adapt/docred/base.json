@@ -3,7 +3,7 @@
     "loader_type": "docred"
   },
   "init_config": {
-    "load_path": "etc/models/ssan_adapt/docred/distant_base/model.pkl"
+    "load_path": "etc/models/ssan_adapt/docred/base_distant/model.pkl"
   },
   "training_config": {
     "compute_metrics": false,
