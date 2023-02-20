@@ -15,19 +15,15 @@ class SSANAdaptModel(AbstractWrapperModel):
 
     def __init__(
             self,
-            entities: Iterable[str],
-            relations: Iterable[str],
             inner_model_type: str,
             hidden_dim: int,
+            relations: Iterable[str],
             **kwargs
     ):
-        self._entities = tuple(entities)
 
         super(SSANAdaptModel, self).__init__(relations)
 
-        self._inner_model: AbstractSSANAdaptInnerModel = get_inner_model(
-            inner_model_type=inner_model_type, entities=entities, relations=relations, **kwargs
-        )
+        self._inner_model: AbstractSSANAdaptInnerModel = get_inner_model(inner_model_type=inner_model_type, relations=relations, **kwargs)
 
         self._dist_ceil = self._inner_model.dist_ceil
         self._dist_emb_dim = self._dist_ceil * 2
@@ -40,10 +36,6 @@ class SSANAdaptModel(AbstractWrapperModel):
         self._bili = torch.nn.Bilinear(hidden_dim + self._dist_emb_dim, hidden_dim + self._dist_emb_dim, len(self.relations))
 
         self._threshold = None
-
-    @property
-    def entities(self):
-        return self._entities
 
     def forward(
             self,

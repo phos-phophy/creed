@@ -3,7 +3,7 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, Document, EntityFact, FactClass, NO_REL_IND, PreparedDocument, RelationFact, Span, \
+from src.abstract import AbstractDataset, Document, EntityFact, FactClass, NO_ENT_IND, NO_REL_IND, PreparedDocument, RelationFact, Span, \
     get_tokenizer_len_attribute
 
 
@@ -152,7 +152,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         max_ent = self.max_ent if self.max_ent else len(ner_facts)
 
-        ner_ids = torch.zeros(seq_len, dtype=torch.long)
+        ner_ids = torch.ones(seq_len, dtype=torch.long) * NO_ENT_IND
         ent_mask = torch.zeros(max_ent, seq_len, dtype=torch.bool)
         token_to_coreference_id = [type(self).USUAL_TOKEN] * seq_len
 
@@ -168,7 +168,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         return ner_ids, ent_mask, token_to_coreference_id
 
     @classmethod
-    def _extract_struct_matrix(cls, token_to_sentence_ind: List[int], token_to_coreference_id: List[str]):
+    def _extract_struct_matrix(cls, token_to_sentence_ind: List, token_to_coreference_id: List[str]):
         length = len(token_to_sentence_ind)
         struct_mask = torch.zeros((5, length, length), dtype=torch.bool)
 
