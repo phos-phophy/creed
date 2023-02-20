@@ -11,9 +11,16 @@ def get_wo_entities():
     return WOTypesSSANAdaptInnerModel
 
 
+def get_ie_entities():
+    # from .ie_types import IETypesSSANAdaptInnerModel
+    # return IETypesSSANAdaptInnerModel
+    raise NotImplementedError
+
+
 INNER_MODELS = {
     "base": get_base(),
-    "wo_entities": get_wo_entities()
+    "wo": get_wo_entities(),
+    "ie": get_ie_entities()
 }
 
 
