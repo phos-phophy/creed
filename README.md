@@ -192,7 +192,3 @@ direction TB
 ### Start training
 
 `bash scripts/train.sh -c path/to/config -v __gpu_id__`
-
-or
-
-`bash scripts/train_large.sh -c path/to/config -v __gpu_id__ -l __limit__`

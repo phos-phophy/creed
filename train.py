@@ -13,7 +13,7 @@ from src.manager import InitConfig, ModelManager, TrainingConfig
     "save_path": str,
     "train_dataset_path": str,
     "dev_dataset_path": str (optional),
-    "test_dataset_path": str(optional),
+    "test_dataset_path": str (optional),
     "output_eval_path": str (optional),
     "output_pred_path": str (optional)
 }
