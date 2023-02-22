@@ -17,14 +17,14 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
 
         with Path('tests/models/ssan_adapt/data/rel_info.json').open('r') as file:
             rel_info = json.load(file)
-            relations = ['<NO_REL>'] + list(rel_info.values())
+            relations = ['<NO_REL>'] + list(rel_info.keys())
             self.relations = tuple(relations)
             self.rel_to_ind = {rel: ind for ind, rel in enumerate(self.relations)}
 
         with Path('tests/models/ssan_adapt/data/ner2id.json').open('r') as file:
             self.entities = tuple(json.load(file).keys())
 
-        self.loader = DocREDLoader(rel_info)
+        self.loader = DocREDLoader()
         self.tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 
         self.len_attr = get_tokenizer_len_attribute(self.tokenizer)
