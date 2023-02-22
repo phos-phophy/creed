@@ -187,7 +187,7 @@ direction TB
 
 ### Dowload datasets
 
-`bash scripts/dowload_datasets.sh`
+`bash scripts/download_datasets.sh`
 
 ### Start training
 

@@ -1,5 +1,4 @@
 import json
-from itertools import takewhile
 from pathlib import Path
 from typing import Any, Iterable, List
 
@@ -147,17 +146,19 @@ class SSANAdaptModel(AbstractWrapperModel):
 
     def evaluate(self, dataloader: DataLoader, output_path: Path = None):
 
+        # don't take into account gold <NO_REL> relation
         loss, preds, ent_masks, labels_ids = self._get_preds(dataloader, 'Evaluating')
+        labels_ids = torch.cat((labels_ids[:, :, :, :NO_REL_IND], labels_ids[:, :, :, NO_REL_IND + 1:]), dim=-1)
 
-        total_labels = np.sum(labels_ids[:, :, :, NO_REL_IND + 1:]) + np.sum(labels_ids[:, :, :, :NO_REL_IND])
+        total_labels = np.sum(labels_ids)
         output_preds = []
 
-        for pred, ent_mask, labels in zip(preds, ent_masks, labels_ids):
+        for pred, ent_mask, gold_labels in zip(preds, ent_masks, labels_ids):
 
-            # don't take into account <NO_REL> relation
-            gold_relations = [(h, t, r + 1) for h, t, r in zip(*np.where(labels[:, :, 1:]))]
+            # don't take into account gold <NO_REL> relation
+            gold_relations = [(h, t, r + 1) for h, t, r in zip(*np.where(gold_labels))]
 
-            for h, t, logit, predicate_id in iter_over_pred(pred, ent_mask):
+            for h, t, logit, predicate_id in iter_over_pred(pred, ent_mask, 0):
                 is_right_relation = (h, t, predicate_id) in gold_relations
                 output_preds.append((is_right_relation, logit, h, t, predicate_id))
 
@@ -199,26 +200,20 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         _, preds, ent_masks, _ = self._get_preds(dataloader, 'Predicting')
 
+        def build_docred_pred(title, h_idx, t_idx, r):
+            return {"title": title, "h_idx": h_idx, "t_idx": t_idx, "r": r, "evidence": []}
+
         output_preds = []
-
         for document, pred, ent_mask in zip(documents, preds, ent_masks):
-            for h, t, logit, predicate_id in iter_over_pred(pred, ent_mask):
-                output_preds.append((logit, document.doc_id, h, t, self.relations[predicate_id]))
-
-        output_preds.sort(key=lambda x: x[0], reverse=True)
-
-        def build_docred_pred(d_pred: tuple):
-            return {"title": d_pred[1], "h_idx": d_pred[2], "t_idx": d_pred[3], "r": d_pred[4], "evidence": []}
-
-        threshold_preds = takewhile(lambda t_pred: t_pred[0] >= self._threshold, output_preds)
-        docred_preds = [build_docred_pred(pred) for pred in threshold_preds]
+            for h, t, predicate_id in iter_over_pred(pred, ent_mask, self._threshold):
+                output_preds.append(build_docred_pred(document.doc_id, h, t, self.relations[predicate_id]))
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open('w') as file:
-            json.dump(docred_preds, file)
+            json.dump(output_preds, file)
 
 
-def iter_over_pred(pred, ent_mask):
+def iter_over_pred(pred, ent_mask, threshold):
     for h in range(pred.shape[0]):
         for t in range(pred.shape[0]):
 
@@ -229,4 +224,5 @@ def iter_over_pred(pred, ent_mask):
                 if predicate_id == 0:
                     continue
 
-                yield h, t, logit, predicate_id
+                if logit >= threshold:
+                    yield h, t, predicate_id
