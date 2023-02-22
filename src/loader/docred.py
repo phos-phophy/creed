@@ -25,13 +25,6 @@ Example from DocRED consists of the following fields:
 
 class DocREDLoader(AbstractLoader):
 
-    def __init__(self, rel_info: Dict[str, str] = None):
-        self._rel_info = rel_info if rel_info else {}
-
-    @property
-    def rel_info(self):
-        return self._rel_info
-
     def load(self, path: Path) -> Iterator[Document]:
         with path.open('r') as file:
             examples = json.load(file)
@@ -80,12 +73,6 @@ class DocREDLoader(AbstractLoader):
 
         return [build_entity_fact(coref_facts_desc, ind) for ind, coref_facts_desc in enumerate(vertex_set)]
 
-    def _extract_rel_facts(self, labels: List[Dict], entity_facts: List[EntityFact]):
-
-        def build_rel_fact(desc: dict):
-            rel_type = self.rel_info.get(desc["r"], desc["r"])
-            from_fact = entity_facts[desc['h']]
-            to_fact = entity_facts[desc['t']]
-            return RelationFact("", rel_type, from_fact, to_fact)
-
-        return [build_rel_fact(rel_desc) for rel_desc in labels]
+    @staticmethod
+    def _extract_rel_facts(labels: List[Dict], entity_facts: List[EntityFact]):
+        return [RelationFact("", desc["r"], entity_facts[desc['h']], entity_facts[desc['t']]) for desc in labels]
