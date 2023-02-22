@@ -64,7 +64,7 @@ class ModelManager:
 
     def predict(self, documents: List[Document], output_path: Path, batch_size: int = 5):
         dataset: AbstractDataset = self.model.prepare_dataset(documents, False, True)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
         torch.cuda.empty_cache()
         self.model.predict(documents, dataloader, output_path)
 
