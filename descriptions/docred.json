@@ -1,0 +1,578 @@
+{
+  "P6": {
+    "name": "head of government",
+    "name_ru": "глава правительства",
+    "description": "head of the executive power of this town, city, municipality, state, country, or other governmental body",
+    "description_ru": "высшее административное лицо, глава исполнительного органа города, муниципалитета, страны или другой правительственной структуры"
+  },
+  "P17": {
+    "name": "country",
+    "name_ru": "государство",
+    "description": "sovereign state that this item is in (not to be used for human beings)",
+    "description_ru": "суверенное государство, связанное с этим элементом"
+  },
+  "P19": {
+    "name": "place of birth",
+    "name_ru": "место рождения",
+    "description": "most specific known (e.g. city instead of country, or hospital instead of city) birth location of a person, animal or fictional character",
+    "description_ru": "наиболее точное место, где субъект родился (например, город, а не страна)"
+  },
+  "P20": {
+    "name": "place of death",
+    "name_ru": "место смерти",
+    "description": "most specific known (e.g. city instead of country, or hospital instead of city) death location of a person, animal or fictional character",
+    "description_ru": "наиболее точное место, где субъект умер (например, город, а не страна)"
+  },
+  "P22": {
+    "name": "father",
+    "name_ru": "отец",
+    "description": "male parent of the subject",
+    "description_ru": "отец персоны"
+  },
+  "P25": {
+    "name": "mother",
+    "name_ru": "мать",
+    "description": "female parent of the subject",
+    "description_ru": "мать персоны"
+  },
+  "P26": {
+    "name": "spouse",
+    "name_ru": "супруг(а)",
+    "description": "the subject has the object as their spouse (husband, wife, partner, etc.)",
+    "description_ru": "супруг или супруга персоны"
+  },
+  "P27": {
+    "name": "country of citizenship",
+    "name_ru": "гражданство",
+    "description": "the object is a country that recognizes the subject as its citizen",
+    "description_ru": "государство, признающее человека своим гражданином"
+  },
+  "P30": {
+    "name": "continent",
+    "name_ru": "часть света",
+    "description": "continent of which the subject is a part",
+    "description_ru": "часть света, в которой находится элемент. Используется для стран"
+  },
+  "P31": {
+    "name": "instance of",
+    "name_ru": "экземпляр",
+    "description": "that class of which this subject is a particular example and member; different from P279 (subclass of)",
+    "description_ru": "данный элемент представляет собой конкретный объект (экземпляр / частный случай) класса, категории. Не путать с P279 ('подкласс от')"
+  },
+  "P35": {
+    "name": "head of state",
+    "name_ru": "глава государства",
+    "description": "official with the highest formal authority in a country/state",
+    "description_ru": "персона, формально возглавляющая государство"
+  },
+  "P36": {
+    "name": "capital",
+    "name_ru": "административный центр",
+    "description": "seat of government of a country, province, state or other type of administrative territorial entity",
+    "description_ru": "официальный главный населённый пункт в административной единице"
+  },
+  "P37": {
+    "name": "official language",
+    "name_ru": "официальный язык",
+    "description": "language designated as official by this item",
+    "description_ru": "язык, определённый как официальный для этого элемента"
+  },
+  "P39": {
+    "name": "position held",
+    "name_ru": "занимаемая должность",
+    "description": "subject currently or formerly holds the object position or public office",
+    "description_ru": "текущая или прошлая должность"
+  },
+  "P40": {
+    "name": "child",
+    "name_ru": "дети",
+    "description": "subject has object as child. Do not use for stepchildren",
+    "description_ru": "дети этого человека. Не используется для усыновленных детей"
+  },
+  "P50": {
+    "name": "author",
+    "name_ru": "автор",
+    "description": "main creator(s) of a written work (use on works, not humans)",
+    "description_ru": "создатель произведения"
+  },
+  "P54": {
+    "name": "member of sports team",
+    "name_ru": "член спортивной команды",
+    "description": "sports teams or clubs that the subject represents or represented",
+    "description_ru": "команда, в которой данный человек участвует/участвовал"
+  },
+  "P57": {
+    "name": "director",
+    "name_ru": "режиссёр",
+    "description": "director(s) of film, TV-series, stageplay, video game or similar",
+    "description_ru": "режиссёр(ы) фильма, сериала, пьесы, компьютерной игры и др. произведений искусства"
+  },
+  "P58": {
+    "name": "screenwriter",
+    "name_ru": "сценарист",
+    "description": "person(s) who wrote the script for subject item",
+    "description_ru": "автор(ы) сценария фильма"
+  },
+  "P69": {
+    "name": "educated at",
+    "name_ru": "учебное заведение",
+    "description": "educational institution attended by subject",
+    "description_ru": "учебное заведение, в котором учился человек"
+  },
+  "P86": {
+    "name": "composer",
+    "name_ru": "композитор",
+    "description": "person(s) who wrote the music [for lyricist, use 'lyrics by' (P676)]",
+    "description_ru": "автор музыкального произведения (для слов песни используйте 'автор слов' P676)"
+  },
+  "P102": {
+    "name": "member of political party",
+    "name_ru": "член политической партии",
+    "description": "the political party of which a person is or has been a member or otherwise affiliated",
+    "description_ru": "политическая партия, членом которой является (или являлась) данная персона"
+  },
+  "P108": {
+    "name": "employer",
+    "name_ru": "работодатель",
+    "description": "person or organization for which the subject works or worked",
+    "description_ru": "организация, в которой субъект работает или работал"
+  },
+  "P112": {
+    "name": "founded by",
+    "name_ru": "основатель",
+    "description": "founder or co-founder of this organization, religion or place",
+    "description_ru": "основатель или сооснователь организации, учения или населённого пункта"
+  },
+  "P118": {
+    "name": "league",
+    "name_ru": "выступает в лиге",
+    "description": "league in which team or player plays or has played in",
+    "description_ru": "спортивная лига, в которой выступает или выступала команда или спортсмен"
+  },
+  "P123": {
+    "name": "publisher",
+    "name_ru": "издатель",
+    "description": "organization or person responsible for publishing books, periodicals, printed music, podcasts, games or software",
+    "description_ru": "название организации, ответственной за публикацию субъекта"
+  },
+  "P127": {
+    "name": "owned by",
+    "name_ru": "владельцем является",
+    "description": "owner of the subject",
+    "description_ru": "владелец этой сущности"
+  },
+  "P131": {
+    "name": "located in the administrative territorial entity",
+    "name_ru": "административно-территориальная единица",
+    "description": "the item is located on the territory of the following administrative entity. Use P276 for specifying locations that are non-administrative places and for items about events",
+    "description_ru": "вышестоящая единица, на территории которой расположен данный элемент. Используйте P276 («местонахождение») для указания места событий и неадминистративных мест"
+  },
+  "P136": {
+    "name": "genre",
+    "name_ru": "жанр",
+    "description": "creative work's genre or an artist's field of work",
+    "description_ru": "жанр произведения или жанр, в котором работает автор"
+  },
+  "P137": {
+    "name": "operator",
+    "name_ru": "оператор",
+    "description": "person, profession, or organization that operates the equipment, facility, or service",
+    "description_ru": "оператор оборудования, учреждения либо услуги"
+  },
+  "P140": {
+    "name": "religion",
+    "name_ru": "религия или мировоззрение",
+    "description": "religion of a person, organization or religious building, or associated with this subject",
+    "description_ru": "религиозные и/или мировоззренческие взгляды личности, персонажа, организации или культового сооружения"
+  },
+  "P150": {
+    "name": "contains administrative territorial entity",
+    "name_ru": "административно делится на",
+    "description": "(list of) direct subdivisions of an administrative territorial entity",
+    "description_ru": "единицы, на которые непосредственно подразделяется данная административная единица"
+  },
+  "P155": {
+    "name": "follows",
+    "name_ru": "предыдущее по порядку",
+    "description": "immediately prior item in a series of which the subject is a part",
+    "description_ru": "объект, непосредственно идущий до субъекта в некоторой череде элементов"
+  },
+  "P156": {
+    "name": "followed by",
+    "name_ru": "следующее по порядку",
+    "description": "immediately following item in a series of which the subject is a part",
+    "description_ru": "объект, непосредственно идущий после субъекта в некоторой череде элементов"
+  },
+  "P159": {
+    "name": "headquarters location",
+    "name_ru": "расположение штаб-квартиры",
+    "description": "city, where an organization's headquarters is or has been situated",
+    "description_ru": "определённое место, где располагается штаб-квартира организации"
+  },
+  "P161": {
+    "name": "cast member",
+    "name_ru": "в ролях",
+    "description": "actor in the subject production",
+    "description_ru": "актёры данного произведения"
+  },
+  "P162": {
+    "name": "producer",
+    "name_ru": "продюсер",
+    "description": "person(s) who produced the film, musical work, theatrical production, etc. (for film, this does not include executive producers, associate producers, etc.) [for production company, use P272, video games - use P178]",
+    "description_ru": ""
+  },
+  "P166": {
+    "name": "award received",
+    "name_ru": "полученные награды",
+    "description": "award or recognition received by a person, organization or creative work",
+    "description_ru": "награды, полученные персоной, организацией или произведением"
+  },
+  "P170": {
+    "name": "creator",
+    "name_ru": "создатель",
+    "description": "maker of this creative work or other object (where no more specific property exists)",
+    "description_ru": "создатель творческого произведения и т. п. (для случаев, когда нет более точного свойства)"
+  },
+  "P171": {
+    "name": "parent taxon",
+    "name_ru": "ближайший таксон уровнем выше",
+    "description": "closest parent taxon of the taxon in question",
+    "description_ru": "родительский таксон данного таксона"
+  },
+  "P172": {
+    "name": "ethnic group",
+    "name_ru": "этническая группа",
+    "description": "subject's ethnicity",
+    "description_ru": ""
+  },
+  "P175": {
+    "name": "performer",
+    "name_ru": "исполнитель",
+    "description": "actor, musician, band or other performer associated with this role or musical work",
+    "description_ru": "актёр, музыкант или группа, имеющие отношение к данной музыкальной работе"
+  },
+  "P176": {
+    "name": "manufacturer",
+    "name_ru": "производитель",
+    "description": "manufacturer or producer of this product",
+    "description_ru": "основной производитель (без субподрядчиков)"
+  },
+  "P178": {
+    "name": "developer",
+    "name_ru": "разработчик",
+    "description": "organization or person that developed the item",
+    "description_ru": "организация или человек, разработавший предмет"
+  },
+  "P179": {
+    "name": "series",
+    "name_ru": "является частью цикла",
+    "description": "series which contains the subject",
+    "description_ru": "ряд или последовательность, в которой состоит данный элемент (субъект)"
+  },
+  "P190": {
+    "name": "sister city",
+    "name_ru": "город-побратим",
+    "description": "twin towns, sister cities, twinned municipalities and other localities that have a partnership or cooperative agreement, either legally or informally acknowledged by their governments",
+    "description_ru": "город, с которым у данного города установлены постоянные дружественные отношения"
+  },
+  "P194": {
+    "name": "legislative body",
+    "name_ru": "законодательный орган",
+    "description": "legislative body governing this entity; political institution with elected representatives, such as a parliament/legislature or council",
+    "description_ru": "собрание избираемых представителей, уполномоченное принимать законы"
+  },
+  "P205": {
+    "name": "basin country",
+    "name_ru": "бассейн объекта в странах",
+    "description": "country that have drainage to/from or border the body of water",
+    "description_ru": "страна, в которой находится объект данного водоема"
+  },
+  "P206": {
+    "name": "located in or next to body of water",
+    "name_ru": "находится в акватории или на берегу водоёма",
+    "description": "body of water on or next to which a place is located",
+    "description_ru": "водоём, на берегу которого находится место (субъект)"
+  },
+  "P241": {
+    "name": "military branch",
+    "name_ru": "вид или род войск",
+    "description": "branch to which this military unit, award, office, or person belongs, e.g. Royal Navy",
+    "description_ru": "вид или род войск, к которому относится награда, воинское формирование или военнослужащий"
+  },
+  "P264": {
+    "name": "record label",
+    "name_ru": "лейбл звукозаписи",
+    "description": "brand and trademark associated with the marketing of subject music recordings and music videos",
+    "description_ru": "лейбл данного трека или клипа"
+  },
+  "P272": {
+    "name": "production company",
+    "name_ru": "производящая компания",
+    "description": "company that produced this film, audio or performing arts work",
+    "description_ru": "компания, производящая фильм, музыку или театральную постановку"
+  },
+  "P276": {
+    "name": "location",
+    "name_ru": "местонахождение",
+    "description": "location of the object, structure or event. In the case of an administrative entity as containing item use P131. In the case of a geographic entity use P706",
+    "description_ru": "местоположение объекта, структуры или события. Используйте P131 для административного-территориального подразделения, P706 для природно-географического подразделения"
+  },
+  "P279": {
+    "name": "subclass of",
+    "name_ru": "подкласс",
+    "description": "this item is a subclass (subset) of that item; all instances of these items are instances of those items; different from P31 (instance of)",
+    "description_ru": "каждый экземпляр данного класса является также экземпляром следующего(-их) класса(-ов). Не путать с P31 (это частный случай понятия)"
+  },
+  "P355": {
+    "name": "subsidiary",
+    "name_ru": "дочерние компании (организации, учреждения)",
+    "description": "subsidiary of a company or organization; generally a fully owned separate corporation. Opposite of parent organization (P749)",
+    "description_ru": "зависимые компании (организации, учреждения), которые контролируются материнской компанией (организацией, учреждением) (P749)"
+  },
+  "P361": {
+    "name": "part of",
+    "name_ru": "часть от",
+    "description": "object of which the subject is a part (if this subject is already part of object A which is a part of object B, then please only make the subject part of object A). Inverse property of 'has part' (P527)",
+    "description_ru": "объект, частью которого является субъект (если субъект является частью объекта А, который сам является частью объекта Б, то пожалуйста указывайте лишь то, что субъект является частью объекта А). Обратное свойство «состоит из» P527"
+  },
+  "P364": {
+    "name": "original language of work",
+    "name_ru": "язык оригинала фильма или телешоу",
+    "description": "language in which a film or a performance work was originally created",
+    "description_ru": "язык, на котором первоначально был создан фильм или произведение"
+  },
+  "P400": {
+    "name": "platform",
+    "name_ru": "платформа",
+    "description": "platform for which a work was developed or released, or the specific platform version of a software product",
+    "description_ru": "платформа, для которой было разработано программное обеспечение"
+  },
+  "P403": {
+    "name": "mouth of the watercourse",
+    "name_ru": "впадает в",
+    "description": "the body of water to which the watercourse drains",
+    "description_ru": "гидрологический объект, в который впадает водоток (река, ручей)"
+  },
+  "P449": {
+    "name": "original network",
+    "name_ru": "первоначальный вещатель",
+    "description": "network(s) or service(s) that originally broadcast a radio or television program",
+    "description_ru": "радио или телевизионная сеть, которая впервые транслировала сериал, передачу"
+  },
+  "P463": {
+    "name": "member of",
+    "name_ru": "участник организации или коллектива",
+    "description": "organization, club or musical group to which the subject belongs. Do not use for membership in ethnic or social groups, nor for holding a political position, such as a member of parliament (use P39 for that)",
+    "description_ru": "член указанной организации или клуба. Не использовать для членства в этнических или социальных группах, указания членов парламента (используйте P39)"
+  },
+  "P488": {
+    "name": "chairperson",
+    "name_ru": "руководитель",
+    "description": "presiding member of an organization, group or body",
+    "description_ru": "председательствующий участник организации, группы или учреждения"
+  },
+  "P495": {
+    "name": "country of origin",
+    "name_ru": "страна происхождения",
+    "description": "country of origin of this item (creative work, food, phrase, product, etc.)",
+    "description_ru": "страна происхождения творческого произведения или другого продукта"
+  },
+  "P527": {
+    "name": "has part",
+    "name_ru": "состоит из",
+    "description": "part of this subject; inverse property of 'part of' (P361)",
+    "description_ru": "объект, являющийся частью данного субъекта. Обратное свойства «часть от» P361"
+  },
+  "P551": {
+    "name": "residence",
+    "name_ru": "место жительства",
+    "description": "the place where the person is or has been, resident",
+    "description_ru": "место, где человек живёт или жил"
+  },
+  "P569": {
+    "name": "date of birth",
+    "name_ru": "дата рождения",
+    "description": "date on which the subject was born",
+    "description_ru": "день, месяц, год, в который субъект был рождён"
+  },
+  "P570": {
+    "name": "date of death",
+    "name_ru": "дата смерти",
+    "description": "date on which the subject died",
+    "description_ru": "день, месяц, год, в который субъект умер"
+  },
+  "P571": {
+    "name": "inception",
+    "name_ru": "дата основания / создания / возникновения",
+    "description": "time when an entity begins to exist",
+    "description_ru": "дата, когда организация или объект были основаны/созданы"
+  },
+  "P576": {
+    "name": "dissolved, abolished or demolished",
+    "name_ru": "дата прекращения существования",
+    "description": "point in time at which the subject (organisation, building) ceased to exist",
+    "description_ru": "дата, когда сущность (организация, строение) перестала существовать"
+  },
+  "P577": {
+    "name": "publication date",
+    "name_ru": "дата публикации",
+    "description": "date or point in time when a work was first published or released",
+    "description_ru": "дата, когда произведение было выпущено в свет"
+  },
+  "P580": {
+    "name": "start time",
+    "name_ru": "время начала",
+    "description": "time an entity begins to exist or a statement starts being valid",
+    "description_ru": "указывает время начала существования элемента или время, с которого утверждение приобретает силу"
+  },
+  "P582": {
+    "name": "end time",
+    "name_ru": "время конца",
+    "description": "time an entity ceases to exist or a statement stops being valid",
+    "description_ru": "указывает время прекращения существования элемента или время, с которого утверждение утрачивает силу"
+  },
+  "P585": {
+    "name": "point in time",
+    "name_ru": "момент времени",
+    "description": "time and date something took place, existed or a statement was true",
+    "description_ru": "дата, когда что-либо происходило или когда утверждение было истинным"
+  },
+  "P607": {
+    "name": "conflict",
+    "name_ru": "война/сражение",
+    "description": "battles, wars or other military engagements in which the person or item participated",
+    "description_ru": "войны или сражения, в которых участвовала данная личность или объект"
+  },
+  "P674": {
+    "name": "characters",
+    "name_ru": "персонажи",
+    "description": "characters which appear in this item (like plays, operas, operettas, books, comics, films, TV series, video games)",
+    "description_ru": "персонажи пьесы, книги, оперы и т.п."
+  },
+  "P676": {
+    "name": "lyrics by",
+    "name_ru": "автор слов",
+    "description": "author of song lyrics",
+    "description_ru": "автор слов песен"
+  },
+  "P706": {
+    "name": "located on terrain feature",
+    "name_ru": "находится в пределах природно-географического объекта",
+    "description": "located on the specified (geo)physical feature. Should not be used when the value is only political/administrative (P131)",
+    "description_ru": "место расположено на территории некого водоёма или элемента ландшафта (значения свойства не должны быть единицами административно-территориального деления P131)"
+  },
+  "P710": {
+    "name": "participant",
+    "name_ru": "участник(и)",
+    "description": "person, group of people or organization (object) that actively takes/took part in an event or process (subject)",
+    "description_ru": "человек, группа людей или организация, принимавшая участие в событии"
+  },
+  "P737": {
+    "name": "influenced by",
+    "name_ru": "испытал влияние от",
+    "description": "this person, idea, etc. is informed by that other person, idea, etc., e.g. “Heidegger was influenced by Aristotle”",
+    "description_ru": "объекты, которые повлияли на данный (например, Хайдеггер испытал влияние (от) Аристотеля)"
+  },
+  "P740": {
+    "name": "location of formation",
+    "name_ru": "место основания",
+    "description": "location where a group or organization was formed",
+    "description_ru": "место, где была сформирована группа или организация"
+  },
+  "P749": {
+    "name": "parent organization",
+    "name_ru": "материнская компания (организация, учреждение)",
+    "description": "parent organization of an organization, opposite of subsidiaries (P355)",
+    "description_ru": "родительская компания (организация, учреждение), противоположность дочерним компаниям (организациям, учреждениям) (P355)"
+  },
+  "P800": {
+    "name": "notable work",
+    "name_ru": "известная работа",
+    "description": "notable scientific, artistic or literary work, or other work of significance among subject's works",
+    "description_ru": "примечательная работа субъекта (научная или произведение искусства)"
+  },
+  "P807": {
+    "name": "separated from",
+    "name_ru": "отделилось от",
+    "description": "subject was founded or started by separating from identified object",
+    "description_ru": "то, частью чего раньше был данный элемент"
+  },
+  "P840": {
+    "name": "narrative location",
+    "name_ru": "место действия",
+    "description": "the narrative of the work is set in this location",
+    "description_ru": "сюжет данного произведения происходит в данном местоположении"
+  },
+  "P937": {
+    "name": "work location",
+    "name_ru": "место активности",
+    "description": "location where persons or organisations were actively participating in employment, business or other work",
+    "description_ru": "место деятельности субъекта"
+  },
+  "P1001": {
+    "name": "applies to jurisdiction",
+    "name_ru": "юрисдикция распространяется на",
+    "description": "the item (institution, law, public office, public register...) or statement belongs to or has power over or applies to the value (a territorial jurisdiction: a country, state, municipality, ...)",
+    "description_ru": "территория, организация или организационное формирование, на которое распространяется юрисдикция субъекта"
+  },
+  "P1056": {
+    "name": "product or material produced",
+    "name_ru": "продукция",
+    "description": "material or product produced by a government agency, business, industry, facility, or process",
+    "description_ru": "производимое сырьё, продукция или материал"
+  },
+  "P1198": {
+    "name": "unemployment rate",
+    "name_ru": "уровень безработицы",
+    "description": "portion of a workforce population that is not employed",
+    "description_ru": ""
+  },
+  "P1336": {
+    "name": "territory claimed by",
+    "name_ru": "на территорию претендует",
+    "description": "administrative divisions that claim control of a given area",
+    "description_ru": "административные единицы (объекты), претендующие на контроль за данной территорией (субъект)"
+  },
+  "P1344": {
+    "name": "participant of",
+    "name_ru": "участвовал(а) в",
+    "description": "event in which a person or organization was/is a participant; inverse of P710",
+    "description_ru": "мероприятие, в котором участвовала персона или организация, противоположно P710"
+  },
+  "P1365": {
+    "name": "replaces",
+    "name_ru": "заменил",
+    "description": "person, state or item replaced. Use 'follows' (P155) if the previous item was not replaced or predecessor and successor are identical",
+    "description_ru": "человек, организация или объект, который был заменён в должности, позиции и т.д. Используйте P155 ('предыдущее по порядку'), если предыдущий объект не заменялся, а предшественник и преемник идентичны"
+  },
+  "P1366": {
+    "name": "replaced by",
+    "name_ru": "заменён на",
+    "description": "other person or item which continues the item by replacing it in its role. Use P156 ('followed by') if the item is not replaced nor identical, but adds to the series (e.g. books in a series).",
+    "description_ru": "человек, организация или объект, который занял место другого в должности, позиции и т. д. Используйте P156 («следующее по порядку») если объект не был заменён, например, одна книга в серии книг"
+  },
+  "P1376": {
+    "name": "capital of",
+    "name_ru": "является административным центром",
+    "description": "country, state, department, canton or other administrative division of which the municipality is the governmental seat",
+    "description_ru": "административно-территориальная единица, официальным главным населённым пунктом которой является данный город (муниципалитет)"
+  },
+  "P1412": {
+    "name": "languages spoken, written or signed",
+    "name_ru": "языки, на которых говорит или пишет персона",
+    "description": "language(s) that a person or a people speaks, writes or signs, including the native language(s)",
+    "description_ru": "язык или языки, на которых говорит или пишет персона. Может включать родной язык"
+  },
+  "P1441": {
+    "name": "present in work",
+    "name_ru": "представлено в работе",
+    "description": "this (fictional or fictionalized) entity or person appears in that work as part of the narration",
+    "description_ru": "произведение, в котором появляется вымышленный элемент или историческая персона"
+  },
+  "P3373": {
+    "name": "sibling",
+    "name_ru": "брат/сестра",
+    "description": "the subject and the object have at least one common parent (brother, sister, etc. including half-siblings)",
+    "description_ru": "брат или сестра данной персоны"
+  }
+}

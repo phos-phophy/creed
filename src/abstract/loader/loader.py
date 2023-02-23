@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import Iterator
 
-from src.abstract.examples.document import Document
+from src.abstract.example.document import Document
 
 
 class AbstractLoader(metaclass=ABCMeta):

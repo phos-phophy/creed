@@ -3,10 +3,13 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, Document, EntityFact, FactType, PreparedDocument, RelationFact, Span, get_tokenizer_len_attribute
+from src.abstract import AbstractDataset, Document, EntityFact, FactClass, NO_REL_IND, PreparedDocument, RelationFact, Span, \
+    get_tokenizer_len_attribute
 
 
 class BaseSSANAdaptDataset(AbstractDataset):
+    USUAL_TOKEN = "<USUAL_TOKEN>"
+
     def __init__(
             self,
             documents: Iterable[Document],
@@ -15,21 +18,17 @@ class BaseSSANAdaptDataset(AbstractDataset):
             evaluation: bool,
             entities: Iterable[str],
             relations: Iterable[str],
-            no_ent_ind: int,
-            no_rel_ind: int,
             dist_base: int,
             dist_ceil: int
     ):
-        self._max_ent = self._count_max_ent(documents) if extract_labels and evaluation else None
+        self._max_ent = self._count_max_ent(documents) if evaluation else None
         self._entities = tuple(entities)
         self._relations = tuple(relations)
         self._ent_to_ind = {ent: ind for ind, ent in enumerate(entities)}
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}
 
-        self._no_ent_ind = no_ent_ind
-        self._no_rel_ind = no_rel_ind
-
-        self._usual_token = "<USUAL_TOKEN>"
+        self._bos_token = tokenizer.cls_token_id
+        self._eos_token = tokenizer.sep_token_id
 
         self._len_attr = get_tokenizer_len_attribute(tokenizer)
         self._distance_encoder = self._init_distance_encoder(tokenizer.__getattribute__(self._len_attr))
@@ -45,7 +44,8 @@ class BaseSSANAdaptDataset(AbstractDataset):
     @staticmethod
     def _count_max_ent(documents: Iterable[Document]):
         def get_ner_count(doc: Document):
-            return len(list(filter(lambda fact: fact.fact_type is FactType.ENTITY, doc.facts)))
+            return len(list(filter(lambda fact: fact.fact_class is FactClass.ENTITY, doc.facts)))
+
         doc2ner_count = [1] + list(map(lambda document: get_ner_count(document), documents))
         return max(doc2ner_count)
 
@@ -73,6 +73,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         if len(document.sentences) == 0:
             return
 
+        # 1st stage: tokenize text, get input_ids and extract entity facts
         # token_to_sentence - map token_ind to the corresponding sentence_ind
         # span_to_token_ind - map span to the corresponding token_ind's
         input_ids, token_to_sentence_ind, span_to_token_ind = self._tokenize(document)
@@ -81,20 +82,30 @@ class BaseSSANAdaptDataset(AbstractDataset):
         if len(ner_facts) == 0:
             return
 
+        # 2nd stage: get ner_ids and ent_mask
         # token_to_coreference_id - map token_ind to the coreference_id of the corresponding fact
         ner_ids, ent_mask, token_to_coreference_id = self._extract_ner_types(ner_facts, span_to_token_ind, input_ids.shape[0])
+
+        # 3rd stage: get dist_ids and struct_matrix
+        dist_ids = self._extract_dist_ids(ent_mask)
+        struct_matrix = self._extract_struct_matrix(token_to_sentence_ind, token_to_coreference_id)
+
+        # 4th stage: normalize ent_mask
+        tmp = ent_mask.sum(dim=-1)
+        tmp = tmp + (tmp == 0)
+        ent_mask = ent_mask / tmp.unsqueeze(1)
 
         features = {
             "input_ids": input_ids,
             "ner_ids": ner_ids,
-            "dist_ids": self._extract_dist_ids(ent_mask),
+            "dist_ids": dist_ids,
             "ent_mask": ent_mask,
             "attention_mask": torch.ones(input_ids.shape[0]).bool(),
-            "struct_matrix": self._extract_struct_matrix(token_to_sentence_ind, token_to_coreference_id),
+            "struct_matrix": struct_matrix,
         }
 
         labels = None
-        if self.extract_labels:
+        if self.extract_labels:  # 5th stage: extract labels and labels_mask
             labels_tensors, labels_mask = self._extract_labels_and_mask(ner_facts, self._extract_link_facts(document))
             labels = {"labels": labels_tensors, "labels_mask": labels_mask}
 
@@ -108,29 +119,34 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         for ind, sentence in enumerate(document.sentences):
             for span in sentence:
-                tokens = self.tokenizer(document.get_word(span))['input_ids'][1:-1]  # crop tokens of the beginning and the end
+                tokens = self.tokenizer.encode(document.get_word(span))[1:-1]  # crop tokens of the beginning and the end
+
+                tokens = tokens if len(tokens) else [self.tokenizer.unk_token_id]
 
                 input_ids.extend(tokens)
                 token_to_sentence_ind += [ind] * len(tokens)
                 token_to_span += [span] * len(tokens)
 
-        input_ids = input_ids[:self.max_len]
-        token_to_sentence_ind = token_to_sentence_ind[:self.max_len]
-        token_to_span = token_to_span[:self.max_len]
+        input_ids = input_ids[:self.max_len - 2]
+        token_to_sentence_ind = token_to_sentence_ind[:self.max_len - 2]
+        token_to_span = token_to_span[:self.max_len - 2]
+
+        input_ids = [self._bos_token] + input_ids + [self._eos_token]
+        token_to_sentence_ind = [None] + token_to_sentence_ind + [None]
 
         span_to_token_ind = defaultdict(list)
-        for token_ind, span in enumerate(token_to_span):
+        for token_ind, span in enumerate(token_to_span, start=1):
             span_to_token_ind[span].append(token_ind)
 
         return torch.tensor(input_ids, dtype=torch.long), token_to_sentence_ind, span_to_token_ind
 
     def _extract_ner_facts(self, document: Document, span_to_token_ind: Dict[Span, List[int]]):
-        ent_facts = tuple(filter(lambda fact: fact.fact_type is FactType.ENTITY, document.facts))
+        ent_facts = tuple(filter(lambda fact: fact.fact_class is FactClass.ENTITY, document.facts))
         return tuple(filter(lambda fact: any((span in span_to_token_ind) for span in fact.mentions), ent_facts))[:self.max_ent]
 
     @staticmethod
     def _extract_link_facts(document: Document):
-        return tuple(filter(lambda fact: fact.fact_type is FactType.RELATION, document.facts))
+        return tuple(filter(lambda fact: fact.fact_class is FactClass.RELATION, document.facts))
 
     def _extract_ner_types(self, ner_facts: Tuple[EntityFact, ...], span_to_token_ind: Dict[Span, List[int]], seq_len: int):
 
@@ -138,26 +154,27 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         ner_ids = torch.zeros(seq_len, dtype=torch.long)
         ent_mask = torch.zeros(max_ent, seq_len, dtype=torch.bool)
-        token_to_coreference_id = [self._usual_token] * seq_len
+        token_to_coreference_id = [type(self).USUAL_TOKEN] * seq_len
 
         for ind, fact in enumerate(ner_facts):
-            fact_type = self._ent_to_ind[fact.fact_type_id]
+            ind_of_type_id = self._ent_to_ind[fact.type_id]
 
             for span in fact.mentions:
                 for token_ind in span_to_token_ind.get(span, []):
-                    ner_ids[token_ind] = fact_type
+                    ner_ids[token_ind] = ind_of_type_id
                     ent_mask[ind][token_ind] = True
-                    token_to_coreference_id[ind] = fact.coreference_id
+                    token_to_coreference_id[token_ind] = fact.coreference_id
 
         return ner_ids, ent_mask, token_to_coreference_id
 
-    def _extract_struct_matrix(self, token_to_sentence_ind: List[int], token_to_coreference_id: List[str]):
+    @classmethod
+    def _extract_struct_matrix(cls, token_to_sentence_ind: List[int], token_to_coreference_id: List[str]):
         length = len(token_to_sentence_ind)
         struct_mask = torch.zeros((5, length, length), dtype=torch.bool)
 
         for i in range(length):
 
-            if token_to_coreference_id[i] == self._usual_token:
+            if token_to_coreference_id[i] == cls.USUAL_TOKEN:
                 continue
 
             for j in range(length):
@@ -165,12 +182,12 @@ class BaseSSANAdaptDataset(AbstractDataset):
                 if token_to_sentence_ind[i] != token_to_sentence_ind[j]:
                     if token_to_coreference_id[i] == token_to_coreference_id[j]:
                         struct_mask[0][i][j] = True  # inter-coref
-                    elif token_to_coreference_id[j] != 0:
+                    elif token_to_coreference_id[j] != cls.USUAL_TOKEN:
                         struct_mask[1][i][j] = True  # inter-relate
                 else:
                     if token_to_coreference_id[i] == token_to_coreference_id[j]:
                         struct_mask[2][i][j] = True  # intra-coref
-                    elif token_to_coreference_id[j] != 0:
+                    elif token_to_coreference_id[j] != cls.USUAL_TOKEN:
                         struct_mask[3][i][j] = True  # intra-relate
                     else:
                         struct_mask[4][i][j] = True  # intra-NA
@@ -205,20 +222,20 @@ class BaseSSANAdaptDataset(AbstractDataset):
         fact_to_ind = {fact: ind for ind, fact in enumerate(ner_facts)}
 
         labels = torch.zeros(max_ent, max_ent, len(self._relations), dtype=torch.bool)
-        labels[:len(ner_facts), :len(ner_facts), self._no_rel_ind] = True
+        labels[:len(ner_facts), :len(ner_facts), NO_REL_IND] = True
 
         labels_mask = torch.zeros(max_ent, max_ent, dtype=torch.bool)
         labels_mask[:len(ner_facts), :len(ner_facts)] = True
 
         for fact in link_facts:
 
-            if fact.fact_type_id not in self._relations or fact.from_fact not in ner_facts or fact.to_fact not in ner_facts:
+            if fact.type_id not in self._relations or fact.from_fact not in ner_facts or fact.to_fact not in ner_facts:
                 continue
 
             source_fact_ind = fact_to_ind[fact.from_fact]
             target_fact_ind = fact_to_ind[fact.to_fact]
 
-            labels[source_fact_ind][target_fact_ind][self._rel_to_ind[fact.fact_type_id]] = True
-            labels[source_fact_ind][target_fact_ind][self._no_rel_ind] = False
+            labels[source_fact_ind][target_fact_ind][self._rel_to_ind[fact.type_id]] = True
+            labels[source_fact_ind][target_fact_ind][NO_REL_IND] = False
 
         return labels, labels_mask

@@ -55,7 +55,7 @@ The base classes are divided into 3 main categories:
 
 * **_Examples' features_**:
   * Span
-  * FactType
+  * FactClass
   * AbstractFact
     * EntityFact
     * RelationFact
@@ -63,13 +63,12 @@ The base classes are divided into 3 main categories:
   * Document
   * PreparedDocument
   * AbstractDataset
-* **_Models and scores_**:
+* **_Models_**:
   * TorchModel
   * AbstractModel
-  * Score
-  * ModelScore
+  * AbstractWrapperModel
 
-And `Trainer` class that are responsible for model training and scoring 
+And `ModelManager` class that is responsible for model training and scoring 
 
 ### Examples' features
 ```mermaid
@@ -79,14 +78,14 @@ direction TB
    AbstractFact <|-- EntityFact
    AbstractFact <|-- RelationFact
    EntityFact "1" --> "1..*" Span : is mentioned in
-   AbstractFact "1" --> "1" FactType : is a
+   AbstractFact "1" --> "1" FactClass : is a
    
    class Span:::rect{
       +start_idx: int
       +end_idx: int
    }
    
-   class FactType{
+   class FactClass{
       <<Enumeration>>
       ENTITY
       RELATION
@@ -94,15 +93,14 @@ direction TB
 
    class AbstractFact{
       <<Abstract>> 
-      +fact_id: str
-      +fact_type_id: FactType
-      +fact_type: str
+      +name: str
+      +type_id: str
+      +fact_class: FactClass
    }
    
    class EntityFact{
       +coreference_id: str
-      +mentions: Tuple[Span]
-      -validate_mentions(self)
+      +mentions: FrozenSet[Span]
    }
    
    class RelationFact{
@@ -150,7 +148,7 @@ direction LR
    }
 ```
 
-### Models and scores
+### Models
 ```mermaid
 classDiagram
 direction TB
@@ -162,29 +160,19 @@ direction TB
       +load(cls, path: Path) TorchModel
    }
    TorchModel <|-- AbstractModel
+   AbstractModel <|-- AbstractWrapperModel
    
    class AbstractModel{
       <<Abstract>>
       +relations: Tuple[str]
-      +no_rel_ind: int
       +forward(self, *args, **kwargs) Any
-      +compute_loss(self, *args, **kwargs) Any
-      +score(self, logits: torch.Tensor, gold_labels: Dict[str, torch.Tensor]) ModelScore
       +prepare_dataset(self, documents: Iterable[Document], extract_labels, evaluation)  AbstractDataset
    }
    
-   class Score{
-      <<NamedTuple>>
-      +precision: float
-      +recall: float
-      +f_score: float
-   }
-   
-   class ModelScore{
-      <<NamedTuple>>
-      +relations_score: Dict[str, Score]
-      +macro_score: Score
-      +micro_score: Score
+   class AbstractWrapperModel{
+      <<Abstract>>
+      +evaluate(self, dataloader: DataLoader, output_path: str)
+      +predict(self, documents: Iterable[Document], dataloader: DataLoader, output_path: str)
    }
    
 ```
@@ -199,12 +187,8 @@ direction TB
 
 ### Dowload datasets
 
-`bash scripts/dowload_datasets.sh`
+`bash scripts/download_datasets.sh`
 
 ### Start training
 
-`bash scripts/run_train.sh -c path/to/config -v __gpu_id__`
-
-or
-
-`bash scripts/run_train_large.sh -c path/to/config -v __gpu_id__ -l __limit__`
+`bash scripts/train.sh -c path/to/config -v __gpu_id__`

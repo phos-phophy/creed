@@ -2,10 +2,10 @@ from collections import defaultdict
 from itertools import chain
 from typing import Dict, Iterable, Tuple
 
-from src.abstract.features import (
+from src.abstract.feature import (
     AbstractFact,
     EntityFact,
-    FactType,
+    FactClass,
     RelationFact,
     Span
 )
@@ -53,7 +53,7 @@ class Document:
     def _build_coreference_chains(facts) -> Dict[str, Tuple[EntityFact]]:
         coreference_chains = defaultdict(list)
         for fact in facts:
-            if fact.fact_type is FactType.ENTITY:
+            if fact.fact_class is FactClass.ENTITY:
                 fact: EntityFact
                 coreference_chains[fact.coreference_id].append(fact)
         return {key: tuple(item) for key, item in coreference_chains.items()}

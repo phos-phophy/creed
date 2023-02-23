@@ -17,18 +17,17 @@ class BaseSSANAdaptInnerModel(AbstractSSANAdaptInnerModel):
             self,
             entities: Iterable[str],
             relations: Iterable[str],
-            no_ent_ind: int,
             pretrained_model_path: str,
             tokenizer_path: str,
             dist_base: int
     ):
-        super(BaseSSANAdaptInnerModel, self).__init__(entities, relations, no_ent_ind, pretrained_model_path, tokenizer_path, dist_base)
+        super(BaseSSANAdaptInnerModel, self).__init__(entities, relations, pretrained_model_path, tokenizer_path, dist_base)
 
         self._redefine_model_structure()
 
     def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> BaseSSANAdaptDataset:
         return BaseSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations,
-                                    self.no_ent_ind, self.no_rel_ind, self._dist_base, self._dist_ceil)
+                                    self._dist_base, self._dist_ceil)
 
     def forward(
             self,
@@ -52,12 +51,6 @@ class BaseSSANAdaptInnerModel(AbstractSSANAdaptInnerModel):
             del layer.attention.self.struct_matrix
 
         return output
-
-    def compute_loss(self, *args, **kwargs) -> Any:
-        raise NotImplementedError
-
-    def score(self, *args, **kwargs) -> Any:
-        raise NotImplementedError
 
     def _redefine_model_structure(self):
         self._redefine_attention()

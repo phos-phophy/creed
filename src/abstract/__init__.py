@@ -1,22 +1,22 @@
-from .examples import AbstractDataset, Document, PreparedDocument, get_tokenizer_len_attribute
-from .features import AbstractFact, EntityFact, FactType, RelationFact, Span
-from .helpers import AbstractLoader, collate_fn
-from .models import AbstractModel, ModelScore, Score, TorchModel
+from .example import AbstractDataset, Document, PreparedDocument, get_tokenizer_len_attribute
+from .feature import AbstractFact, EntityFact, FactClass, RelationFact, Span
+from .loader import AbstractLoader
+from .model import AbstractModel, AbstractWrapperModel, NO_ENT_IND, NO_REL_IND, TorchModel
 
 __all__ = [
     "AbstractDataset",
     "AbstractFact",
     "AbstractLoader",
     "AbstractModel",
+    "AbstractWrapperModel",
     "Document",
     "EntityFact",
-    "FactType",
-    "ModelScore",
+    "FactClass",
+    "NO_ENT_IND",
+    "NO_REL_IND",
     "RelationFact",
     "PreparedDocument",
-    "Score",
     "Span",
     "TorchModel",
-    "collate_fn",
     "get_tokenizer_len_attribute"
 ]

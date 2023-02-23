@@ -25,13 +25,6 @@ Example from DocRED consists of the following fields:
 
 class DocREDLoader(AbstractLoader):
 
-    def __init__(self, rel_info: Dict[str, str] = None):
-        self._rel_info = rel_info if rel_info else {}
-
-    @property
-    def rel_info(self):
-        return self._rel_info
-
     def load(self, path: Path) -> Iterator[Document]:
         with path.open('r') as file:
             examples = json.load(file)
@@ -43,10 +36,10 @@ class DocREDLoader(AbstractLoader):
         sentences: List[List[Span]] = self._extract_sentences(example)
         text = ' '.join(word for sentence in example['sents'] for word in sentence)
 
-        entity_facts, coref_chains = self._extract_entity_facts(example["vertexSet"], sentences)
+        entity_facts = self._extract_entity_facts(example["vertexSet"], sentences)
 
         facts: List[AbstractFact] = entity_facts
-        facts.extend(self._extract_rel_facts(example.get("labels", []), coref_chains))
+        facts.extend(self._extract_rel_facts(example.get("labels", []), entity_facts))
 
         return Document(example["title"], text, sentences, facts)
 
@@ -69,26 +62,17 @@ class DocREDLoader(AbstractLoader):
     @staticmethod
     def _extract_entity_facts(vertex_set: List[List[Dict]], sentences: List[List[Span]]):
 
-        facts: List[EntityFact] = []
-        coref_chains: List[List[EntityFact]] = []
+        def get_mention_spans(mention: dict):
+            sent_id, start, end = mention["sent_id"], mention["pos"][0], mention["pos"][1]
+            return [sentences[sent_id][span_id] for span_id in range(start, end, 1)]
 
-        def build_entity_fact(desc: dict, coref_id: int):
-            mention_spans = [sentences[desc["sent_id"]][span_id] for span_id in range(desc["pos"][0], desc["pos"][1], 1)]
-            return EntityFact("", desc["type"], str(coref_id), tuple(mention_spans))
+        def build_entity_fact(facts_desc: List[dict], coref_id: int):
+            type_id = facts_desc[0]["type"]
+            mention_spans = chain.from_iterable(get_mention_spans(mention) for mention in facts_desc)
+            return EntityFact("", type_id, str(coref_id), tuple(set(mention_spans)))
 
-        for ind, coref_facts_desc in enumerate(vertex_set):
-            coref_facts = [build_entity_fact(fact_desc, ind) for fact_desc in coref_facts_desc]
-            facts.extend(coref_facts)
-            coref_chains.append(coref_facts)
+        return [build_entity_fact(coref_facts_desc, ind) for ind, coref_facts_desc in enumerate(vertex_set)]
 
-        return facts, coref_chains
-
-    def _extract_rel_facts(self, labels: List[Dict], coref_facts: List[List[EntityFact]]):
-
-        def build_rel_fact(desc: dict):
-            rel_type = self.rel_info.get(desc["r"], desc["r"])
-            from_facts = coref_facts[desc["h"]]
-            to_facts = coref_facts[desc["t"]]
-            return [RelationFact("", rel_type, from_fact, to_fact) for from_fact in from_facts for to_fact in to_facts]
-
-        return list(chain.from_iterable(build_rel_fact(rel_desc) for rel_desc in labels))
+    @staticmethod
+    def _extract_rel_facts(labels: List[Dict], entity_facts: List[EntityFact]):
+        return [RelationFact("", desc["r"], entity_facts[desc['h']], entity_facts[desc['t']]) for desc in labels]
