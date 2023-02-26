@@ -7,9 +7,9 @@ def get_ssan_adapt():
 
 
 MODELS = {
-    "ssan_adapt": get_ssan_adapt(),
+    "ssan_adapt": get_ssan_adapt,
 }
 
 
 def get_model(model_type: str, **kwargs) -> AbstractModel:
-    return MODELS[model_type](**kwargs)
+    return MODELS[model_type]()(**kwargs)
