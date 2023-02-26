@@ -9,7 +9,7 @@ from .dataset import WOTypesSSANAdaptDataset
 class WOTypesSSANAdaptInnerModel(BaseSSANAdaptInnerModel):
 
     def __init__(self, **kwargs):
-        stub_entities = ()
+        stub_entities = ('NO_ENT', 'ENT')
         super(WOTypesSSANAdaptInnerModel, self).__init__(entities=stub_entities, **kwargs)
 
     def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> WOTypesSSANAdaptDataset:
