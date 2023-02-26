@@ -28,7 +28,7 @@ if __name__ == '__main__':
     arguments = parser.parse_args()
     config_path = arguments.config_path
 
-    with Path(arguments.config_path).open('r') as file:
+    with Path(config_path).open('r') as file:
         config: dict = json.load(file)
 
     # parse main config
