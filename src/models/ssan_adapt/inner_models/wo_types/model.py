@@ -7,7 +7,11 @@ from .dataset import WOTypesSSANAdaptDataset
 
 
 class WOTypesSSANAdaptInnerModel(BaseSSANAdaptInnerModel):
-    def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> WOTypesSSANAdaptDataset:
+
+    def __init__(self, **kwargs):
         stub_entities = ()
-        return WOTypesSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, stub_entities, self.relations,
+        super(WOTypesSSANAdaptInnerModel, self).__init__(entities=stub_entities, **kwargs)
+
+    def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> WOTypesSSANAdaptDataset:
+        return WOTypesSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations,
                                        self._dist_base, self._dist_ceil)
