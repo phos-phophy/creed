@@ -26,6 +26,6 @@
   "dev_dataset_path": "etc/datasets/docred/dev.json",
   "test_dataset_path": "etc/datasets/docred/test.json",
   "save_path": "etc/models/ssan_adapt/docred/wo/model.pkl",
-  "output_eval_path": "etc/models/ssan_adapt/docred/base/eval_results.json",
-  "output_pred_path": "etc/models/ssan_adapt/docred/base/result.json"
+  "output_eval_path": "etc/models/ssan_adapt/docred/wo/eval_results.json",
+  "output_pred_path": "etc/models/ssan_adapt/docred/wo/result.json"
 }

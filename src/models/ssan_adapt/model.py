@@ -140,7 +140,7 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         # don't take into account gold <NO_REL> relation
         loss, preds, ent_masks, labels_ids = self._get_preds(dataloader, 'Evaluating')
-        labels_ids = torch.cat((labels_ids[:, :, :, :NO_REL_IND], labels_ids[:, :, :, NO_REL_IND + 1:]), dim=-1)
+        labels_ids = np.concatenate((labels_ids[:, :, :, :NO_REL_IND], labels_ids[:, :, :, NO_REL_IND + 1:]), axis=-1)
 
         total_labels = np.sum(labels_ids)
         output_preds = []
@@ -197,7 +197,7 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         output_preds = []
         for document, pred, ent_mask in zip(documents, preds, ent_masks):
-            for h, t, predicate_id in iter_over_pred(pred, ent_mask, self._threshold):
+            for h, t, _, predicate_id in iter_over_pred(pred, ent_mask, self._threshold):
                 output_preds.append(build_docred_pred(document.doc_id, h, t, self.relations[predicate_id]))
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -217,4 +217,4 @@ def iter_over_pred(pred, ent_mask, threshold):
                     continue
 
                 if logit >= threshold:
-                    yield h, t, predicate_id
+                    yield h, t, logit, predicate_id
