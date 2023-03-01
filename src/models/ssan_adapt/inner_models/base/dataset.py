@@ -19,7 +19,8 @@ class BaseSSANAdaptDataset(AbstractDataset):
             entities: Iterable[str],
             relations: Iterable[str],
             dist_base: int,
-            dist_ceil: int
+            dist_ceil: int,
+            desc: str
     ):
         self._max_ent = self._count_max_ent(documents) if evaluation else None
         self._entities = tuple(entities)
@@ -35,7 +36,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         self._dist_bins = torch.tensor([dist_base ** i for i in range(dist_ceil)], dtype=torch.long)
 
-        super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, extract_labels, evaluation)
+        super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation)
 
     @property
     def max_ent(self):

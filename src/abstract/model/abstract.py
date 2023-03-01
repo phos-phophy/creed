@@ -20,7 +20,13 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
         return self._relations
 
     @abstractmethod
-    def prepare_dataset(self, documents: Iterable[Document], extract_labels: bool = False, evaluation: bool = False) -> AbstractDataset:
+    def prepare_dataset(
+            self,
+            documents: Iterable[Document],
+            desc: str,
+            extract_labels: bool = False,
+            evaluation: bool = False
+    ) -> AbstractDataset:
         pass
 
     @abstractmethod

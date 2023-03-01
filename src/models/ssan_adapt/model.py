@@ -76,8 +76,8 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         return torch.sigmoid(logits)
 
-    def prepare_dataset(self, document: Iterable[Document], extract_labels=False, evaluation=False) -> AbstractDataset:
-        return self._inner_model.prepare_dataset(document, extract_labels, evaluation)
+    def prepare_dataset(self, document: Iterable[Document], desc: str, extract_labels=False, evaluation=False) -> AbstractDataset:
+        return self._inner_model.prepare_dataset(document, desc, extract_labels, evaluation)
 
     def _compute_loss(
             self,

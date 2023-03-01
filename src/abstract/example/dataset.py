@@ -3,6 +3,7 @@ from typing import Dict, Iterable, List, NamedTuple, Optional
 
 import torch
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
 from .document import Document
 from .helpers import get_tokenizer_len_attribute
@@ -14,7 +15,7 @@ class PreparedDocument(NamedTuple):
 
 
 class AbstractDataset(Dataset, metaclass=ABCMeta):
-    def __init__(self, documents: Iterable[Document], tokenizer, extract_labels: bool, evaluation: bool):
+    def __init__(self, documents: Iterable[Document], tokenizer, desc: str, extract_labels: bool, evaluation: bool):
         super(AbstractDataset, self).__init__()
 
         self._tokenizer = tokenizer
@@ -24,7 +25,7 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         self._len_attr = get_tokenizer_len_attribute(tokenizer)
 
         self._documents: List[PreparedDocument] = []
-        for doc in documents:
+        for doc in tqdm(documents, desc=desc):
             self._prepare_document(doc)
 
     def __getitem__(self, idx: int) -> PreparedDocument:

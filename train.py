@@ -44,9 +44,9 @@ if __name__ == '__main__':
     output_pred_path = config.get("output_pred_path", None)
 
     # get documents
-    print('Load the train and dev datasets')
+    print('Load the training and dev datasets')
     loader = get_loader(**loader_config)
-    train_documents = list(tqdm(loader.load(Path(train_dataset_path)), desc='Train documents'))
+    train_documents = list(tqdm(loader.load(Path(train_dataset_path)), desc='Training documents'))
     dev_documents = list(tqdm(loader.load(Path(dev_dataset_path)), desc='Dev documents')) if dev_dataset_path else None
 
     # train, evaluate, predict and save
