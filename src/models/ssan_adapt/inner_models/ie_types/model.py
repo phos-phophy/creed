@@ -12,5 +12,5 @@ class IETypesSSANAdaptInnerModel(BaseSSANAdaptInnerModel):
         super(BaseSSANAdaptInnerModel, self).__init__(entities=stub_entities, **kwargs)
 
     def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> IETypesSSANAdaptDataset:
-        return IETypesSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.stub_entities, self.relations,
+        return IETypesSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations,
                                        self._dist_base, self._dist_ceil)

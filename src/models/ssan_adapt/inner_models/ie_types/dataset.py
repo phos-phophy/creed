@@ -32,7 +32,7 @@ class IETypesSSANAdaptDataset(BaseSSANAdaptDataset):
                 else:
                     start[span_ind] = (ner_fact.coreference_id, ner_fact.type_id)
 
-                if span_ind - 1 < len(spans):
+                if span_ind < len(spans) - 1:
                     if start[span_ind + 1] != (ner_fact.coreference_id, ner_fact.type_id):
                         end[span_ind] = (ner_fact.coreference_id, ner_fact.type_id)
                     else:
