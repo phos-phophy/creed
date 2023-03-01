@@ -40,7 +40,7 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
                  EntityFact('', 'ENT2', '3', (Span(24, 27), Span(28, 31), Span(49, 52))))
 
         document = Document('', text, sentences, facts)
-        dataset = IETypesSSANAdaptDataset([document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil)
+        dataset = IETypesSSANAdaptDataset([document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
 
         start_ent_tokens, end_ent_tokens = dataset._get_ent_tokens(document)
 
@@ -66,7 +66,7 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
                  EntityFact('', 'ENT3', '3', (Span(28, 31), Span(49, 52))))
 
         document = Document('', text, sentences, facts)
-        dataset = IETypesSSANAdaptDataset([document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil)
+        dataset = IETypesSSANAdaptDataset([document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
 
         start_ent_tokens, end_ent_tokens = dataset._get_ent_tokens(document)
 

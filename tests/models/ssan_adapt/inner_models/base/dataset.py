@@ -35,7 +35,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
         documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
-        document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil)[0]
+        document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')[0]
 
         expected_shapes = {
             "features": {
@@ -64,8 +64,8 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
         documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
-        document1 = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil)[0]
-        document2 = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil)[0]
+        document1 = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')[0]
+        document2 = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')[0]
 
         for key, tensor in document1.features.items():
             equal_tensors(self, tensor.long(), document2.features[key].long())
@@ -80,7 +80,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
 
         documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
         documents = documents + documents
-        documents = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil)
+        documents = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
 
         document1 = documents[0]
         document2 = documents[1]
@@ -97,7 +97,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
         documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
-        document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil)[0]
+        document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')[0]
 
         rel_facts = tuple(filter(lambda fact: isinstance(fact, RelationFact) and fact.type_id in self.relations, documents[0].facts))
         ent_facts = tuple(filter(lambda fact: isinstance(fact, EntityFact), documents[0].facts))
@@ -128,7 +128,8 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
 
         gold_document = documents[0]
-        pred_document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil)[0]
+        pred_document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
+        pred_document = pred_document[0]
 
         gold_labels_num = len(list(filter(lambda fact: isinstance(fact, RelationFact), gold_document.facts)))
 

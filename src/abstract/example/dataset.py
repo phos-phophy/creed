@@ -25,7 +25,7 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         self._len_attr = get_tokenizer_len_attribute(tokenizer)
 
         self._documents: List[PreparedDocument] = []
-        for doc in tqdm(documents, desc=desc):
+        for doc in tqdm(documents, desc=desc, disable=not bool(desc)):
             self._prepare_document(doc)
 
     def __getitem__(self, idx: int) -> PreparedDocument:
