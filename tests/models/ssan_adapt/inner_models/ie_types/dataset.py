@@ -35,9 +35,9 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
                      (Span(33, 37), Span(38, 42), Span(42, 43)),
                      (Span(44, 48), Span(49, 52), Span(53, 57), Span(58, 62), Span(62, 63)))
 
-        facts = (EntityFact('', 'ENT1', '1', (Span(10, 13),)),
-                 EntityFact('', 'ENT1', '2', (Span(15, 18),)),
-                 EntityFact('', 'ENT2', '3', (Span(24, 27), Span(28, 31), Span(49, 52))))
+        facts = (EntityFact('', 'ENT1', 1, (Span(10, 13),)),
+                 EntityFact('', 'ENT1', 2, (Span(15, 18),)),
+                 EntityFact('', 'ENT2', 3, (Span(24, 27), Span(28, 31), Span(49, 52))))
 
         document = Document('', text, sentences, facts)
         dataset = IETypesSSANAdaptDataset([document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
@@ -60,10 +60,10 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
                      (Span(33, 37), Span(38, 42), Span(42, 43)),
                      (Span(44, 48), Span(49, 52), Span(53, 57), Span(58, 62), Span(62, 63)))
 
-        facts = (EntityFact('', 'ENT1', '1', (Span(10, 13),)),
-                 EntityFact('', 'ENT1', '2', (Span(15, 18),)),
-                 EntityFact('', 'ENT2', '4', (Span(24, 27),)),
-                 EntityFact('', 'ENT3', '3', (Span(28, 31), Span(49, 52))))
+        facts = (EntityFact('', 'ENT1', 1, (Span(10, 13),)),
+                 EntityFact('', 'ENT1', 2, (Span(15, 18),)),
+                 EntityFact('', 'ENT2', 4, (Span(24, 27),)),
+                 EntityFact('', 'ENT3', 3, (Span(28, 31), Span(49, 52))))
 
         document = Document('', text, sentences, facts)
         dataset = IETypesSSANAdaptDataset([document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')

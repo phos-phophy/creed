@@ -28,9 +28,9 @@ class DocREDLoaderTest(unittest.TestCase):
         sentences = [[Span(0, 5), Span(6, 14), Span(15, 16)],
                      [Span(17, 20), Span(21, 23), Span(24, 28), Span(29, 30)]]
         facts = [
-            EntityFact("", "NUM", "0", (Span(0, 5),)),
-            EntityFact("", "POS", "1", (Span(17, 20),)),
-            EntityFact("", "MISC", "2", (Span(24, 28),))
+            EntityFact("", "NUM", 0, (Span(0, 5),)),
+            EntityFact("", "POS", 1, (Span(17, 20),)),
+            EntityFact("", "MISC", 2, (Span(24, 28),))
         ]
         facts.extend([RelationFact("", "P17", facts[1], facts[2])])
 
@@ -57,9 +57,9 @@ class DocREDLoaderTest(unittest.TestCase):
         sentences = [[Span(0, 5), Span(6, 14), Span(15, 16)],
                      [Span(17, 20), Span(21, 23), Span(24, 28), Span(29, 30)]]
         facts = [
-            EntityFact("", "NUM", "0", (Span(0, 5),)),
-            EntityFact("", "POS", "1", (Span(17, 20),)),
-            EntityFact("", "MISC", "2", (Span(21, 23), Span(24, 28))),
+            EntityFact("", "NUM", 0, (Span(0, 5),)),
+            EntityFact("", "POS", 1, (Span(17, 20),)),
+            EntityFact("", "MISC", 2, (Span(21, 23), Span(24, 28))),
         ]
         facts.extend([RelationFact("", "P17", facts[1], facts[2])])
 
@@ -85,9 +85,9 @@ class DocREDLoaderTest(unittest.TestCase):
         sentences = [[Span(0, 5), Span(6, 14), Span(15, 16)],
                      [Span(17, 20), Span(21, 23), Span(24, 28), Span(29, 30)]]
         facts = [
-            EntityFact("", "NUM", "0", (Span(0, 5),)),
-            EntityFact("", "POS", "1", (Span(17, 20),)),
-            EntityFact("", "MISC", "2", (Span(21, 23),))
+            EntityFact("", "NUM", 0, (Span(0, 5),)),
+            EntityFact("", "POS", 1, (Span(17, 20),)),
+            EntityFact("", "MISC", 2, (Span(21, 23),))
         ]
         facts.extend([RelationFact("", "P17", facts[1], facts[2])])
 
@@ -136,17 +136,17 @@ class DocREDLoaderTest(unittest.TestCase):
                       Span(920, 921)]]
 
         facts = [
-            EntityFact("", "ORG", "0", (Span(573, 577), Span(578, 580), Span(0, 4), Span(5, 7), Span(424, 428), Span(429, 431))),
-            EntityFact("", "LOC", "1", (Span(13, 18),)),
-            EntityFact("", "LOC", "2", (Span(63, 70),)),
-            EntityFact("", "ORG", "3", (Span(91, 95), Span(96, 101))),
-            EntityFact("", "TIME", "4", (Span(194, 197), Span(198, 200), Span(201, 206), Span(207, 211))),
-            EntityFact("", "LOC", "5", (Span(219, 225),)),
-            EntityFact("", "ORG", "6", (Span(402, 406),)),
-            EntityFact("", "ORG", "7", (Span(411, 418), Span(419, 421))),
-            EntityFact("", "ORG", "8", (Span(452, 457),)),
-            EntityFact("", "LOC", "9", (Span(695, 701), Span(552, 558),)),
-            EntityFact("", "MISC", "10", (Span(633, 638),))
+            EntityFact("", "ORG", 0, (Span(573, 577), Span(578, 580), Span(0, 4), Span(5, 7), Span(424, 428), Span(429, 431))),
+            EntityFact("", "LOC", 1, (Span(13, 18),)),
+            EntityFact("", "LOC", 2, (Span(63, 70),)),
+            EntityFact("", "ORG", 3, (Span(91, 95), Span(96, 101))),
+            EntityFact("", "TIME", 4, (Span(194, 197), Span(198, 200), Span(201, 206), Span(207, 211))),
+            EntityFact("", "LOC", 5, (Span(219, 225),)),
+            EntityFact("", "ORG", 6, (Span(402, 406),)),
+            EntityFact("", "ORG", 7, (Span(411, 418), Span(419, 421))),
+            EntityFact("", "ORG", 8, (Span(452, 457),)),
+            EntityFact("", "LOC", 9, (Span(695, 701), Span(552, 558),)),
+            EntityFact("", "MISC", 10, (Span(633, 638),))
         ]
 
         facts.extend([
@@ -162,5 +162,5 @@ class DocREDLoaderTest(unittest.TestCase):
 
         gold_document = Document(doc_id, text, sentences, tuple(facts))
 
-        document = list(self.loader.load(Path("tests/loader/data/docred.json")))[0]
+        document = list(self.loader.load(Path("tests/loader/data/docred_1.json")))[0]
         equal_docs(self, gold_document, document)

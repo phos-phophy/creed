@@ -41,7 +41,7 @@ class AbstractFact(metaclass=ABCMeta):
 
 
 class EntityFact(AbstractFact):
-    def __init__(self, name: str, type_id: str, coreference_id: str, mentions: Tuple[Span, ...]):
+    def __init__(self, name: str, type_id: str, coreference_id: int, mentions: Tuple[Span, ...]):
         super().__init__(name, type_id, FactClass.ENTITY)
         self._coreference_id = coreference_id
         self._mentions = frozenset(mentions)

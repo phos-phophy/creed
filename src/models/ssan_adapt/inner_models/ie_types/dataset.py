@@ -68,7 +68,7 @@ class IETypesSSANAdaptDataset(BaseSSANAdaptDataset):
         token_to_span = token_to_span[:self.max_len - 2]
 
         input_ids = [self._bos_token] + input_ids + [self._eos_token]
-        token_to_sentence_ind = [None] + token_to_sentence_ind + [None]
+        token_to_sentence_ind = [-1] + token_to_sentence_ind + [-1]
 
         span_to_token_ind = defaultdict(list)
         for token_ind, span in enumerate(token_to_span, start=1):
@@ -84,9 +84,8 @@ class IETypesSSANAdaptDataset(BaseSSANAdaptDataset):
         ent_mask = torch.zeros(max_ent, seq_len, dtype=torch.bool)
         token_to_coreference_id = [type(self).USUAL_TOKEN] * seq_len
 
+        ind_of_type_id = type(self).ENT_IND
         for ind, fact in enumerate(ner_facts):
-            ind_of_type_id = type(self).ENT_IND
-
             for span in fact.mentions:
                 for token_ind in span_to_token_ind.get(span, []):
                     ner_ids[token_ind] = ind_of_type_id

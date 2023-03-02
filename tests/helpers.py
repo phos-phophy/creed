@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from src.abstract import Document
-from torch import Tensor, sum
+from torch import Tensor, abs, sum
 
 
 def equal_docs(case: TestCase, gold_doc: Document, doc: Document):
@@ -14,4 +14,4 @@ def equal_docs(case: TestCase, gold_doc: Document, doc: Document):
 
 def equal_tensors(case: TestCase, gold_tensor: Tensor, tensor: Tensor):
     case.assertEqual(gold_tensor.shape, tensor.shape)
-    case.assertAlmostEqual(0, sum(gold_tensor - tensor).item())
+    case.assertAlmostEqual(0, sum(abs(gold_tensor - tensor)).item())

@@ -1,7 +1,6 @@
 from typing import Dict, List, Tuple
 
 import torch
-
 from src.abstract import EntityFact, NO_ENT_IND, Span
 
 from ..base.dataset import BaseSSANAdaptDataset
@@ -18,9 +17,8 @@ class WOTypesSSANAdaptDataset(BaseSSANAdaptDataset):
         ent_mask = torch.zeros(max_ent, seq_len, dtype=torch.bool)
         token_to_coreference_id = [type(self).USUAL_TOKEN] * seq_len
 
+        ind_of_type_id = type(self).ENT_IND
         for ind, fact in enumerate(ner_facts):
-            ind_of_type_id = type(self).ENT_IND
-
             for span in fact.mentions:
                 for token_ind in span_to_token_ind.get(span, []):
                     ner_ids[token_ind] = ind_of_type_id

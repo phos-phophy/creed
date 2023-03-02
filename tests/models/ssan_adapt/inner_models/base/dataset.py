@@ -10,6 +10,8 @@ from src.models.ssan_adapt.inner_models.base.dataset import BaseSSANAdaptDataset
 from tests.helpers import equal_tensors
 from transformers import AutoTokenizer
 
+from .gold_dataset import GoldDataset
+
 
 class BaseSSANAdaptDatasetTest(unittest.TestCase):
 
@@ -34,7 +36,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
-        documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
+        documents = list(self.loader.load(Path("tests/loader/data/docred_1.json")))
         document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')[0]
 
         expected_shapes = {
@@ -63,7 +65,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
-        documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
+        documents = list(self.loader.load(Path("tests/loader/data/docred_1.json")))
         document1 = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')[0]
         document2 = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')[0]
 
@@ -78,7 +80,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
-        documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
+        documents = list(self.loader.load(Path("tests/loader/data/docred_1.json")))
         documents = documents + documents
         documents = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
 
@@ -96,7 +98,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
-        documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
+        documents = list(self.loader.load(Path("tests/loader/data/docred_1.json")))
         document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')[0]
 
         rel_facts = tuple(filter(lambda fact: isinstance(fact, RelationFact) and fact.type_id in self.relations, documents[0].facts))
@@ -125,7 +127,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
-        documents = list(self.loader.load(Path("tests/loader/data/docred.json")))
+        documents = list(self.loader.load(Path("tests/loader/data/docred_1.json")))
 
         gold_document = documents[0]
         pred_document = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
@@ -138,3 +140,15 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         pred_labels_num = torch.sum(labels, dtype=torch.int).item()
 
         self.assertEqual(gold_labels_num, pred_labels_num)
+
+    def test_struct_matrix(self):
+        dist_base = 2
+        dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
+
+        documents = list(self.loader.load(Path("tests/loader/data/docred_200.json")))
+
+        pred_dataset = BaseSSANAdaptDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
+        gold_dataset = GoldDataset(documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
+
+        for p_doc, g_doc in zip(pred_dataset, gold_dataset):
+            equal_tensors(self, p_doc.features["struct_matrix"] * 1, g_doc.features["struct_matrix"] * 1)
