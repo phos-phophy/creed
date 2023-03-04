@@ -3,12 +3,12 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, Document, EntityFact, FactClass, NO_REL_IND, PreparedDocument, RelationFact, Span, \
+from src.abstract import AbstractDataset, Document, EntityFact, FactClass, NO_ENT_IND, NO_REL_IND, PreparedDocument, RelationFact, Span, \
     get_tokenizer_len_attribute
 
 
 class BaseSSANAdaptDataset(AbstractDataset):
-    USUAL_TOKEN = "<USUAL_TOKEN>"
+    USUAL_TOKEN = -1
 
     def __init__(
             self,
@@ -19,7 +19,8 @@ class BaseSSANAdaptDataset(AbstractDataset):
             entities: Iterable[str],
             relations: Iterable[str],
             dist_base: int,
-            dist_ceil: int
+            dist_ceil: int,
+            desc: str
     ):
         self._max_ent = self._count_max_ent(documents) if evaluation else None
         self._entities = tuple(entities)
@@ -35,7 +36,11 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         self._dist_bins = torch.tensor([dist_base ** i for i in range(dist_ceil)], dtype=torch.long)
 
-        super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, extract_labels, evaluation)
+        self.total_time = 0
+        self.total_len = 0
+        self.total_len_sq = 0
+
+        super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation)
 
     @property
     def max_ent(self):
@@ -132,7 +137,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         token_to_span = token_to_span[:self.max_len - 2]
 
         input_ids = [self._bos_token] + input_ids + [self._eos_token]
-        token_to_sentence_ind = [None] + token_to_sentence_ind + [None]
+        token_to_sentence_ind = [-1] + token_to_sentence_ind + [-1]
 
         span_to_token_ind = defaultdict(list)
         for token_ind, span in enumerate(token_to_span, start=1):
@@ -152,7 +157,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         max_ent = self.max_ent if self.max_ent else len(ner_facts)
 
-        ner_ids = torch.zeros(seq_len, dtype=torch.long)
+        ner_ids = torch.ones(seq_len, dtype=torch.long) * NO_ENT_IND
         ent_mask = torch.zeros(max_ent, seq_len, dtype=torch.bool)
         token_to_coreference_id = [type(self).USUAL_TOKEN] * seq_len
 
@@ -167,30 +172,34 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         return ner_ids, ent_mask, token_to_coreference_id
 
-    @classmethod
-    def _extract_struct_matrix(cls, token_to_sentence_ind: List[int], token_to_coreference_id: List[str]):
-        length = len(token_to_sentence_ind)
-        struct_mask = torch.zeros((5, length, length), dtype=torch.bool)
+    def _extract_struct_matrix(self, token_to_sentence_ind: List[int], token_to_coreference_id: List[int]):
 
-        for i in range(length):
+        token_to_sentence_ind = torch.tensor([token_to_sentence_ind])  # (1, length)
+        token_to_coreference_id = torch.tensor([token_to_coreference_id])  # (1, length)
 
-            if token_to_coreference_id[i] == cls.USUAL_TOKEN:
-                continue
+        same_sent = token_to_sentence_ind.t() == token_to_sentence_ind  # (length, length)
+        same_id = token_to_coreference_id.t() == token_to_coreference_id  # (length, length)
+        is_usual_id = (token_to_coreference_id == type(self).USUAL_TOKEN).view(-1)  # (length,)
 
-            for j in range(length):
+        intra_coref = same_sent * same_id  # (length, length)
+        intra_coref[is_usual_id] = False
 
-                if token_to_sentence_ind[i] != token_to_sentence_ind[j]:
-                    if token_to_coreference_id[i] == token_to_coreference_id[j]:
-                        struct_mask[0][i][j] = True  # inter-coref
-                    elif token_to_coreference_id[j] != cls.USUAL_TOKEN:
-                        struct_mask[1][i][j] = True  # inter-relate
-                else:
-                    if token_to_coreference_id[i] == token_to_coreference_id[j]:
-                        struct_mask[2][i][j] = True  # intra-coref
-                    elif token_to_coreference_id[j] != cls.USUAL_TOKEN:
-                        struct_mask[3][i][j] = True  # intra-relate
-                    else:
-                        struct_mask[4][i][j] = True  # intra-NA
+        intra_relate = same_sent * ~same_id  # (length, length)
+        intra_relate[:, is_usual_id] = False
+        intra_relate[is_usual_id] = False
+
+        intra_na = same_sent * ~same_id  # (length, length)
+        intra_na[:, ~is_usual_id] = False
+        intra_na[is_usual_id] = False
+
+        inter_coref = ~same_sent * same_id  # (length, length)
+        inter_coref[is_usual_id] = False
+
+        inter_relate = ~same_sent * ~same_id  # (length, length)
+        inter_relate[:, is_usual_id] = False
+        inter_relate[is_usual_id] = False
+
+        struct_mask = torch.stack((inter_coref, inter_relate, intra_coref, intra_relate, intra_na))
 
         return struct_mask
 

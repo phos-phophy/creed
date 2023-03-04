@@ -13,21 +13,12 @@ from ..abstract import AbstractSSANAdaptInnerModel
 
 
 class BaseSSANAdaptInnerModel(AbstractSSANAdaptInnerModel):
-    def __init__(
-            self,
-            entities: Iterable[str],
-            relations: Iterable[str],
-            pretrained_model_path: str,
-            tokenizer_path: str,
-            dist_base: int
-    ):
-        super(BaseSSANAdaptInnerModel, self).__init__(entities, relations, pretrained_model_path, tokenizer_path, dist_base)
+    def __init__(self, entities: Iterable[str], **kwargs):
+        super(BaseSSANAdaptInnerModel, self).__init__(entities=entities, **kwargs)
 
-        self._redefine_model_structure()
-
-    def prepare_dataset(self, documents: Iterable[Document], extract_labels=False, evaluation=False) -> BaseSSANAdaptDataset:
+    def prepare_dataset(self, documents: Iterable[Document], desc: str, extract_labels=False, evaluation=False) -> BaseSSANAdaptDataset:
         return BaseSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations,
-                                    self._dist_base, self._dist_ceil)
+                                    self._dist_base, self._dist_ceil, desc)
 
     def forward(
             self,

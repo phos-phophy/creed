@@ -50,7 +50,7 @@ class Document:
         return self._coreference_chains
 
     @staticmethod
-    def _build_coreference_chains(facts) -> Dict[str, Tuple[EntityFact]]:
+    def _build_coreference_chains(facts) -> Dict[int, Tuple[EntityFact]]:
         coreference_chains = defaultdict(list)
         for fact in facts:
             if fact.fact_class is FactClass.ENTITY:

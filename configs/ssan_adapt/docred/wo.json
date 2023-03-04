@@ -3,13 +3,13 @@
     "loader_type": "docred"
   },
   "init_config": {
-    "load_path": "etc/models/ssan_adapt/docred/base_distant/model.pkl"
+    "load_path": "etc/models/ssan_adapt/docred/wo_distant/model.pkl"
   },
   "training_config": {
     "compute_metrics": false,
     "training_arguments": {
-      "logging_dir": "etc/models/ssan_adapt/docred/base/log_dir",
-      "output_dir": "etc/models/ssan_adapt/docred/base/output",
+      "logging_dir": "etc/models/ssan_adapt/docred/wo/log_dir",
+      "output_dir": "etc/models/ssan_adapt/docred/wo/output",
       "num_train_epochs": 60,
       "save_total_limit": 1,
       "evaluation_strategy": "epoch",
@@ -25,7 +25,7 @@
   "train_dataset_path": "etc/datasets/docred/train_annotated.json",
   "dev_dataset_path": "etc/datasets/docred/dev.json",
   "test_dataset_path": "etc/datasets/docred/test.json",
-  "save_path": "etc/models/ssan_adapt/docred/base/model.pkl",
-  "output_eval_path": "etc/models/ssan_adapt/docred/base/eval_results.json",
-  "output_pred_path": "etc/models/ssan_adapt/docred/base/result.json"
+  "save_path": "etc/models/ssan_adapt/docred/wo/model.pkl",
+  "output_eval_path": "etc/models/ssan_adapt/docred/wo/eval_results.json",
+  "output_pred_path": "etc/models/ssan_adapt/docred/wo/result.json"
 }

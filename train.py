@@ -4,6 +4,7 @@ from pathlib import Path
 
 from src.loader import get_loader
 from src.manager import InitConfig, ModelManager, TrainingConfig
+from tqdm import tqdm
 
 """Config structure:
 {
@@ -28,7 +29,7 @@ if __name__ == '__main__':
     arguments = parser.parse_args()
     config_path = arguments.config_path
 
-    with Path(arguments.config_path).open('r') as file:
+    with Path(config_path).open('r') as file:
         config: dict = json.load(file)
 
     # parse main config
@@ -43,23 +44,31 @@ if __name__ == '__main__':
     output_pred_path = config.get("output_pred_path", None)
 
     # get documents
+    print('Load the training and dev datasets')
     loader = get_loader(**loader_config)
-    train_documents = list(loader.load(Path(train_dataset_path)))
-    dev_documents = list(loader.load(Path(dev_dataset_path))) if dev_dataset_path else None
+    train_documents = list(tqdm(loader.load(Path(train_dataset_path)), desc='Training documents'))
+    dev_documents = list(tqdm(loader.load(Path(dev_dataset_path)), desc='Dev documents')) if dev_dataset_path else None
 
     # train, evaluate, predict and save
+    print('Init the model and its manager')
     manager = ModelManager(init_config)
+
+    print('Start training')
     manager.train(training_config, train_documents, dev_documents)
 
+    print(f'Save the model in the file {Path(save_path)}')
     manager.save(Path(save_path), False)
 
     batch_size = training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
     if dev_documents and output_eval_path:
+        print(f'Evaluate the model. The results will be saved in the file {Path(output_eval_path)}')
         manager.evaluate(dev_documents, Path(output_eval_path), batch_size)
 
     if test_dataset_path and output_pred_path:
-        test_documents = list(loader.load(Path(test_dataset_path)))
+        print(f'Load the test dataset and make predictions that will be saved in the file {Path(output_pred_path)}')
+        test_documents = list(tqdm(loader.load(Path(test_dataset_path)), desc='Test documents'))
         manager.predict(test_documents, Path(output_pred_path), batch_size)
 
+    print(f'Save the model in the file {Path(save_path)}')
     manager.save(Path(save_path), True)

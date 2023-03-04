@@ -15,19 +15,15 @@ class SSANAdaptModel(AbstractWrapperModel):
 
     def __init__(
             self,
-            entities: Iterable[str],
-            relations: Iterable[str],
             inner_model_type: str,
             hidden_dim: int,
+            relations: Iterable[str],
             **kwargs
     ):
-        self._entities = tuple(entities)
 
         super(SSANAdaptModel, self).__init__(relations)
 
-        self._inner_model: AbstractSSANAdaptInnerModel = get_inner_model(
-            inner_model_type=inner_model_type, entities=entities, relations=relations, **kwargs
-        )
+        self._inner_model: AbstractSSANAdaptInnerModel = get_inner_model(inner_model_type=inner_model_type, relations=relations, **kwargs)
 
         self._dist_ceil = self._inner_model.dist_ceil
         self._dist_emb_dim = self._dist_ceil * 2
@@ -40,10 +36,6 @@ class SSANAdaptModel(AbstractWrapperModel):
         self._bili = torch.nn.Bilinear(hidden_dim + self._dist_emb_dim, hidden_dim + self._dist_emb_dim, len(self.relations))
 
         self._threshold = None
-
-    @property
-    def entities(self):
-        return self._entities
 
     def forward(
             self,
@@ -84,8 +76,8 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         return torch.sigmoid(logits)
 
-    def prepare_dataset(self, document: Iterable[Document], extract_labels=False, evaluation=False) -> AbstractDataset:
-        return self._inner_model.prepare_dataset(document, extract_labels, evaluation)
+    def prepare_dataset(self, document: Iterable[Document], desc: str, extract_labels=False, evaluation=False) -> AbstractDataset:
+        return self._inner_model.prepare_dataset(document, desc, extract_labels, evaluation)
 
     def _compute_loss(
             self,
@@ -148,7 +140,7 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         # don't take into account gold <NO_REL> relation
         loss, preds, ent_masks, labels_ids = self._get_preds(dataloader, 'Evaluating')
-        labels_ids = torch.cat((labels_ids[:, :, :, :NO_REL_IND], labels_ids[:, :, :, NO_REL_IND + 1:]), dim=-1)
+        labels_ids = np.concatenate((labels_ids[:, :, :, :NO_REL_IND], labels_ids[:, :, :, NO_REL_IND + 1:]), axis=-1)
 
         total_labels = np.sum(labels_ids)
         output_preds = []
@@ -205,7 +197,7 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         output_preds = []
         for document, pred, ent_mask in zip(documents, preds, ent_masks):
-            for h, t, predicate_id in iter_over_pred(pred, ent_mask, self._threshold):
+            for h, t, _, predicate_id in iter_over_pred(pred, ent_mask, self._threshold):
                 output_preds.append(build_docred_pred(document.doc_id, h, t, self.relations[predicate_id]))
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -225,4 +217,4 @@ def iter_over_pred(pred, ent_mask, threshold):
                     continue
 
                 if logit >= threshold:
-                    yield h, t, predicate_id
+                    yield h, t, logit, predicate_id

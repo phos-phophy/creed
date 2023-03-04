@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, NamedTuple
 
 import torch
-from src.abstract import AbstractDataset, AbstractWrapperModel, Document
+from src.abstract import AbstractWrapperModel, Document
 from src.models import get_model
 from torch.utils.data import DataLoader
 from transformers import Trainer, TrainingArguments
@@ -38,8 +38,8 @@ class ModelManager:
         train_params = TrainingArguments(**config.training_arguments)
         compute_metrics = config.compute_metrics
 
-        train_dataset: AbstractDataset = self.model.prepare_dataset(train_documents, True, False)
-        dev_dataset: AbstractDataset = self.model.prepare_dataset(dev_documents, True, True) if dev_documents else None
+        train_dataset = self.model.prepare_dataset(train_documents, 'Prepare training dataset', True, False)
+        dev_dataset = self.model.prepare_dataset(dev_documents, 'Prepare dev dataset', True, True) if dev_documents else None
 
         compute_metrics = partial(score_model, relations=self.model.relations) if compute_metrics else None
 
@@ -57,13 +57,13 @@ class ModelManager:
         trainer.train()
 
     def evaluate(self, documents: List[Document], output_path: Path = None, batch_size: int = 5):
-        dataset: AbstractDataset = self.model.prepare_dataset(documents, True, True)
+        dataset = self.model.prepare_dataset(documents, 'Prepare dev dataset', True, True)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
         torch.cuda.empty_cache()
         self.model.evaluate(dataloader, output_path)
 
     def predict(self, documents: List[Document], output_path: Path, batch_size: int = 5):
-        dataset: AbstractDataset = self.model.prepare_dataset(documents, False, True)
+        dataset = self.model.prepare_dataset(documents, 'Prepare test dataset', False, True)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
         torch.cuda.empty_cache()
         self.model.predict(documents, dataloader, output_path)

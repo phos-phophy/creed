@@ -99,7 +99,7 @@ direction TB
    }
    
    class EntityFact{
-      +coreference_id: str
+      +coreference_id: int
       +mentions: FrozenSet[Span]
    }
    
