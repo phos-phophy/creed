@@ -36,10 +36,6 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         self._dist_bins = torch.tensor([dist_base ** i for i in range(dist_ceil)], dtype=torch.long)
 
-        self.total_time = 0
-        self.total_len = 0
-        self.total_len_sq = 0
-
         super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation)
 
     @property
