@@ -2,7 +2,7 @@ import math
 from typing import Any, Iterable, Tuple
 
 import torch
-from src.abstract import Document
+from src.abstract import DiversifierConfig, Document
 from transformers.models.bert.modeling_bert import (
     BertEmbeddings,
     BertSelfAttention
@@ -16,9 +16,20 @@ class BaseSSANAdaptInnerModel(AbstractSSANAdaptInnerModel):
     def __init__(self, entities: Iterable[str], **kwargs):
         super(BaseSSANAdaptInnerModel, self).__init__(entities=entities, **kwargs)
 
-    def prepare_dataset(self, documents: Iterable[Document], desc: str, extract_labels=False, evaluation=False) -> BaseSSANAdaptDataset:
+    def prepare_dataset(
+            self,
+            documents: Iterable[Document],
+            diversifier: DiversifierConfig,
+            desc: str,
+            extract_labels=False,
+            evaluation=False
+    ) -> BaseSSANAdaptDataset:
+
+        if diversifier.active:
+            raise ValueError("Base SSAN Adapt model and active diversifier are not compatible!")
+
         return BaseSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations,
-                                    self._dist_base, self._dist_ceil, desc)
+                                    self._dist_base, self._dist_ceil, desc, diversifier)
 
     def forward(
             self,

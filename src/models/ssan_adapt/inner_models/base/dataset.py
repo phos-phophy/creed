@@ -3,8 +3,8 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, Document, EntityFact, FactClass, NO_ENT_IND, NO_REL_IND, PreparedDocument, RelationFact, Span, \
-    get_tokenizer_len_attribute
+from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, FactClass, NO_ENT_IND, NO_REL_IND, PreparedDocument, \
+    RelationFact, Span
 
 
 class BaseSSANAdaptDataset(AbstractDataset):
@@ -20,23 +20,21 @@ class BaseSSANAdaptDataset(AbstractDataset):
             relations: Iterable[str],
             dist_base: int,
             dist_ceil: int,
-            desc: str
+            desc: str,
+            diversifier: DiversifierConfig
     ):
+        super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation, diversifier)
+
         self._max_ent = self._count_max_ent(documents) if evaluation else None
         self._entities = tuple(entities)
         self._relations = tuple(relations)
         self._ent_to_ind = {ent: ind for ind, ent in enumerate(entities)}
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}
 
-        self._bos_token = tokenizer.cls_token_id
-        self._eos_token = tokenizer.sep_token_id
-
-        self._len_attr = get_tokenizer_len_attribute(tokenizer)
-        self._distance_encoder = self._init_distance_encoder(tokenizer.__getattribute__(self._len_attr))
+        self._bos_token = self.tokenizer.cls_token_id
+        self._eos_token = self.tokenizer.sep_token_id
 
         self._dist_bins = torch.tensor([dist_base ** i for i in range(dist_ceil)], dtype=torch.long)
-
-        super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation)
 
     @property
     def max_ent(self):
@@ -50,16 +48,27 @@ class BaseSSANAdaptDataset(AbstractDataset):
         doc2ner_count = [1] + list(map(lambda document: get_ner_count(document), documents))
         return max(doc2ner_count)
 
-    @staticmethod
-    def _init_distance_encoder(max_len):
-        encoder = torch.zeros(max_len, dtype=torch.long)
-        ind = 1
-        while ind < max_len:
-            encoder[ind:] += 1
-            ind <<= 1
-        return encoder
+    def _build_empty_doc(self):
 
-    def _prepare_document(self, document: Document):
+        features = {
+            "input_ids": torch.ones((1,), dtype=torch.long),
+            "ner_ids": torch.ones((1,), dtype=torch.long),
+            "dist_ids": torch.zeros((1, 1), dtype=torch.long),
+            "ent_mask": torch.zeros((1, 1), dtype=torch.bool),
+            "attention_mask": torch.zeros((1,), dtype=torch.bool),
+            "struct_matrix": torch.zeros((5, 1, 1), dtype=torch.bool),
+        }
+
+        labels = None
+        if self.extract_labels:
+            labels = {
+                "labels": torch.zeros((1, 1, len(self._relations)), dtype=torch.bool),
+                "labels_mask": torch.zeros((1, 1), dtype=torch.bool)
+            }
+
+        return PreparedDocument(features=features, labels=labels)
+
+    def _prepare_document(self, document: Document) -> PreparedDocument:
         """
         1) input_ids: LongTensor (len,)
         2) ner_ids: LongTensor  (len,)
@@ -72,7 +81,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         """
 
         if len(document.sentences) == 0:
-            return
+            return self._build_empty_doc()
 
         # 1st stage: tokenize text, get input_ids and extract entity facts
         # token_to_sentence - map token_ind to the corresponding sentence_ind
@@ -81,7 +90,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
         ner_facts = self._extract_ner_facts(document, span_to_token_ind)
 
         if len(ner_facts) == 0:
-            return
+            return self._build_empty_doc()
 
         # 2nd stage: get ner_ids and ent_mask
         # token_to_coreference_id - map token_ind to the coreference_id of the corresponding fact
@@ -110,9 +119,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
             labels_tensors, labels_mask = self._extract_labels_and_mask(ner_facts, self._extract_link_facts(document))
             labels = {"labels": labels_tensors, "labels_mask": labels_mask}
 
-        prepared_document = PreparedDocument(features=features, labels=labels)
-
-        self._documents.append(prepared_document)
+        return PreparedDocument(features=features, labels=labels)
 
     def _tokenize(self, document: Document):
 

@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Any, Iterable
 
-from src.abstract.example import AbstractDataset, Document
+from src.abstract.example import AbstractDataset, DiversifierConfig, Document
 
 from .torch_model import TorchModel
 
@@ -23,6 +23,7 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
     def prepare_dataset(
             self,
             documents: Iterable[Document],
+            diversifier: DiversifierConfig,
             desc: str,
             extract_labels: bool = False,
             evaluation: bool = False

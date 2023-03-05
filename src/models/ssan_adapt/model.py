@@ -4,7 +4,7 @@ from typing import Any, Iterable, List
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, AbstractWrapperModel, Document, NO_REL_IND
+from src.abstract import AbstractDataset, AbstractWrapperModel, DiversifierConfig, Document, NO_REL_IND
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -76,8 +76,15 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         return torch.sigmoid(logits)
 
-    def prepare_dataset(self, document: Iterable[Document], desc: str, extract_labels=False, evaluation=False) -> AbstractDataset:
-        return self._inner_model.prepare_dataset(document, desc, extract_labels, evaluation)
+    def prepare_dataset(
+            self,
+            document: Iterable[Document],
+            diversifier: DiversifierConfig,
+            desc: str,
+            extract_labels=False,
+            evaluation=False
+    ) -> AbstractDataset:
+        return self._inner_model.prepare_dataset(document, diversifier, desc, extract_labels, evaluation)
 
     def _compute_loss(
             self,
