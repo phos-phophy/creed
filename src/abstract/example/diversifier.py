@@ -1,11 +1,11 @@
 import random
-from typing import Dict, NamedTuple, Tuple
+from typing import Dict, NamedTuple, Sequence
 
 
 class DiversifierConfig(NamedTuple):
     replace_prob: float = 0
     noise_prob: float = 0
-    mapping: Dict[str, Tuple[str]] = {}
+    mapping: Dict[str, Sequence[str]] = {}
 
     def validate(self):
         if self.replace_prob + self.noise_prob > 1.0:
@@ -35,7 +35,7 @@ class Diversifier:
     def __getitem__(self, item):
         chance = random.random()
         if chance < self._replace:
-            return self._mapping.get(item, item)
+            return random.choice(self._mapping.get(item, [item]))
         elif chance < self._noise and self._tokenizer:
             return random.choice(self._tokenizer.get_vocab().keys())
         return item

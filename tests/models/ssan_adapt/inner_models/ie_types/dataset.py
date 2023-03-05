@@ -3,7 +3,7 @@ import math
 import unittest
 from pathlib import Path
 
-from src.abstract import Document, EntityFact, Span, get_tokenizer_len_attribute
+from src.abstract import DiversifierConfig, Document, EntityFact, Span, get_tokenizer_len_attribute
 from src.loader import DocREDLoader
 from src.models.ssan_adapt.inner_models.ie_types.dataset import IETypesSSANAdaptDataset
 from transformers import AutoTokenizer
@@ -29,6 +29,8 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
+        diversifier = DiversifierConfig()
+
         text = "word word ent. ent word ent ent. word word. word ent word word."
         sentences = ((Span(0, 4), Span(5, 9), Span(10, 13), Span(13, 14)),
                      (Span(15, 18), Span(19, 23), Span(24, 27), Span(28, 31), Span(31, 32)),
@@ -40,7 +42,9 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
                  EntityFact('', 'ENT2', 3, (Span(24, 27), Span(28, 31), Span(49, 52))))
 
         document = Document('', text, sentences, facts)
-        dataset = IETypesSSANAdaptDataset([document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
+        dataset = IETypesSSANAdaptDataset(
+            [document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', diversifier
+        ).prepare_documents()
 
         start_ent_tokens, end_ent_tokens = dataset._get_ent_tokens(document)
 
@@ -54,6 +58,8 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
         dist_base = 2
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
+        diversifier = DiversifierConfig()
+
         text = "word word ent. ent word ent ent. word word. word ent word word."
         sentences = ((Span(0, 4), Span(5, 9), Span(10, 13), Span(13, 14)),
                      (Span(15, 18), Span(19, 23), Span(24, 27), Span(28, 31), Span(31, 32)),
@@ -66,12 +72,43 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
                  EntityFact('', 'ENT3', 3, (Span(28, 31), Span(49, 52))))
 
         document = Document('', text, sentences, facts)
-        dataset = IETypesSSANAdaptDataset([document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '')
+        dataset = IETypesSSANAdaptDataset(
+            [document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', diversifier
+        ).prepare_documents()
 
         start_ent_tokens, end_ent_tokens = dataset._get_ent_tokens(document)
 
         expected_start = ['', '', ' <ENT1> ', '', ' <ENT1> ', '', ' <ENT2> ', ' <ENT3> ', '', '', '', '', '', ' <ENT3> ', '', '', '']
         expected_end = ['', '', ' </ENT1> ', '', ' </ENT1> ', '', ' </ENT2> ', ' </ENT3> ', '', '', '', '', '', ' </ENT3> ', '', '', '']
+
+        self.assertEqual(expected_start, start_ent_tokens)
+        self.assertEqual(expected_end, end_ent_tokens)
+
+    def test_diversifier(self):
+        dist_base = 2
+        dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
+
+        diversifier = DiversifierConfig(replace_prob=1, mapping={'ENT2': ['ENT3']})
+
+        text = "word word ent. ent word ent ent. word word. word ent word word."
+        sentences = ((Span(0, 4), Span(5, 9), Span(10, 13), Span(13, 14)),
+                     (Span(15, 18), Span(19, 23), Span(24, 27), Span(28, 31), Span(31, 32)),
+                     (Span(33, 37), Span(38, 42), Span(42, 43)),
+                     (Span(44, 48), Span(49, 52), Span(53, 57), Span(58, 62), Span(62, 63)))
+
+        facts = (EntityFact('', 'ENT1', 1, (Span(10, 13),)),
+                 EntityFact('', 'ENT1', 2, (Span(15, 18),)),
+                 EntityFact('', 'ENT2', 3, (Span(24, 27), Span(28, 31), Span(49, 52))))
+
+        document = Document('', text, sentences, facts)
+        dataset = IETypesSSANAdaptDataset(
+            [document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', diversifier
+        ).prepare_documents()
+
+        start_ent_tokens, end_ent_tokens = dataset._get_ent_tokens(document)
+
+        expected_start = ['', '', ' <ENT1> ', '', ' <ENT1> ', '', ' <ENT3> ', '', '', '', '', '', '', ' <ENT3> ', '', '', '']
+        expected_end = ['', '', ' </ENT1> ', '', ' </ENT1> ', '', '', ' </ENT3> ', '', '', '', '', '', ' </ENT3> ', '', '', '']
 
         self.assertEqual(expected_start, start_ent_tokens)
         self.assertEqual(expected_end, end_ent_tokens)
