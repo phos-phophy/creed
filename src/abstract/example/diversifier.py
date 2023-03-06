@@ -25,7 +25,7 @@ class Diversifier:
 
         config.validate()
 
-        self._tokenizer = tokenizer
+        self._vocab = tuple(tokenizer.get_vocab().keys()) if tokenizer else ()
         self._replace = config.replace_prob
         self._noise = config.noise_prob + config.replace_prob
         self._mapping = config.mapping
@@ -36,8 +36,8 @@ class Diversifier:
         chance = random.random()
         if chance < self._replace:
             return random.choice(self._mapping.get(item, [item]))
-        elif chance < self._noise and self._tokenizer:
-            return random.choice(self._tokenizer.get_vocab().keys())
+        elif chance < self._noise and self._vocab:
+            return random.choice(self._vocab)
         return item
 
     @property

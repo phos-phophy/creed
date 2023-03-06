@@ -41,8 +41,14 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
 
         self._documents: Tuple[Document] = tuple(documents)
         self._prepared_docs: List[PreparedDocument] = []
+        self._used_docs = 0
 
     def __getitem__(self, idx: int) -> PreparedDocument:
+        if self.should_prepare:
+            self.prepare_documents()
+
+        self._used_docs += 1
+
         return self._prepared_docs[idx]
 
     def __len__(self):
@@ -69,6 +75,10 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         return self.tokenizer.__getattribute__(self._len_attr)
 
     @property
+    def should_prepare(self):
+        return self.diversifier.active and self._used_docs >= len(self._documents) or len(self._prepared_docs) == 0
+
+    @property
     def tokenizer(self):
         return self._tokenizer
 
@@ -79,9 +89,5 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
     def prepare_documents(self):
         documents = tqdm(self._documents, desc=self._desc, disable=not bool(self._desc))
         self._prepared_docs = list(map(self._prepare_document, documents))
+        self._used_docs = 0
         return self
-
-    def set_epoch(self, epoch):
-        self._epoch = epoch
-        if self.diversifier.active or len(self._prepared_docs) == 0:
-            self.prepare_documents()
