@@ -22,9 +22,9 @@ from tqdm import tqdm
     "test_dataset_path": str (optional),
     "output_eval_path": str (optional),
     "output_pred_path": str (optional),
-    "train_diversifier": dict (optional),
-    "dev_diversifier": dict (optional),
-    "test_diversifier": dict (optional)
+    "train_diversifier": DiversifierConfig (optional),
+    "dev_diversifier": DiversifierConfig (optional),
+    "test_diversifier": DiversifierConfig (optional)
 }
 """
 

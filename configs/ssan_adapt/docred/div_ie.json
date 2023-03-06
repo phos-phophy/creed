@@ -1,0 +1,67 @@
+{
+  "loader_config": {
+    "loader_type": "docred"
+  },
+  "init_config": {
+    "load_path": "etc/models/ssan_adapt/docred/div_ie_distant/model.pkl"
+  },
+  "training_config": {
+    "compute_metrics": false,
+    "training_arguments": {
+      "logging_dir": "etc/models/ssan_adapt/docred/div_ie/log_dir",
+      "output_dir": "etc/models/ssan_adapt/docred/div_ie/output",
+      "num_train_epochs": 60,
+      "save_total_limit": 1,
+      "evaluation_strategy": "epoch",
+      "do_train": true,
+      "do_eval": true,
+      "no_cuda": false,
+      "per_device_train_batch_size": 5,
+      "per_device_eval_batch_size": 5,
+      "warmup_ratio": 0.1,
+      "learning_rate": 0.00003
+    }
+  },
+  "train_dataset_path": "etc/datasets/docred/train_annotated.json",
+  "dev_dataset_path": "etc/datasets/docred/dev.json",
+  "test_dataset_path": "etc/datasets/docred/test.json",
+  "save_path": "etc/models/ssan_adapt/docred/div_ie/model.pkl",
+  "output_eval_path": "etc/models/ssan_adapt/docred/div_ie/eval_results.json",
+  "output_pred_path": "etc/models/ssan_adapt/docred/div_ie/result.json",
+  "train_diversifier": {
+    "replace_prob": 0.85,
+    "noise_prob": 0.15,
+    "mapping": {
+      "ORG": ["ORG", "INSTITUTE", "GROUPING"],
+      "LOC": ["LOC", "AREA", "DISTRICT"],
+      "TIME": ["TIME", "MOMENT", "STAGE"],
+      "PER": ["PER", "CHARACTER", "HUMAN"],
+      "MISC": ["MISC", "ETC", "DIFFERENT"],
+      "NUM": ["NUM", "DIGIT", "QUANTITY"]
+    }
+  },
+  "dev_diversifier": {
+    "replace_prob": 0.85,
+    "noise_prob": 0.15,
+    "mapping": {
+      "ORG": ["ORG", "INSTITUTE", "GROUPING"],
+      "LOC": ["LOC", "AREA", "DISTRICT"],
+      "TIME": ["TIME", "MOMENT", "STAGE"],
+      "PER": ["PER", "CHARACTER", "HUMAN"],
+      "MISC": ["MISC", "ETC", "DIFFERENT"],
+      "NUM": ["NUM", "DIGIT", "QUANTITY"]
+    }
+  },
+  "test_diversifier": {
+    "replace_prob": 0.85,
+    "noise_prob": 0.15,
+    "mapping": {
+      "ORG": ["ORGANIZATION"],
+      "LOC": ["LOCATION"],
+      "TIME": ["DATE"],
+      "PER": ["PERSON"],
+      "MISC": ["MISCELLANEOUS"],
+      "NUM": ["NUMBER"]
+    }
+  }
+}
