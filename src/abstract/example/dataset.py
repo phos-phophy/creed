@@ -52,7 +52,7 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         return self._prepared_docs[idx]
 
     def __len__(self):
-        return len(self._prepared_docs)
+        return len(self._documents)
 
     @property
     def diversifier(self):

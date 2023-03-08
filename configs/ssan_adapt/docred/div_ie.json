@@ -53,8 +53,7 @@
     }
   },
   "test_diversifier": {
-    "replace_prob": 0.85,
-    "noise_prob": 0.15,
+    "replace_prob": 1,
     "mapping": {
       "ORG": ["ORGANIZATION"],
       "LOC": ["LOCATION"],
