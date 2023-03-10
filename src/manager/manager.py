@@ -68,10 +68,16 @@ class ModelManager:
         self.model.evaluate(dataloader, output_path)
 
     def predict(self, documents: List[Document], diversifier: DiversifierConfig, output_path: Path, batch_size: int = 5):
-        dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare test dataset', False, True).prepare_documents()
+        dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare pred dataset', False, True).prepare_documents()
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
         torch.cuda.empty_cache()
         self.model.predict(documents, dataloader, output_path)
+
+    def test(self, documents: List[Document], diversifier: DiversifierConfig, output_path: Path, batch_size: int = 5):
+        dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare test dataset', True, True).prepare_documents()
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+        torch.cuda.empty_cache()
+        self.model.test(dataloader, output_path)
 
     def save(self, save_path: Path, rewrite: bool = False):
         self.model.save(path=save_path, rewrite=rewrite)

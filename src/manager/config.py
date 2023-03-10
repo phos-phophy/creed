@@ -8,9 +8,9 @@ from .manager import InitConfig, TrainingConfig
 class MainConfig(NamedTuple):
     loader_config: dict
     init_config: dict
-    save_path: str
 
     seed: int = 42
+    save_path: str = None
     training_config: dict = {}
 
     train_dataset_path: str = None

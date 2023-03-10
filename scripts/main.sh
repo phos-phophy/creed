@@ -12,7 +12,7 @@ do
   esac
 done
 
-run_path="./train.py"
+run_path="main.py"
 
 export CUDA_VISIBLE_DEVICES=$cuda
 
