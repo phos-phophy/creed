@@ -173,6 +173,7 @@ direction TB
       <<Abstract>>
       +evaluate(self, dataloader: DataLoader, output_path: str)
       +predict(self, documents: Iterable[Document], dataloader: DataLoader, output_path: str)
+      +test(self, dataloader: DataLoader, output_path: str)
    }
    
 ```
@@ -191,4 +192,4 @@ direction TB
 
 ### Start training
 
-`bash scripts/train.sh -c path/to/config -v __gpu_id__`
+`bash scripts/main.sh -c path/to/config -v __gpu_id__`
