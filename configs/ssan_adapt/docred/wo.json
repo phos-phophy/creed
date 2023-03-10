@@ -24,8 +24,11 @@
   },
   "train_dataset_path": "etc/datasets/docred/train_annotated.json",
   "dev_dataset_path": "etc/datasets/docred/dev.json",
-  "test_dataset_path": "etc/datasets/docred/test.json",
+  "eval_dataset_path": "etc/datasets/docred/dev.json",
+  "test_dataset_path": "etc/datasets/docred/dev.json",
+  "pred_dataset_path": "etc/datasets/docred/test.json",
   "save_path": "etc/models/ssan_adapt/docred/wo/model.pkl",
   "output_eval_path": "etc/models/ssan_adapt/docred/wo/eval_results.json",
+  "output_test_path": "etc/models/ssan_adapt/docred/div_ie/test_results.json",
   "output_pred_path": "etc/models/ssan_adapt/docred/wo/result.json"
 }

@@ -7,11 +7,11 @@ from .manager import InitConfig, TrainingConfig
 
 class MainConfig(NamedTuple):
     loader_config: dict
-    init_config: dict
+    init_config: dict  # InitConfig
 
     seed: int = 42
     save_path: str = None
-    training_config: dict = {}
+    training_config: dict = {}  # TrainingConfig
 
     train_dataset_path: str = None
     dev_dataset_path: str = None
@@ -23,11 +23,11 @@ class MainConfig(NamedTuple):
     output_test_path: str = None
     output_pred_path: str = None
 
-    train_diversifier: dict = {}
-    dev_diversifier: dict = {}
-    eval_diversifier: dict = {}
-    test_diversifier: dict = {}
-    pred_diversifier: dict = {}
+    train_diversifier: dict = {}  # DiversifierConfig
+    dev_diversifier: dict = {}  # DiversifierConfig
+    eval_diversifier: dict = {}  # DiversifierConfig
+    test_diversifier: dict = {}  # DiversifierConfig
+    pred_diversifier: dict = {}  # DiversifierConfig
 
     def init(self):
         self.init_config: InitConfig = InitConfig(**self.init_config)
