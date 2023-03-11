@@ -22,7 +22,7 @@ def load_config():
     with Path(config_path).open('r') as file:
         config: dict = json.load(file)
 
-    return MainConfig(**config).init()
+    return MainConfig(**config)
 
 
 def set_seed(config: MainConfig):
