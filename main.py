@@ -73,7 +73,7 @@ def main():
     # predict on the private test dataset
     if config.pred_dataset_path and config.output_pred_path:
         print(f'Load the pred dataset and make predictions that will be saved in the file {Path(config.output_pred_path)}')
-        pred_documents = list(tqdm(loader.load(Path(config.pred_dataset_path)), desc='Test documents'))
+        pred_documents = list(tqdm(loader.load(Path(config.pred_dataset_path)), desc='Pred documents'))
         manager.predict(pred_documents, config.pred_diversifier, Path(config.output_pred_path), batch_size)
 
 
