@@ -21,24 +21,28 @@ class IETypesSSANAdaptDataset(BaseSSANAdaptDataset):
         ner_facts: Tuple[EntityFact, ...] = tuple(filter(lambda fact: fact.fact_class is FactClass.ENTITY, document.facts))[:self.max_ent]
 
         for ner_fact in ner_facts:
+
+            type_id = ner_fact.type_id if not self.diversifier.active else self.diversifier[ner_fact.type_id]
+            fact_info = (ner_fact.coreference_id, type_id)
+
             for span in ner_fact.mentions:
                 span_ind = spans_to_ind[span]
 
                 if span_ind > 0:
-                    if end[span_ind - 1] != (ner_fact.coreference_id, ner_fact.type_id):
-                        start[span_ind] = (ner_fact.coreference_id, ner_fact.type_id)
+                    if end[span_ind - 1] != fact_info:
+                        start[span_ind] = fact_info
                     else:
                         end[span_ind - 1] = ()
                 else:
-                    start[span_ind] = (ner_fact.coreference_id, ner_fact.type_id)
+                    start[span_ind] = fact_info
 
                 if span_ind < len(spans) - 1:
-                    if start[span_ind + 1] != (ner_fact.coreference_id, ner_fact.type_id):
-                        end[span_ind] = (ner_fact.coreference_id, ner_fact.type_id)
+                    if start[span_ind + 1] != fact_info:
+                        end[span_ind] = fact_info
                     else:
                         start[span_ind + 1] = ()
                 else:
-                    end[span_ind] = (ner_fact.coreference_id, ner_fact.type_id)
+                    end[span_ind] = fact_info
 
         start_ent_tokens = [f' <{s[1]}> ' if s else '' for s in start]
         end_ent_tokens = [f' </{e[1]}> ' if e else '' for e in end]

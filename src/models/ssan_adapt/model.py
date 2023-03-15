@@ -4,7 +4,7 @@ from typing import Any, Iterable, List
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, AbstractWrapperModel, Document, NO_REL_IND
+from src.abstract import AbstractDataset, AbstractWrapperModel, DiversifierConfig, Document, NO_REL_IND
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -76,8 +76,15 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         return torch.sigmoid(logits)
 
-    def prepare_dataset(self, document: Iterable[Document], desc: str, extract_labels=False, evaluation=False) -> AbstractDataset:
-        return self._inner_model.prepare_dataset(document, desc, extract_labels, evaluation)
+    def prepare_dataset(
+            self,
+            document: Iterable[Document],
+            diversifier: DiversifierConfig,
+            desc: str,
+            extract_labels=False,
+            evaluation=False
+    ) -> AbstractDataset:
+        return self._inner_model.prepare_dataset(document, diversifier, desc, extract_labels, evaluation)
 
     def _compute_loss(
             self,
@@ -156,25 +163,25 @@ class SSANAdaptModel(AbstractWrapperModel):
 
         output_preds.sort(key=lambda x: x[1], reverse=True)
 
-        pr_x = []
-        pr_y = []
+        recall = []
+        precision = []
         correct = 0
         for i, pred in enumerate(output_preds, start=1):
             correct += pred[0]
-            pr_y.append(float(correct) / i)
-            pr_x.append(float(correct) / total_labels)
+            precision.append(float(correct) / i)
+            recall.append(float(correct) / total_labels)
 
-        pr_x = np.asarray(pr_x, dtype='float32')
-        pr_y = np.asarray(pr_y, dtype='float32')
-        f1_arr = (2 * pr_x * pr_y / (pr_x + pr_y + 1e-20))
+        recall = np.asarray(recall, dtype='float32')
+        precision = np.asarray(precision, dtype='float32')
+        f1_arr = (2 * recall * precision / (recall + precision + 1e-20))
         f1 = f1_arr.max()
         f1_pos = f1_arr.argmax()
         threshold = output_preds[f1_pos][1]
 
         result = {
             "loss": float(loss),
-            "precision": float(pr_y[f1_pos]),
-            "recall": float(pr_x[f1_pos]),
+            "precision": float(precision[f1_pos]),
+            "recall": float(recall[f1_pos]),
             "f1": float(f1),
             "threshold": float(threshold)
         }
@@ -188,7 +195,7 @@ class SSANAdaptModel(AbstractWrapperModel):
 
     def predict(self, documents: List[Document], dataloader: DataLoader, output_path: Path):
         if self._threshold is None:
-            raise ValueError("First calculate the threshold value using evaluate function (on dev dataset)!")
+            raise ValueError("First calculate the threshold value using evaluate function (on the dev dataset)!")
 
         _, preds, ent_masks, _ = self._get_preds(dataloader, 'Predicting')
 
@@ -203,6 +210,46 @@ class SSANAdaptModel(AbstractWrapperModel):
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open('w') as file:
             json.dump(output_preds, file)
+
+    def test(self, dataloader: DataLoader, output_path: Path = None):
+
+        if self._threshold is None:
+            raise ValueError("First calculate the threshold value using evaluate function (on the dev dataset)!")
+
+        # don't take into account gold <NO_REL> relation
+        loss, preds, ent_masks, labels_ids = self._get_preds(dataloader, 'Test')
+        labels_ids = np.concatenate((labels_ids[:, :, :, :NO_REL_IND], labels_ids[:, :, :, NO_REL_IND + 1:]), axis=-1)
+
+        total_labels = np.sum(labels_ids)
+        total_preds = 0
+        right_preds = 0
+
+        for pred, ent_mask, gold_labels in zip(preds, ent_masks, labels_ids):
+
+            # don't take into account gold <NO_REL> relation
+            gold_relations = [(h, t, r + 1) for h, t, r in zip(*np.where(gold_labels))]
+
+            for h, t, _, predicate_id in iter_over_pred(pred, ent_mask, self._threshold):
+                right_preds += (h, t, predicate_id) in gold_relations
+                total_preds += 1
+
+        recall = right_preds / total_labels
+        precision = right_preds / total_preds
+
+        f1 = (2 * recall * precision / (recall + precision + 1e-20))
+
+        result = {
+            "loss": float(loss),
+            "precision": float(precision),
+            "recall": float(recall),
+            "f1": float(f1),
+            "threshold": float(self._threshold)
+        }
+
+        if output_path:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with output_path.open('w') as file:
+                json.dump(result, file)
 
 
 def iter_over_pred(pred, ent_mask, threshold):
