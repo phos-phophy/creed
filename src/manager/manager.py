@@ -1,52 +1,56 @@
+import random
 from functools import partial
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import List
 
+import numpy as np
 import torch
-from src.abstract import AbstractWrapperModel, DiversifierConfig, Document
+from src.abstract import AbstractWrapperModel, Document
+from src.loader import get_loader
 from src.models import get_model
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 from transformers import Trainer, TrainingArguments
 
 from .collate import collate_fn
+from .config import ManagerConfig
 from .score import score_model
 
 
-class InitConfig(NamedTuple):
-    load_path: str = None
-    model_params: dict = {}  # load_path and model_params are mutually exclusive
-
-
-# See https://huggingface.co/docs/transformers/v4.23.1/en/main_classes/trainer#transformers.TrainingArguments
-class TrainingConfig(NamedTuple):
-    training_arguments: dict
-    compute_metrics: bool = True
-
-
 class ModelManager:
-    def __init__(self, config: InitConfig):
-        load_path = config.load_path
-        model = AbstractWrapperModel.load(Path(load_path)) if load_path else get_model(**config.model_params)
+    def __init__(self, config: ManagerConfig):
+        """ Init the model, its manager and loader """
+
+        self.config = config
+        self.loader = get_loader(**config.loader_config)
+
+        self.set_seed()
+
+        load_path = config.model_init_config.load_path
+        model = AbstractWrapperModel.load(Path(load_path)) if load_path else get_model(**config.model_init_config.model_params)
         self.model = model.cuda() if torch.cuda.is_available() else model
 
-    def train(
-            self,
-            config: TrainingConfig,
-            train_diversifier: DiversifierConfig,
-            dev_diversifier: DiversifierConfig,
-            train_documents: List[Document],
-            dev_documents: List[Document] = None,
-    ):
-        train_params = TrainingArguments(**config.training_arguments)
-        compute_metrics = config.compute_metrics
+    def train(self):
 
-        train_dataset = self.model.prepare_dataset(train_documents, train_diversifier, 'Prepare training dataset', True, False)
+        if not self.config.train_dataset_path or not self.config.save_path:
+            return
 
-        dev_dataset = None
-        if dev_documents:
-            dev_dataset = self.model.prepare_dataset(dev_documents, dev_diversifier, 'Prepare dev dataset', True, True).prepare_documents()
+        print('Load the training and dev datasets')
+        train_documents = self.load(Path(self.config.train_dataset_path), 'Training documents')
+        dev_documents = self.load(Path(self.config.dev_dataset_path), 'Dev documents') if self.config.dev_dataset_path else None
 
-        compute_metrics = partial(score_model, relations=self.model.relations) if compute_metrics else None
+        train_desc = 'Prepare training dataset'
+        dev_desc = 'Prepare dev dataset'
+
+        train_diversifier = self.config.train_diversifier
+        dev_diversifier = self.config.dev_diversifier
+
+        train_dataset = self.model.prepare_dataset(train_documents, train_diversifier, train_desc, True, False)
+        dev_dataset = self.model.prepare_dataset(dev_documents, dev_diversifier, dev_desc, True, True) if dev_documents else None
+        dev_dataset = dev_dataset.prepare_documents() if dev_dataset else None
+
+        train_params = TrainingArguments(**self.config.training_config.training_arguments)
+        compute_metrics = partial(score_model, relations=self.model.relations) if self.config.training_config.compute_metrics else None
 
         torch.cuda.empty_cache()
 
@@ -59,25 +63,78 @@ class ModelManager:
             compute_metrics=compute_metrics
         )
 
+        print('Start training')
         trainer.train()
 
-    def evaluate(self, documents: List[Document], diversifier: DiversifierConfig, output_path: Path = None, batch_size: int = 5):
-        dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare dev dataset', True, True).prepare_documents()
+        self.save(rewrite=False)
+
+    def evaluate(self):
+        """ Evaluate the model """
+
+        if not self.config.eval_dataset_path or not self.config.output_eval_path or not self.config.save_path:
+            return
+
+        print(f'Load the eval dataset and evaluate the model. The results will be saved in the file {Path(self.config.output_eval_path)}')
+        documents = self.load(Path(self.config.eval_dataset_path), 'Eval documents')
+
+        diversifier = self.config.eval_diversifier
+        batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
+
+        dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare eval dataset', True, True).prepare_documents()
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
-        torch.cuda.empty_cache()
-        self.model.evaluate(dataloader, output_path)
 
-    def predict(self, documents: List[Document], diversifier: DiversifierConfig, output_path: Path, batch_size: int = 5):
-        dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare pred dataset', False, True).prepare_documents()
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
         torch.cuda.empty_cache()
-        self.model.predict(documents, dataloader, output_path)
+        self.model.evaluate(dataloader, Path(self.config.output_eval_path))
 
-    def test(self, documents: List[Document], diversifier: DiversifierConfig, output_path: Path, batch_size: int = 5):
+        self.save(rewrite=True)
+
+    def test(self):
+        """ Test the model on the public test dataset """
+
+        if not self.config.test_dataset_path or not self.config.output_test_path:
+            return
+
+        print(f'Load the test dataset and test the model. The results will be saved in the file {Path(self.config.output_test_path)}')
+        documents = self.load(Path(self.config.test_dataset_path), 'Test_documents')
+
+        diversifier = self.config.test_diversifier
+        batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
+
         dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare test dataset', True, True).prepare_documents()
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
-        torch.cuda.empty_cache()
-        self.model.test(dataloader, output_path)
 
-    def save(self, save_path: Path, rewrite: bool = False):
-        self.model.save(path=save_path, rewrite=rewrite)
+        torch.cuda.empty_cache()
+        self.model.test(dataloader, Path(self.config.output_test_path))
+
+    def predict(self):
+        """ Predict on the private test dataset """
+
+        if not self.config.pred_dataset_path or not self.config.output_pred_path:
+            return
+
+        print(f'Load the pred dataset and make predictions that will be saved in the file {Path(self.config.output_pred_path)}')
+        documents = self.load(Path(self.config.pred_dataset_path), 'Pred documents')
+
+        diversifier = self.config.pred_diversifier
+        batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
+
+        dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare pred dataset', False, True).prepare_documents()
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
+
+        torch.cuda.empty_cache()
+        self.model.predict(documents, dataloader, Path(self.config.output_pred_path))
+
+    def save(self, *, rewrite: bool = False):
+        if self.config.save_path:
+            print(f'Save the model in the file {Path(self.config.save_path)}')
+            self.model.save(path=Path(self.config.save_path), rewrite=rewrite)
+
+    def load(self, dataset_path: Path, desc: str = "") -> List[Document]:
+        return list(tqdm(self.loader.load(dataset_path), desc=desc))
+
+    def set_seed(self):
+        torch.manual_seed(self.config.seed)
+        torch.cuda.manual_seed(self.config.seed)
+        torch.cuda.manual_seed_all(self.config.seed)
+        np.random.seed(self.config.seed)
+        random.seed(self.config.seed)
