@@ -1,9 +1,9 @@
-from .config import MainConfig
+from .config import ManagerConfig
 from .manager import InitConfig, ModelManager, TrainingConfig
 
 __all__ = [
     "InitConfig",
-    "MainConfig",
+    "ManagerConfig",
     "ModelManager",
     "TrainingConfig"
 ]
