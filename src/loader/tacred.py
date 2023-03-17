@@ -35,15 +35,15 @@ class TacredLoader(AbstractLoader):
     def _build_document(self, example: Dict[str, Any]) -> Document:
 
         sentences: List[List[Span]] = self._extract_sentences(example)
-        text = ' '.join(word for sentence in example['sents'] for word in sentence)
+        text = ' '.join(example['token'])
 
-        entity_facts: List[EntityFact] = self._extract_entity_facts(example["vertexSet"], sentences)
+        entity_facts: List[EntityFact] = self._extract_entity_facts(example, sentences)
 
         facts: List[AbstractFact] = entity_facts
         if example["relation"] != "no_relation":
             facts.append(RelationFact("", example["relation"], entity_facts[0], entity_facts[1]))
 
-        return Document(example["title"], text, sentences, facts)
+        return Document(example["docid"], text, sentences, facts)
 
     @staticmethod
     def _extract_sentences(example: Dict[str, Any]):
@@ -62,7 +62,7 @@ class TacredLoader(AbstractLoader):
         def get_mention_spans(start, end):
             return [sentences[0][span_id] for span_id in range(start, end + 1, 1)]
 
-        subject_fact = EntityFact("", example["subj_type"], 1, tuple(set(get_mention_spans(example["subj_start"], example["subj_end"]))))
+        subject_fact = EntityFact("", example["subj_type"], 0, tuple(set(get_mention_spans(example["subj_start"], example["subj_end"]))))
         object_fact = EntityFact("", example["obj_type"], 1, tuple(set(get_mention_spans(example["obj_start"], example["obj_end"]))))
 
         return [subject_fact, object_fact]
