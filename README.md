@@ -227,6 +227,10 @@ direction TB
    labels in the original release. For more details, see the [TACRED Revisited paper](https://arxiv.org/pdf/2004.14855.pdf) and their
    original [code base](https://github.com/DFKI-NLP/tacrev)
 
+   After downloading and processing:
+   * move tacred folder to `./etc/datasets` folder 
+   * put all patched files in the `./etc/dataset/tacred/data/json` directory
+
 
 ### Build docker container
 1) `cd path/to/project`
