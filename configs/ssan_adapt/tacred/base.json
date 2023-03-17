@@ -28,7 +28,7 @@
       "learning_rate": 0.00003
     }
   },
-  "init_config": {
+  "model_init_config": {
     "model_params": {
       "model_type": "ssan_adapt",
       "inner_model_type": "base",

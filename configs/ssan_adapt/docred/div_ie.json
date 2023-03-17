@@ -2,7 +2,7 @@
   "loader_config": {
     "loader_type": "docred"
   },
-  "init_config": {
+  "model_init_config": {
     "load_path": "etc/models/ssan_adapt/docred/div_ie_distant/model.pkl"
   },
   "training_config": {
