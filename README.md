@@ -9,12 +9,16 @@ explore how models can be adapted to the changing types of entities.
 
 There are several ways to deal with the changing types of entyties:
 
-1) Ignoring (our baseline)
+1) Fine-tuning
 
-    * Build a model that does not use any information of entities' types (and get lower results);
-    * Or don't pay any attention to the domain shift during inference (and also get lower results).
+    We can retrain our model on the new obtained data, but the main problem is to get and annotate new documents
 
-2) Mapping
+2) Ignoring
+
+    * Build a model that does not use any information of entities' types;
+    * Or don't pay any attention to the domain shift during inference.
+
+3) Mapping
 
    Another way is to build a mapping from the model's entity types to another domain ones. But there may be situations
    when it is impossible to build the unambiguous mapping (e.g. diagram below, where `PER` correspond only to `PERSON`,
@@ -44,10 +48,44 @@ flowchart LR
     a ==> c 
 ```
 
-3) Adapting
+4) Diversified training
 
-   We are going to develop training methods that instill domain shift resistance in RE models and allow them to adapt to
+   We are going to develop training methods that instills domain shift resistance in RE models and allows them to adapt to
    new types of entities.
+
+## Results
+
+<table>
+  <tr>
+    <th rowspan="3">Adaptation methods</th>
+    <th colspan="4">Results, F1-мера</th>
+  </tr>
+  <tr>
+    <th colspan="2">DocRED</th>
+    <th colspan="2">TACRED</th>
+  </tr>
+  <tr>
+    <th>SSAN-Adapt</th>
+    <th>DocUNet</th>
+    <th>SSAN-Adapt</th>
+    <th>DocUNet</th>
+  </tr>
+  <tr>
+    <td>Ignoring</td>
+    <td>53.60</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr>
+  <tr>
+    <td>Diversified training</td>
+    <td>54.23</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr>
+</table>
+
 
 ## Class diagrams
 
