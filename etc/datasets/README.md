@@ -13,3 +13,15 @@ For more details, please refer to:
 * [DocRED on GitHub](https://github.com/thunlp/DocRED)
 * [DocRED on Codalab](https://codalab.lisn.upsaclay.fr/competitions/365)
 * [DocRED on paperswtihcode.com](https://paperswithcode.com/dataset/docred)
+
+
+# Tacred
+
+TACRED is a large-scale relation extraction dataset with 106,264 examples built over newswire and web text from the corpus used in the
+yearly TAC Knowledge Base Population (TAC KBP) challenges. Examples in TACRED cover 41 relation types as used in the TAC KBP challenges
+(e.g., per:schools_attended and org:members) or are labeled as no_relation if no defined relation is held. These examples are created by
+combining available human annotations from the TAC KBP challenges and crowdsourcing.
+
+* [Tacred official page](https://nlp.stanford.edu/projects/tacred/)
+* [Tacred on aclanthology](https://aclanthology.org/D17-1004/)
+* [Tacred on papesrwithcode.com](https://paperswithcode.com/dataset/tacred)
