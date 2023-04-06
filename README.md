@@ -115,7 +115,7 @@ direction TB
 
    AbstractFact <|-- EntityFact
    AbstractFact <|-- RelationFact
-   EntityFact "1" --> "1..*" Span : is mentioned in
+   EntityFact "1" o-- "1..*" Span : is mentioned in
    AbstractFact "1" --> "1" FactClass : is a
    
    class Span:::rect{
@@ -177,7 +177,7 @@ direction LR
       +__getitem__(self, idx: int) PreparedDocument
    }
    AbstractDataset ..> Document : processes
-   AbstractDataset "1" --o "1..*" PreparedDocument : stores
+   AbstractDataset "1" o-- "1..*" PreparedDocument : stores
    
    class PreparedDocument{
       <<NamedTuple>>
