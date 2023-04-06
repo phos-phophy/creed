@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Iterable
 
 from src.abstract import DiversifierConfig, Document
@@ -18,11 +19,13 @@ class WOTypesSSANAdaptInnerModel(BaseSSANAdaptInnerModel):
             diversifier: DiversifierConfig,
             desc: str,
             extract_labels=False,
-            evaluation=False
+            evaluation=False,
+            cache_dir: Path = None,
+            dataset_name: str = ''
     ) -> WOTypesSSANAdaptDataset:
 
         if diversifier.active:
             raise ValueError("WO SSAN Adapt model and active diversifier are not compatible!")
 
         return WOTypesSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations,
-                                       self._dist_base, self._dist_ceil, desc, diversifier)
+                                       self._dist_base, self._dist_ceil, desc, diversifier, cache_dir, dataset_name)

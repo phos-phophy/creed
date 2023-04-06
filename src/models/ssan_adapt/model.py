@@ -82,9 +82,11 @@ class SSANAdaptModel(AbstractWrapperModel):
             diversifier: DiversifierConfig,
             desc: str,
             extract_labels=False,
-            evaluation=False
+            evaluation=False,
+            cache_dir: Path = None,
+            dataset_name: str = ''
     ) -> AbstractDataset:
-        return self._inner_model.prepare_dataset(document, diversifier, desc, extract_labels, evaluation)
+        return self._inner_model.prepare_dataset(document, diversifier, desc, extract_labels, evaluation, cache_dir, dataset_name)
 
     def _compute_loss(
             self,
