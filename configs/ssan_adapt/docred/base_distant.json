@@ -4,6 +4,7 @@
   },
   "train_dataset_path": "etc/datasets/docred/train_distant.json",
   "save_path": "etc/models/ssan_adapt/docred/base_distant/model.pkl",
+  "cache_dir": "etc/cache",
   "training_config": {
     "compute_metrics": false,
     "training_arguments": {

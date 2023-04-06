@@ -132,7 +132,8 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         if self.diversifier.active or not self.cache_dir:
             return
 
-        cache_file = self.cache_dir / str(self.__module__.__class__) / self.dataset_name
+        cache_file = self.cache_dir / str(self.__module__.__class__) / self.dataset_name.replace('/', '_').replace('.', '_')
+        cache_file.mkdir(parents=True, exist_ok=True)
 
         with cache_file.open('wb') as file:
             pkl.dump(self._prepared_docs, file)
