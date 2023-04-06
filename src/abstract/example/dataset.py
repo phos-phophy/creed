@@ -27,7 +27,7 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
             evaluation: bool,
             diversifier: DiversifierConfig,
             cache_dir: Path = None,
-            dataset_name=''
+            dataset_name: str = ''
     ):
         super(AbstractDataset, self).__init__()
 

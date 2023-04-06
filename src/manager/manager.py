@@ -45,8 +45,13 @@ class ModelManager:
         train_diversifier = self.config.train_diversifier
         dev_diversifier = self.config.dev_diversifier
 
-        train_dataset = self.model.prepare_dataset(train_documents, train_diversifier, train_desc, True, False)
-        dev_dataset = self.model.prepare_dataset(dev_documents, dev_diversifier, dev_desc, True, True) if dev_documents else None
+        train_dataset = self.model.prepare_dataset(
+            train_documents, train_diversifier, train_desc, True, False, Path(self.config.cache_dir), self.config.train_dataset_path
+        )
+        dev_dataset = self.model.prepare_dataset(
+            dev_documents, dev_diversifier, dev_desc, True, True, Path(self.config.cache_dir), self.config.dev_dataset_path
+        ) if dev_documents else None
+
         dev_dataset = dev_dataset.prepare_documents() if dev_dataset else None
 
         train_params = TrainingArguments(**self.config.training_config.training_arguments)
@@ -80,7 +85,10 @@ class ModelManager:
         diversifier = self.config.eval_diversifier
         batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
-        dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare eval dataset', True, True).prepare_documents()
+        dataset = self.model.prepare_dataset(
+            documents, diversifier, 'Prepare eval dataset', True, True, Path(self.config.cache_dir), self.config.eval_dataset_path
+        ).prepare_documents()
+
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
 
         torch.cuda.empty_cache()
@@ -100,7 +108,10 @@ class ModelManager:
         diversifier = self.config.test_diversifier
         batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
-        dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare test dataset', True, True).prepare_documents()
+        dataset = self.model.prepare_dataset(
+            documents, diversifier, 'Prepare test dataset', True, True, Path(self.config.cache_dir), self.config.test_dataset_path
+        ).prepare_documents()
+
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
 
         torch.cuda.empty_cache()
@@ -118,7 +129,10 @@ class ModelManager:
         diversifier = self.config.pred_diversifier
         batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
-        dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare pred dataset', False, True).prepare_documents()
+        dataset = self.model.prepare_dataset(
+            documents, diversifier, 'Prepare pred dataset', False, True, Path(self.config.cache_dir), self.config.pred_dataset_path
+        ).prepare_documents()
+
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
         torch.cuda.empty_cache()

@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from pathlib import Path
 from typing import Any, Iterable
 
 from src.abstract.example import AbstractDataset, DiversifierConfig, Document
@@ -26,7 +27,9 @@ class AbstractModel(TorchModel, metaclass=ABCMeta):
             diversifier: DiversifierConfig,
             desc: str,
             extract_labels: bool = False,
-            evaluation: bool = False
+            evaluation: bool = False,
+            cache_dir: Path = None,
+            dataset_name: str = ''
     ) -> AbstractDataset:
         pass
 

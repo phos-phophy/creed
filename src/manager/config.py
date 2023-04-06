@@ -21,6 +21,7 @@ class ManagerConfig(NamedTuple):
 
     seed: int = 42
     save_path: str = None
+    cache_dir: str = None
     training_config: TrainingConfig = TrainingConfig({}, False)
 
     train_dataset_path: str = None
