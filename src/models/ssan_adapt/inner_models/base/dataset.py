@@ -41,6 +41,8 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         self._dist_bins = torch.tensor([dist_base ** i for i in range(dist_ceil)], dtype=torch.long)
 
+        self._local_cache = dict()
+
     @property
     def max_ent(self):
         return self._max_ent
@@ -126,15 +128,19 @@ class BaseSSANAdaptDataset(AbstractDataset):
 
         return PreparedDocument(features=features, labels=labels)
 
+    def _word2token(self, word_: str):
+        if word_ not in self._local_cache:
+            tokens_ = self.tokenizer.encode(word_)[1:-1]  # crop tokens of the beginning and the end
+            self._local_cache[word_] = tokens_ if len(tokens_) else [self.tokenizer.unk_token_id]
+        return self._local_cache[word_]
+
     def _tokenize(self, document: Document):
 
         input_ids, token_to_sentence_ind, token_to_span = [], [], []
 
         for ind, sentence in enumerate(document.sentences):
             for span in sentence:
-                tokens = self.tokenizer.encode(document.get_word(span))[1:-1]  # crop tokens of the beginning and the end
-
-                tokens = tokens if len(tokens) else [self.tokenizer.unk_token_id]
+                tokens = self._word2token(document.get_word(span))
 
                 input_ids.extend(tokens)
                 token_to_sentence_ind += [ind] * len(tokens)
