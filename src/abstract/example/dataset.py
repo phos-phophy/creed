@@ -96,6 +96,12 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
     def tokenizer(self):
         return self._tokenizer
 
+    @property
+    def cache_file(self):
+        if self.cache_dir:
+            return self.cache_dir / str(self.__class__.__name__) / (self.dataset_name.replace('/', '_').replace('.', '_') + '.pkl')
+        return ''
+
     @abstractmethod
     def _prepare_document(self, document: Document) -> PreparedDocument:
         pass
@@ -113,7 +119,7 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         if self.diversifier.active or not self.cache_dir:
             return False
 
-        cache_file = self.cache_dir / str(self.__module__.__class__) / self.dataset_name
+        cache_file = self.cache_file
         if not cache_file.exists():
             return False
 
@@ -132,8 +138,8 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         if self.diversifier.active or not self.cache_dir:
             return
 
-        cache_file = self.cache_dir / str(self.__module__.__class__) / self.dataset_name.replace('/', '_').replace('.', '_')
-        cache_file.mkdir(parents=True, exist_ok=True)
+        cache_file = self.cache_file
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
 
         with cache_file.open('wb') as file:
             pkl.dump(self._prepared_docs, file)
