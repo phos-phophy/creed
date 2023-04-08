@@ -11,7 +11,7 @@ from tqdm import tqdm
 from .inner_models import AbstractSSANAdaptInnerModel, get_inner_model
 
 
-class SSANAdaptModel(AbstractWrapperModel):
+class SSANAdaptDocREDModel(AbstractWrapperModel):
 
     def __init__(
             self,
@@ -21,7 +21,7 @@ class SSANAdaptModel(AbstractWrapperModel):
             **kwargs
     ):
 
-        super(SSANAdaptModel, self).__init__(relations)
+        super(SSANAdaptDocREDModel, self).__init__(relations)
 
         self._inner_model: AbstractSSANAdaptInnerModel = get_inner_model(inner_model_type=inner_model_type, relations=relations, **kwargs)
 
