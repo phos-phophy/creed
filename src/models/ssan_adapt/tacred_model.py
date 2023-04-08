@@ -146,45 +146,24 @@ class SSANAdaptTACREDModel(AbstractWrapperModel):
         return loss, preds, ent_masks, labels_ids
 
     def evaluate(self, dataloader: DataLoader, output_path: Path = None):
-
-        loss, preds, ent_masks, labels_ids = self._get_preds(dataloader, 'Evaluating')
-
-        total_predictions = np.sum(np.argmax(preds, axis=1) != NO_REL_IND)
-        total_labels = np.sum(np.argmax(labels_ids, axis=1) != NO_REL_IND)
-
-        mask1 = np.argmax(preds, axis=1) != NO_REL_IND
-        mask2 = np.argmax(labels_ids, axis=1) != NO_REL_IND
-        tp = np.sum((np.argmax(preds, axis=1) == np.argmax(labels_ids, axis=1))[mask1 & mask2])
-
-        precision = tp / total_predictions
-        recall = tp / total_labels
-        f1 = (2 * recall * precision / (recall + precision + 1e-20))
-
-        result = {
-            "loss": float(loss),
-            "precision": float(precision),
-            "recall": float(recall),
-            "f1": f1
-        }
-
-        if output_path:
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            with output_path.open('w') as file:
-                json.dump(result, file)
+        self._score(dataloader, 'Evaluating', output_path)
 
     def predict(self, documents: List[Document], dataloader: DataLoader, output_path: Path):
         raise NotImplementedError
 
     def test(self, dataloader: DataLoader, output_path: Path = None):
+        self._score(dataloader, 'Test', output_path)
 
-        loss, preds, ent_masks, labels_ids = self._get_preds(dataloader, 'Test')
+    def _score(self, dataloader: DataLoader, desc: str, output_path: Path = None):
 
-        total_predictions = np.sum(np.argmax(preds, axis=1) != NO_REL_IND)
-        total_labels = np.sum(np.argmax(labels_ids, axis=1) != NO_REL_IND)
+        loss, preds, ent_masks, labels_ids = self._get_preds(dataloader, desc)
 
-        mask1 = np.argmax(preds, axis=1) != NO_REL_IND
-        mask2 = np.argmax(labels_ids, axis=1) != NO_REL_IND
-        tp = np.sum((np.argmax(preds, axis=1) == np.argmax(labels_ids, axis=1))[mask1 & mask2])
+        total_predictions = np.sum(np.argmax(preds, axis=-1) != NO_REL_IND)
+        total_labels = np.sum(np.argmax(labels_ids, axis=-1) != NO_REL_IND)
+
+        mask1 = np.argmax(preds, axis=-1) != NO_REL_IND
+        mask2 = np.argmax(labels_ids, axis=-1) != NO_REL_IND
+        tp = np.sum((np.argmax(preds, axis=-1) == np.argmax(labels_ids, axis=-1))[mask1 & mask2])
 
         precision = tp / total_predictions
         recall = tp / total_labels
