@@ -102,7 +102,6 @@ The base classes are divided into 3 main categories:
   * PreparedDocument
   * AbstractDataset
 * **_Models_**:
-  * TorchModel
   * AbstractModel
   * AbstractWrapperModel
 
@@ -191,18 +190,14 @@ direction LR
 classDiagram
 direction TB
 
-   class TorchModel{
-      <<Abstract>>
-      +device: torch.device
-      +save(self, path: Path, *, rewrite: bool)
-      +load(cls, path: Path) TorchModel
-   }
-   TorchModel <|-- AbstractModel
    AbstractModel <|-- AbstractWrapperModel
    
    class AbstractModel{
       <<Abstract>>
+      +device: torch.device
       +relations: Tuple[str]
+      +save(self, path: Path, *, rewrite: bool)
+      +load(cls, path: Path) AbstractModel
       +forward(self, *args, **kwargs) Any
       +prepare_dataset(self, documents: Iterable[Document], extract_labels, evaluation)  AbstractDataset
    }
