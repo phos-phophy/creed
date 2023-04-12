@@ -239,4 +239,4 @@ direction TB
 
 ### Start training
 
-`bash scripts/main.sh -c path/to/config -v __gpu_id__`
+`bash scripts/main.sh -c path/to/config -v __gpu_id__ -s __seed__`
