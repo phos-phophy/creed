@@ -1,13 +1,12 @@
 import pickle
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Iterable, NamedTuple, Type, TypeVar
+from typing import Any, Iterable, Type, TypeVar
 
 import torch
 from src.abstract.example import AbstractDataset, DiversifierConfig, Document
 
 _Model = TypeVar('_Model', bound='AbstractModel')
-_Config = TypeVar('_Config', bound=NamedTuple)
 
 NO_REL_IND = 0
 NO_ENT_IND = 0
@@ -15,9 +14,9 @@ NO_ENT_IND = 0
 
 class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
 
-    def __init__(self, config: _Config):
+    def __init__(self, relations: Iterable[str]):
         super(AbstractModel, self).__init__()
-        self._config = config
+        self._relations = tuple(relations)
         self._dummy_param = torch.nn.Parameter(torch.empty(0))
 
     @property
@@ -25,8 +24,8 @@ class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
         return self._dummy_param.device
 
     @property
-    def config(self):
-        return self._config
+    def relations(self):
+        return self._relations
 
     def save(self, path: Path, *, rewrite: bool = False) -> None:
         previous_device = self.device
@@ -64,9 +63,4 @@ class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
 
     @abstractmethod
     def forward(self, *args, **kwargs) -> Any:
-        pass
-
-    @classmethod
-    @abstractmethod
-    def from_config(cls, config: dict) -> _Model:
         pass
