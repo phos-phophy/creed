@@ -1,7 +1,5 @@
-from .docred_model import SSANAdaptDocREDModel
-from .tacred_model import SSANAdaptTACREDModel
+from .model import SSANAdaptModel
 
 __all__ = [
-    "SSANAdaptDocREDModel",
-    "SSANAdaptTACREDModel"
+    "SSANAdaptModel"
 ]

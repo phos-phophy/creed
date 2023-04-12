@@ -1,19 +1,13 @@
 from src.abstract import AbstractModel
 
 
-def get_ssan_adapt_docred():
-    from .ssan_adapt import SSANAdaptDocREDModel
-    return SSANAdaptDocREDModel
-
-
-def get_ssan_adapt_tacred():
-    from .ssan_adapt import SSANAdaptTACREDModel
-    return SSANAdaptTACREDModel
+def get_ssan_adapt():
+    from .ssan_adapt import SSANAdaptModel
+    return SSANAdaptModel
 
 
 MODELS = {
-    "ssan_adapt_docred": get_ssan_adapt_docred,
-    "ssan_adapt_tacred": get_ssan_adapt_tacred,
+    "ssan_adapt": get_ssan_adapt
 }
 
 
