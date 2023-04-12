@@ -44,7 +44,7 @@ class DocREDLoader(AbstractLoader):
         return Document(example["title"], text, sentences, facts)
 
     @staticmethod
-    def _extract_sentences(example: Dict):
+    def _extract_sentences(example: Dict[str, Any]):
         start_idx = 0
         sentences: List[List[Span]] = []
 

@@ -6,8 +6,14 @@ def get_docred_loader():
     return DocREDLoader
 
 
+def get_tacred_loader():
+    from .tacred import TacredLoader
+    return TacredLoader
+
+
 LOADERS = {
     "docred": get_docred_loader,
+    "tacred": get_tacred_loader
 }
 
 

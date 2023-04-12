@@ -218,15 +218,24 @@ direction TB
 
 ## Run
 
+### Dowload datasets
+
+1) `bash scripts/download_datasets.sh`
+2) In order to download original TACRED dataset visit [LDC TACRED webpage](https://catalog.ldc.upenn.edu/LDC2018T24).
+   If you are an LDC member, the access will be free; otherwise, an access fee of $25 is needed.  In addition to the original version of 
+   TACRED, we should also use the new label-corrected version of the TACRED dataset, which fixed a substantial portion of the dev/test 
+   labels in the original release. For more details, see the [TACRED Revisited paper](https://arxiv.org/pdf/2004.14855.pdf) and their
+   original [code base](https://github.com/DFKI-NLP/tacrev)
+
+   After downloading and processing:
+   * move tacred folder to `./etc/datasets` folder 
+   * put all patched files in the `./etc/dataset/tacred/data/json` directory
+
 
 ### Build docker container
 1) `cd path/to/project`
 2) `docker build ./`
 3) `docker run -it --gpus=all __image_id__ /bin/bash`
-
-### Dowload datasets
-
-`bash scripts/download_datasets.sh`
 
 ### Start training
 
