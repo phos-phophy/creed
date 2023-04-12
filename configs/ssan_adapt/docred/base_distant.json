@@ -23,7 +23,7 @@
   },
   "model_init_config": {
     "model_params": {
-      "model_type": "ssan_adapt_docred",
+      "model_type": "ssan_adapt",
       "inner_model_type": "base",
       "pretrained_model_path": "bert-base-uncased",
       "tokenizer_path": "bert-base-uncased",
