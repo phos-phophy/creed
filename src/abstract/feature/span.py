@@ -9,6 +9,12 @@ class Span:
     def __eq__(self, other: 'Span'):
         return self.start_idx == other.start_idx and self.end_idx == self.end_idx
 
+    def __le__(self, other: 'Span'):
+        return self.start_idx < other.start_idx or self.start_idx == other.start_idx and self.end_idx < other.start_idx
+
+    def __ge__(self, other: 'Span'):
+        return self.start_idx > other.start_idx or self.start_idx == other.start_idx and self.end_idx > other.end_idx
+
     def __hash__(self):
         return hash((self.start_idx, self.end_idx))
 
