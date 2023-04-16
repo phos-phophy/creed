@@ -62,7 +62,9 @@ class TacredLoader(AbstractLoader):
         def get_mention_spans(start, end):
             return [sentences[0][span_id] for span_id in range(start, end + 1, 1)]
 
-        subject_fact = EntityFact("", example["subj_type"], 0, tuple(set(get_mention_spans(example["subj_start"], example["subj_end"]))))
-        object_fact = EntityFact("", example["obj_type"], 1, tuple(set(get_mention_spans(example["obj_start"], example["obj_end"]))))
+        facts = [
+            EntityFact("subject", example["subj_type"], 0, tuple(set(get_mention_spans(example["subj_start"], example["subj_end"])))),
+            EntityFact("object", example["obj_type"], 1, tuple(set(get_mention_spans(example["obj_start"], example["obj_end"]))))
+        ]
 
-        return [subject_fact, object_fact]
+        return facts
