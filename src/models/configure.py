@@ -6,8 +6,14 @@ def get_ssan_adapt():
     return SSANAdaptModel
 
 
+def get_bert_baseline():
+    from .bert_baseline import BertBaseline
+    return BertBaseline
+
+
 MODELS = {
-    "ssan_adapt": get_ssan_adapt
+    "ssan_adapt": get_ssan_adapt,
+    "bert_baseline": get_bert_baseline()
 }
 
 
