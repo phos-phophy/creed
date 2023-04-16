@@ -58,22 +58,20 @@ flowchart LR
 <table>
   <tr>
     <th rowspan="3">Adaptation methods</th>
-    <th colspan="4">Results, F1-мера</th>
+    <th colspan="3">Results, F1-мера</th>
   </tr>
   <tr>
     <th colspan="2">DocRED</th>
-    <th colspan="2">TACRED</th>
+    <th colspan="1">Re-TACRED</th>
   </tr>
   <tr>
     <th>SSAN-Adapt</th>
     <th>DocUNet</th>
-    <th>SSAN-Adapt</th>
-    <th>DocUNet</th>
+    <th>BERT_base</th>
   </tr>
   <tr>
     <td>Ignoring</td>
     <td>53.60</td>
-    <td>-</td>
     <td>-</td>
     <td>-</td>
   </tr>
@@ -82,14 +80,13 @@ flowchart LR
     <td>54.23</td>
     <td>-</td>
     <td>-</td>
-    <td>-</td>
   </tr>
 </table>
 
 
 ## Class diagrams
 
-The base classes are divided into 3 main categories:
+The base classes are divided into 4 main categories:
 
 * **_Examples' features_**:
   * Span
@@ -104,18 +101,56 @@ The base classes are divided into 3 main categories:
 * **_Models_**:
   * AbstractModel
   * AbstractWrapperModel
-
-And `ModelManager` class that is responsible for model training and scoring 
+* **_Utilities_**:
+  * ModelManager
+  * AbstractLoader
 
 ### Examples' features
+
+```mermaid
+classDiagram
+directionTB
+    ModelManager "1" --> "1" AbstractModelWrapper : init, train and evaluate
+    AbstractModelWrapper ..> AbstractDataset : use
+    AbstractDataset "1" --o "1..*" Document : process
+    AbstractDataset "1" --o "1..*" PreparedDocument : store
+    
+    AbstractModelWrapper <|-- SSANAdaptModel
+    AbstractModelWrapper <|-- BertBaseline
+    
+    class AbstractModelWrapper{
+        <<Abstract>>
+    }
+    
+    class AbstractDataset{
+        <<Abstract>>
+    }
+    
+    class PreparedDocument{
+        <<NamedTuple>>
+    }
+```
+
 ```mermaid
 classDiagram
 direction TB
 
+   Document "1" o-- "1..*" AbstractFact
+   Document "1" o-- "1..*" Span
    AbstractFact <|-- EntityFact
    AbstractFact <|-- RelationFact
-   EntityFact "1" o-- "1..*" Span : is mentioned in
+   Span "1" o-- "1..*" EntityFact : is mentioned in
    AbstractFact "1" --> "1" FactClass : is a
+   
+   class Document{
+      +doc_id: str
+      +text: str
+      +words: Tuple[Span]
+      +sentences: Tuple[Tuple[Span]]
+      +facts: Tuple[AbstractFact]
+      +coreference_chains: Dict[int, Tuple[EntityFact]]
+      +get_word(span: Span) str
+   }
    
    class Span:::rect{
       +start_idx: int
@@ -144,71 +179,6 @@ direction TB
       +from_fact: EntityFact
       +to_fact: EntityFact
    }
-```
-### Examples
-```mermaid
-classDiagram
-direction LR
-   class Document{
-      +doc_id: str
-      +text: str
-      +words: Tuple[Span]
-      +sentences: Tuple[Tuple[Span]]
-      +facts: Tuple[AbstractFact]
-      +coreference_chains: Dict[str, Tuple[EntityFact]]
-      #_build_coreference_chains(facts)
-      #_validate_span(text_span: Span, span: Span)
-      #_validate_spans(self, spans: Tuple[Span])
-      #_validate_facts(self)
-      +get_word(self, span: Span)
-      +add_relation_facts(self, facts: Iterable[RelationFact])
-   }
-   
-   class AbstractDataset{
-      <<Abstract>>
-      +evaluation: bool
-      +extract_labels: bool
-      +tokenizer
-      +max_len: int
-      #_documents: List[PreparedDocument]
-      #_setup_len_attr(self, tokenizer)
-      #_prepare_doc(self, doc: Document)
-      +__getitem__(self, idx: int) PreparedDocument
-   }
-   AbstractDataset ..> Document : processes
-   AbstractDataset "1" o-- "1..*" PreparedDocument : stores
-   
-   class PreparedDocument{
-      <<NamedTuple>>
-      +features: Dict[str, torch.Tensor]
-      +labels: Optional[Dict[str, torch.Tensor]]
-   }
-```
-
-### Models
-```mermaid
-classDiagram
-direction TB
-
-   AbstractModel <|-- AbstractWrapperModel
-   
-   class AbstractModel{
-      <<Abstract>>
-      +device: torch.device
-      +relations: Tuple[str]
-      +save(self, path: Path, *, rewrite: bool)
-      +load(cls, path: Path) AbstractModel
-      +forward(self, *args, **kwargs) Any
-      +prepare_dataset(self, documents: Iterable[Document], extract_labels, evaluation)  AbstractDataset
-   }
-   
-   class AbstractWrapperModel{
-      <<Abstract>>
-      +evaluate(self, dataloader: DataLoader, output_path: str)
-      +predict(self, documents: Iterable[Document], dataloader: DataLoader, output_path: str)
-      +test(self, dataloader: DataLoader, output_path: str)
-   }
-   
 ```
 
 ## Run
