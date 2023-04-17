@@ -45,7 +45,8 @@ class EntityMarkerDataset(AbstractDataset):
         labels = None
         if self.extract_labels:
             link_fact = next(self._get_fact(document, 'fact_class', FactClass.RELATION))
-            labels = {"labels": self._rel_to_ind[link_fact.type_id] if link_fact else NO_REL_IND}
+            rel_ind = self._rel_to_ind[link_fact.type_id] if link_fact else NO_REL_IND
+            labels = {"labels": torch.tensor([rel_ind], dtype=torch.long)}
 
         return PreparedDocument(features=features, labels=labels)
 
@@ -96,4 +97,4 @@ class EntityMarkerDataset(AbstractDataset):
 
         input_ids = [self._bos_token] + input_ids[:self.max_len - 2] + [self._eos_token]
 
-        return torch.tensor(input_ids, dtype=torch.long), ss + 1, os + 1
+        return torch.tensor(input_ids, dtype=torch.long), torch.tensor([ss + 1], dtype=torch.long), torch.tensor([os + 1], dtype=torch.long)
