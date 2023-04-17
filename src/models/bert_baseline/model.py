@@ -28,6 +28,7 @@ class BertBaseline(AbstractWrapperModel):
 
         self._entities = tuple(entities) if entities else ('',)
 
+        self._added_vocab_len = 0
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
         self._encoder: BertModel = AutoModel.from_pretrained(pretrained_model_path)
@@ -60,15 +61,22 @@ class BertBaseline(AbstractWrapperModel):
             dataset_name: str = ''
     ) -> AbstractDataset:
         if self.inner_model_type == 'entity_marker':
-            return EntityMarkerDataset(
+            dataset = EntityMarkerDataset(
                 documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier, cache_dir, dataset_name
             )
         elif self.inner_model_type == 'typed_entity_marker':
-            return TypedEntityMarkerDataset(
+            dataset = TypedEntityMarkerDataset(
                 documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier, cache_dir, dataset_name
             )
         else:
             raise ValueError
+
+        added_vocab = self._tokenizer.get_added_vocab()
+        if len(added_vocab) > self._added_vocab_len:
+            self._added_vocab_len = len(added_vocab)
+            self._encoder.resize_token_embeddings(len(self._tokenizer))
+
+        return dataset
 
     def evaluate(self, dataloader: DataLoader, output_path: Path = None) -> None:
         self._evaluate(dataloader, output_path, 'Evaluating')
