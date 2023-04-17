@@ -63,7 +63,7 @@ class BertBaseline(AbstractWrapperModel):
             return EntityMarkerDataset(
                 documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier, cache_dir, dataset_name
             )
-        elif self.inner_model_type == 'typed-entity_marker':
+        elif self.inner_model_type == 'typed_entity_marker':
             return TypedEntityMarkerDataset(
                 documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier, cache_dir, dataset_name
             )

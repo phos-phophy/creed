@@ -1,0 +1,83 @@
+{
+  "loader_config": {
+    "loader_type": "tacred"
+  },
+  "train_dataset_path": "etc/datasets/tacred/data/json/train.json",
+  "dev_dataset_path": "etc/datasets/tacred/data/json/dev_rev.json",
+  "eval_dataset_path": "etc/datasets/tacred/data/json/dev_rev.json",
+  "test_dataset_path": "etc/datasets/tacred/data/json/test_rev.json",
+  "save_path": "etc/models/bert_base/tacred/tem/model.pkl",
+  "cache_dir": "etc/cache",
+  "output_eval_path": "etc/models/bert_base/tacred/tem/eval_results.json",
+  "output_test_path": "etc/models/bert_base/tacred/tem/test_results.json",
+  "training_config": {
+    "compute_metrics": false,
+    "training_arguments": {
+      "logging_dir": "etc/models/bert_base/tacred/tem/log_dir",
+      "output_dir": "etc/models/bert_base/tacred/tem/output",
+      "num_train_epochs": 5,
+      "evaluation_strategy": "no",
+      "save_total_limit": 1,
+      "do_train": true,
+      "do_eval": true,
+      "no_cuda": false,
+      "per_device_train_batch_size": 64,
+      "per_device_eval_batch_size": 64,
+      "warmup_ratio": 0.1,
+      "learning_rate": 0.00005
+    }
+  },
+  "model_init_config": {
+    "model_params": {
+      "model_type": "bert_baseline",
+      "inner_model_type": "typed_entity_marker",
+      "pretrained_model_path": "bert-base-cased",
+      "tokenizer_path": "bert-base-cased",
+      "dropout": 0.1,
+      "relations": [
+        "no_relation",
+        "org:alternate_names",
+        "org:city_of_headquarters",
+        "org:country_of_headquarters",
+        "org:dissolved",
+        "org:founded",
+        "org:founded_by",
+        "org:member_of",
+        "org:members",
+        "org:number_of_employees/members",
+        "org:parents",
+        "org:political/religious_affiliation",
+        "org:shareholders",
+        "org:stateorprovince_of_headquarters",
+        "org:subsidiaries",
+        "org:top_members/employees",
+        "org:website",
+        "per:age",
+        "per:alternate_names",
+        "per:cause_of_death",
+        "per:charges",
+        "per:children",
+        "per:cities_of_residence",
+        "per:city_of_birth",
+        "per:city_of_death",
+        "per:countries_of_residence",
+        "per:country_of_birth",
+        "per:country_of_death",
+        "per:date_of_birth",
+        "per:date_of_death",
+        "per:employee_of",
+        "per:origin",
+        "per:other_family",
+        "per:parents",
+        "per:religion",
+        "per:schools_attended",
+        "per:siblings",
+        "per:spouse",
+        "per:stateorprovince_of_birth",
+        "per:stateorprovince_of_death",
+        "per:stateorprovinces_of_residence",
+        "per:title"
+      ]
+    }
+  }
+}
