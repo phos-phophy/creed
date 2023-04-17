@@ -9,8 +9,8 @@ class TypedEntityMarkerDataset(EntityMarkerDataset):
     def _tokenize(self, document: Document):
         input_ids, ss, os = [], 0, 0
 
-        object_type = self._get_fact(document, 'name', 'object').type_id
-        subject_type = self._get_fact(document, 'name', 'subject').type_id
+        object_type = next(self._get_fact(document, 'name', 'object')).type_id
+        subject_type = next(self._get_fact(document, 'name', 'subject')).type_id
 
         if self.diversifier.active:
             object_type = self.diversifier[object_type]
