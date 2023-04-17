@@ -1,24 +1,16 @@
 import json
-from functools import wraps
 from pathlib import Path
 from typing import Iterable, List, Optional
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, AbstractWrapperModel, DiversifierConfig, Document, NO_ENT_IND, NO_REL_IND, cuda_autocast
+from src.abstract import AbstractDataset, AbstractWrapperModel, DiversifierConfig, Document, NO_REL_IND, cuda_autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer, BertModel
-from transformers.models.bert.modeling_bert import BertEmbeddings
 
 from .datasets import EntityMarkerDataset
-
-
-def new_forward(embeddings: BertEmbeddings, old_forward):
-    @wraps(old_forward)
-    def forward(**kwargs):
-        return old_forward(**kwargs) + embeddings.ner_embeddings(embeddings.ner_ids)
-    return forward
+from ..embeddings import NEREmbeddings
 
 
 class BertBaseline(AbstractWrapperModel):
@@ -40,6 +32,7 @@ class BertBaseline(AbstractWrapperModel):
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
         self._encoder: BertModel = AutoModel.from_pretrained(pretrained_model_path)
+        self._encoder.embeddings = NEREmbeddings(self._encoder.embeddings, len(self._entities))
         self._modify_embeddings()
 
         self._classifier = torch.nn.Sequential(
@@ -55,12 +48,9 @@ class BertBaseline(AbstractWrapperModel):
     def inner_model_type(self):
         return self._inner_model_type
 
-    def _modify_embeddings(self):
-        embedding_dim = self._encoder.embeddings.word_embeddings.embedding_dim
-        ner_embeddings = torch.nn.Embedding(num_embeddings=len(self._entities), embedding_dim=embedding_dim, padding_idx=NO_ENT_IND)
-
-        self._encoder.embeddings.ner_embeddings = ner_embeddings
-        self._encoder.embeddings.forward = new_forward(self._encoder.embeddings, self._encoder.embeddings.forward)
+    @property
+    def entities(self):
+        return self._entities
 
     def prepare_dataset(
             self,
@@ -94,15 +84,15 @@ class BertBaseline(AbstractWrapperModel):
         pooled_output = self._encoder(input_ids, attention_mask=attention_mask)[0]  # (bs, length, hidden_size)
 
         idx = torch.arange(input_ids.size(0)).to(input_ids.device)  # (bs, )
-        ss_emb = pooled_output[idx, ss]  # (bs, hidden_size)
-        os_emb = pooled_output[idx, os]  # (bs, hidden_size)
+        ss_emb = pooled_output[idx, ss.flatten()]  # (bs, hidden_size)
+        os_emb = pooled_output[idx, os.flatten()]  # (bs, hidden_size)
 
         h = torch.cat((ss_emb, os_emb), dim=-1)  # (bs, 2 * hidden_size)
         logits = self._classifier(h)  # (bs, num_rel)
 
         outputs = (logits,)
         if labels is not None:
-            loss = self._loss_fnt(logits.float(), labels)
+            loss = self._loss_fnt(logits.float(), labels.flatten())
             outputs = (loss,) + outputs
 
         return outputs
