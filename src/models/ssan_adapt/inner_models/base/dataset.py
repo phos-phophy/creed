@@ -1,5 +1,4 @@
 from collections import defaultdict
-from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
@@ -23,12 +22,9 @@ class BaseSSANAdaptDataset(AbstractDataset):
             dist_ceil: int,
             desc: str,
             diversifier: DiversifierConfig,
-            cache_dir: Path = None,
-            dataset_name: str = ''
+            **kwargs
     ):
-        super(BaseSSANAdaptDataset, self).__init__(
-            documents, tokenizer, desc, extract_labels, evaluation, diversifier, cache_dir, dataset_name
-        )
+        super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation, diversifier)
 
         self._max_ent = self._count_max_ent(documents) if evaluation else None
         self._entities = tuple(entities)

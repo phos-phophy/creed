@@ -1,5 +1,4 @@
 import math
-from pathlib import Path
 from typing import Any, Iterable, Tuple
 
 import torch
@@ -24,15 +23,13 @@ class BaseSSANAdaptInnerModel(AbstractSSANAdaptInnerModel):
             desc: str,
             extract_labels=False,
             evaluation=False,
-            cache_dir: Path = None,
-            dataset_name: str = ''
     ) -> BaseSSANAdaptDataset:
 
         if diversifier.active:
             raise ValueError("Base SSAN Adapt model and active diversifier are not compatible!")
 
         return BaseSSANAdaptDataset(documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations,
-                                    self._dist_base, self._dist_ceil, desc, diversifier, cache_dir, dataset_name)
+                                    self._dist_base, self._dist_ceil, desc, diversifier)
 
     def forward(
             self,
