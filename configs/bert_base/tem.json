@@ -7,7 +7,6 @@
   "eval_dataset_path": "etc/datasets/tacred/data/json/dev_rev.json",
   "test_dataset_path": "etc/datasets/tacred/data/json/test_rev.json",
   "save_path": "etc/models/bert_base/tacred/tem/model.pkl",
-  "cache_dir": "etc/cache",
   "output_eval_path": "etc/models/bert_base/tacred/tem/eval_results.json",
   "output_test_path": "etc/models/bert_base/tacred/tem/test_results.json",
   "training_config": {
