@@ -55,9 +55,7 @@ class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
             diversifier: DiversifierConfig,
             desc: str,
             extract_labels: bool = False,
-            evaluation: bool = False,
-            cache_dir: Path = None,
-            dataset_name: str = ''
+            evaluation: bool = False
     ) -> AbstractDataset:
         pass
 
