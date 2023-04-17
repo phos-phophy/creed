@@ -56,18 +56,12 @@ class BertBaseline(AbstractWrapperModel):
             diversifier: DiversifierConfig,
             desc: str,
             extract_labels: bool = False,
-            evaluation: bool = False,
-            cache_dir: Path = None,
-            dataset_name: str = ''
+            evaluation: bool = False
     ) -> AbstractDataset:
         if self.inner_model_type == 'entity_marker':
-            dataset = EntityMarkerDataset(
-                documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier, cache_dir, dataset_name
-            )
+            dataset = EntityMarkerDataset(documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier)
         elif self.inner_model_type == 'typed_entity_marker':
-            dataset = TypedEntityMarkerDataset(
-                documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier, cache_dir, dataset_name
-            )
+            dataset = TypedEntityMarkerDataset(documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier)
         else:
             raise ValueError
 

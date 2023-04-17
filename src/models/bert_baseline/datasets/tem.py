@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Iterable
 
 import torch
@@ -16,13 +15,9 @@ class TypedEntityMarkerDataset(EntityMarkerDataset):
             evaluation: bool,
             relations: Iterable[str],
             desc: str,
-            diversifier: DiversifierConfig,
-            cache_dir: Path = None,
-            dataset_name: str = ''
+            diversifier: DiversifierConfig
     ):
-        super(EntityMarkerDataset, self).__init__(
-            documents, tokenizer, desc, extract_labels, evaluation, diversifier, cache_dir, dataset_name
-        )
+        super(EntityMarkerDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation, diversifier)
 
         self._relations = tuple(relations)
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}

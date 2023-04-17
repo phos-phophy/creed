@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Any, Iterable
 
 import torch
@@ -14,13 +13,9 @@ class EntityMarkerDataset(AbstractDataset):
             evaluation: bool,
             relations: Iterable[str],
             desc: str,
-            diversifier: DiversifierConfig,
-            cache_dir: Path = None,
-            dataset_name: str = ''
+            diversifier: DiversifierConfig
     ):
-        super(EntityMarkerDataset, self).__init__(
-            documents, tokenizer, desc, extract_labels, evaluation, diversifier, cache_dir, dataset_name
-        )
+        super(EntityMarkerDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation, diversifier)
 
         self.tokenizer.add_tokens(['[E1]', '[/E1]', '[E2]', '[/E2]'])
 
