@@ -1,15 +1,17 @@
 import json
 from functools import wraps
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, AbstractWrapperModel, DiversifierConfig, Document, NO_ENT_IND, NO_REL_IND
+from src.abstract import AbstractDataset, AbstractWrapperModel, DiversifierConfig, Document, NO_ENT_IND, NO_REL_IND, cuda_autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import AutoModel, BertModel
+from transformers import AutoModel, AutoTokenizer, BertModel
 from transformers.models.bert.modeling_bert import BertEmbeddings
+
+from .datasets import EntityMarkerDataset
 
 
 def new_forward(embeddings: BertEmbeddings, old_forward):
@@ -21,10 +23,21 @@ def new_forward(embeddings: BertEmbeddings, old_forward):
 
 class BertBaseline(AbstractWrapperModel):
 
-    def __init__(self, pretrained_model_path: str, relations: Iterable[str], entities: Iterable[str], dropout: float):
+    def __init__(
+            self,
+            pretrained_model_path: str,
+            tokenizer_path: str,
+            inner_model_type: str,
+            relations: Iterable[str],
+            dropout: float,
+            entities: Optional[Iterable[str]] = None
+    ):
         super().__init__(relations)
+        self._inner_model_type = inner_model_type
 
-        self._entities = tuple(entities)
+        self._entities = tuple(entities) if entities else ('',)
+
+        self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
         self._encoder: BertModel = AutoModel.from_pretrained(pretrained_model_path)
         self._modify_embeddings()
@@ -37,6 +50,10 @@ class BertBaseline(AbstractWrapperModel):
         )
 
         self._loss_fnt = torch.nn.CrossEntropyLoss()
+
+    @property
+    def inner_model_type(self):
+        return self._inner_model_type
 
     def _modify_embeddings(self):
         embedding_dim = self._encoder.embeddings.word_embeddings.embedding_dim
@@ -55,7 +72,12 @@ class BertBaseline(AbstractWrapperModel):
             cache_dir: Path = None,
             dataset_name: str = ''
     ) -> AbstractDataset:
-        pass
+        if self.inner_model_type == 'entity_marker':
+            return EntityMarkerDataset(
+                documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier, cache_dir, dataset_name
+            )
+        else:
+            raise ValueError
 
     def evaluate(self, dataloader: DataLoader, output_path: Path = None) -> None:
         self._evaluate(dataloader, output_path, 'Evaluating')
@@ -66,6 +88,7 @@ class BertBaseline(AbstractWrapperModel):
     def test(self, dataloader: DataLoader, output_path: Path = None) -> None:
         self._evaluate(dataloader, output_path, 'Test')
 
+    @cuda_autocast
     def forward(self, input_ids=None, ner_ids=None, attention_mask=None, labels=None, ss=None, os=None):
         self._encoder.embeddings.ner_ids = ner_ids
         pooled_output = self._encoder(input_ids, attention_mask=attention_mask)[0]  # (bs, length, hidden_size)

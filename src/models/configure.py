@@ -13,7 +13,7 @@ def get_bert_baseline():
 
 MODELS = {
     "ssan_adapt": get_ssan_adapt,
-    "bert_baseline": get_bert_baseline()
+    "bert_baseline": get_bert_baseline
 }
 
 
