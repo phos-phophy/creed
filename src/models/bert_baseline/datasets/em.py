@@ -22,6 +22,8 @@ class EntityMarkerDataset(AbstractDataset):
             documents, tokenizer, desc, extract_labels, evaluation, diversifier, cache_dir, dataset_name
         )
 
+        self.tokenizer.add_tokens(['[E1]', ['[/E1]', ['E2'], ['/E2']]])
+
         self._relations = tuple(relations)
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}
 
@@ -79,18 +81,18 @@ class EntityMarkerDataset(AbstractDataset):
         for sentence in document.sentences:
             for span in sentence:
 
+                tokens = self._word2token(document.get_word(span))
+
                 if span == subject_start_token:
                     ss = len(input_ids)
-                    tokens = self._word2token('[E1] ' + document.get_word(span))
+                    tokens = ['[E1]'] + tokens
                 elif span == subject_end_token:
-                    tokens = self._word2token(document.get_word(span) + ' [/E1]')
+                    tokens = tokens + ['[/E1]']
                 elif span == object_start_token:
                     os = len(input_ids)
-                    tokens = self._word2token('[E2] ' + document.get_word(span))
-                elif span == subject_end_token:
-                    tokens = self._word2token(document.get_word(span) + ' [/E2]')
-                else:
-                    tokens = self._word2token(document.get_word(span))
+                    tokens = ['[E2]'] + tokens
+                elif span == object_end_token:
+                    tokens = tokens + ['[/E2]']
 
                 input_ids.extend(tokens)
 
