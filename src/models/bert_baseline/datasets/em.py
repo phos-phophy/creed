@@ -45,9 +45,8 @@ class EntityMarkerDataset(AbstractDataset):
         labels = None
         if self.extract_labels:
             link_fact = next(self._get_fact(document, 'fact_class', FactClass.RELATION))
-            labels_ids = torch.zeros(len(self._relations), dtype=torch.long)
-            labels_ids[self._rel_to_ind[link_fact.type_id] if link_fact else NO_REL_IND] = 1
-            labels = {"labels": labels_ids}
+            rel_ind = self._rel_to_ind[link_fact.type_id] if link_fact else NO_REL_IND
+            labels = {"labels": torch.tensor([rel_ind], dtype=torch.long)}
 
         return PreparedDocument(features=features, labels=labels)
 

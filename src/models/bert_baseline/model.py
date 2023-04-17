@@ -33,7 +33,6 @@ class BertBaseline(AbstractWrapperModel):
 
         self._encoder: BertModel = AutoModel.from_pretrained(pretrained_model_path)
         self._encoder.embeddings = NEREmbeddings(self._encoder.embeddings, len(self._entities))
-        self._modify_embeddings()
 
         self._classifier = torch.nn.Sequential(
             torch.nn.Linear(2 * self._encoder.config.hidden_size, self._encoder.config.hidden_size),
@@ -104,7 +103,7 @@ class BertBaseline(AbstractWrapperModel):
             self.eval()
 
             inputs = {key: token.cuda() for key, token in inputs.items()} if torch.cuda.is_available() else inputs
-            labels_ids += inputs["labels"].tolist() if "labels" in inputs else [None]
+            labels_ids += inputs["labels"].flatten().tolist() if "labels" in inputs else [None]
 
             with torch.no_grad():
                 outputs = self(**inputs)
