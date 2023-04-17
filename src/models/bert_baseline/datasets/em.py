@@ -22,13 +22,10 @@ class EntityMarkerDataset(AbstractDataset):
             documents, tokenizer, desc, extract_labels, evaluation, diversifier, cache_dir, dataset_name
         )
 
-        self.tokenizer.add_tokens(['[E1]', ['[/E1]', ['E2'], ['/E2']]])
+        self.tokenizer.add_tokens(['[E1]', '[/E1]', '[E2]', '[/E2]'])
 
         self._relations = tuple(relations)
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}
-
-        self._bos_token = self.tokenizer.cls_token_id
-        self._eos_token = self.tokenizer.sep_token_id
 
         self._local_cache = dict()
 
@@ -53,8 +50,8 @@ class EntityMarkerDataset(AbstractDataset):
 
     def _word2token(self, word_: str):
         if word_ not in self._local_cache:
-            tokens_ = self.tokenizer.encode(word_)[1:-1]  # crop tokens of the beginning and the end
-            self._local_cache[word_] = tokens_ if len(tokens_) else [self.tokenizer.unk_token_id]
+            tokens_ = self.tokenizer.tokenize(word_)
+            self._local_cache[word_] = tokens_ if len(tokens_) else [self.tokenizer.unk_token]
         return self._local_cache[word_]
 
     @staticmethod
@@ -74,28 +71,30 @@ class EntityMarkerDataset(AbstractDataset):
         return subject_spans[0], subject_spans[-1], object_spans[0], object_spans[-1]
 
     def _tokenize(self, document: Document):
-        input_ids, ss, os = [], 0, 0
+        tokens, ss, os = [], 0, 0
 
         subject_start_token, subject_end_token, object_start_token, object_end_token = self._get_facts_info(document)
 
         for sentence in document.sentences:
             for span in sentence:
 
-                tokens = self._word2token(document.get_word(span))
+                word_tokens = self._word2token(document.get_word(span))
 
                 if span == subject_start_token:
-                    ss = len(input_ids)
-                    tokens = ['[E1]'] + tokens
+                    ss = len(tokens)
+                    word_tokens = ['[E1]'] + word_tokens
                 elif span == subject_end_token:
-                    tokens = tokens + ['[/E1]']
+                    word_tokens = word_tokens + ['[/E1]']
                 elif span == object_start_token:
-                    os = len(input_ids)
-                    tokens = ['[E2]'] + tokens
+                    os = len(tokens)
+                    word_tokens = ['[E2]'] + word_tokens
                 elif span == object_end_token:
-                    tokens = tokens + ['[/E2]']
+                    word_tokens = word_tokens + ['[/E2]']
 
-                input_ids.extend(tokens)
+                tokens.extend(word_tokens)
 
-        input_ids = [self._bos_token] + input_ids[:self.max_len - 2] + [self._eos_token]
+        tokens = tokens[:self.max_len - 2]
+        input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+        input_ids = self.tokenizer.build_inputs_with_special_tokens(input_ids)
 
         return torch.tensor(input_ids, dtype=torch.long), torch.tensor([ss + 1], dtype=torch.long), torch.tensor([os + 1], dtype=torch.long)
