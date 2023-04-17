@@ -26,8 +26,8 @@ class TacredLoaderTest(unittest.TestCase):
                       Span(257, 263), Span(264, 274), Span(275, 277), Span(278, 281), Span(282, 286), Span(287, 298), Span(299, 304),
                       Span(305, 309), Span(310, 316), Span(317, 320), Span(321, 325), Span(326, 327)]]
 
-        facts = [EntityFact("", "ORGANIZATION", 0, (Span(187, 198), Span(199, 208), Span(209, 211), Span(212, 219))),
-                 EntityFact("", "ORGANIZATION", 1, (Span(243, 256), Span(257, 263), Span(264, 274)))]
+        facts = [EntityFact("subject", "ORGANIZATION", 0, (Span(187, 198), Span(199, 208), Span(209, 211), Span(212, 219))),
+                 EntityFact("object", "ORGANIZATION", 1, (Span(243, 256), Span(257, 263), Span(264, 274)))]
 
         gold_document = Document(doc_id, text, sentences, facts)
 
@@ -45,8 +45,8 @@ class TacredLoaderTest(unittest.TestCase):
                      Span(99, 104), Span(105, 108), Span(109, 111), Span(112, 119), Span(120, 122), Span(123, 127), Span(128, 129),
                      Span(130, 140), Span(141, 144), Span(145, 146)]]
 
-        facts = [EntityFact("", "PERSON", 0, (Span(43, 50), Span(51, 56))),
-                 EntityFact("", "TITLE", 1, (Span(69, 77),))]
+        facts = [EntityFact("subject", "PERSON", 0, (Span(43, 50), Span(51, 56))),
+                 EntityFact("object", "TITLE", 1, (Span(69, 77),))]
 
         facts.extend([RelationFact("", "per:title", facts[0], facts[1])])
 
