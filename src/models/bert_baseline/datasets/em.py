@@ -36,7 +36,6 @@ class EntityMarkerDataset(AbstractDataset):
 
         features = {
             "input_ids": input_ids,
-            "ner_ids": torch.zeros(input_ids.shape[0], dtype=torch.long),
             "attention_mask": torch.ones(input_ids.shape[0]).bool(),
             "ss": ss,
             "os": os

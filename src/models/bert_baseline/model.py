@@ -10,7 +10,6 @@ from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer, BertModel
 
 from .datasets import EntityMarkerDataset
-from ..embeddings import NEREmbeddings
 
 
 class BertBaseline(AbstractWrapperModel):
@@ -32,7 +31,6 @@ class BertBaseline(AbstractWrapperModel):
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
         self._encoder: BertModel = AutoModel.from_pretrained(pretrained_model_path)
-        self._encoder.embeddings = NEREmbeddings(self._encoder.embeddings, len(self._entities))
 
         self._classifier = torch.nn.Sequential(
             torch.nn.Linear(2 * self._encoder.config.hidden_size, self._encoder.config.hidden_size),
@@ -78,8 +76,7 @@ class BertBaseline(AbstractWrapperModel):
         self._evaluate(dataloader, output_path, 'Test')
 
     @cuda_autocast
-    def forward(self, input_ids=None, ner_ids=None, attention_mask=None, labels=None, ss=None, os=None):
-        self._encoder.embeddings.ner_ids = ner_ids
+    def forward(self, input_ids=None, attention_mask=None, labels=None, ss=None, os=None):
         pooled_output = self._encoder(input_ids, attention_mask=attention_mask)[0]  # (bs, length, hidden_size)
 
         idx = torch.arange(input_ids.size(0)).to(input_ids.device)  # (bs, )
