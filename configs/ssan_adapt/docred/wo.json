@@ -8,8 +8,6 @@
   "training_config": {
     "compute_metrics": false,
     "training_arguments": {
-      "logging_dir": "etc/models/ssan_adapt/docred/wo/log_dir",
-      "output_dir": "etc/models/ssan_adapt/docred/wo/output",
       "num_train_epochs": 60,
       "save_total_limit": 1,
       "evaluation_strategy": "epoch",
@@ -27,8 +25,4 @@
   "eval_dataset_path": "etc/datasets/docred/dev.json",
   "test_dataset_path": "etc/datasets/docred/dev.json",
   "pred_dataset_path": "etc/datasets/docred/test.json",
-  "save_path": "etc/models/ssan_adapt/docred/wo/model.pkl",
-  "output_eval_path": "etc/models/ssan_adapt/docred/wo/eval_results.json",
-  "output_test_path": "etc/models/ssan_adapt/docred/wo/test_results.json",
-  "output_pred_path": "etc/models/ssan_adapt/docred/wo/result.json"
 }
