@@ -112,8 +112,8 @@ classDiagram
 directionTB
     ModelManager "1" --> "1" AbstractModelWrapper : init, train and evaluate
     AbstractModelWrapper ..> AbstractDataset : use
-    AbstractDataset "1" --o "1..*" Document : process
-    AbstractDataset "1" --o "1..*" PreparedDocument : store
+    AbstractDataset "1" o-- "1..*" Document : process
+    AbstractDataset "1" o-- "1..*" PreparedDocument : store
     
     AbstractModelWrapper <|-- SSANAdaptModel
     AbstractModelWrapper <|-- BertBaseline
@@ -204,4 +204,4 @@ direction TB
 
 ### Start training
 
-`bash scripts/main.sh -c path/to/config -v __gpu_id__ -s __seed__`
+`bash scripts/main.sh -c path/to/config -v __gpu_id__ -s __seed__ -o path/to/model/output/dir`

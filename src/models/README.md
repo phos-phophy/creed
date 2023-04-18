@@ -22,7 +22,7 @@ For the more details please refer to:
 |---------|-------------|--------------|-------------|
 | DocRED  | F1          | 65.92        | 3           |
 | CDR     | F1          | 68.7         | 7           |
-| GDA     | F1          | 83.9         | 3           |
+| GDA     | F1          | 83.9         | 7           |
 
 Results are obtained from [paperwithcode.com](https://paperswithcode.com/paper/entity-structure-within-and-throughout)
 
