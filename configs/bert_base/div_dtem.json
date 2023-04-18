@@ -6,14 +6,9 @@
   "dev_dataset_path": "etc/datasets/tacred/data/json/dev_rev.json",
   "eval_dataset_path": "etc/datasets/tacred/data/json/dev_rev.json",
   "test_dataset_path": "etc/datasets/tacred/data/json/test_rev.json",
-  "save_path": "etc/models/bert_base/tacred/div_dtem/model.pkl",
-  "output_eval_path": "etc/models/bert_base/tacred/div_dtem/eval_results.json",
-  "output_test_path": "etc/models/bert_base/tacred/div_dtem/test_results.json",
   "training_config": {
     "compute_metrics": false,
     "training_arguments": {
-      "logging_dir": "etc/models/bert_base/tacred/div_dtem/log_dir",
-      "output_dir": "etc/models/bert_base/tacred/div_dtem/output",
       "num_train_epochs": 5,
       "evaluation_strategy": "no",
       "save_total_limit": 1,
