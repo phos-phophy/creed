@@ -59,16 +59,17 @@ class BertBaseline(AbstractWrapperModel):
             evaluation: bool = False
     ) -> AbstractDataset:
         if self.inner_model_type == 'entity_marker':
-            dataset = EntityMarkerDataset(documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier)
+            dataset = EntityMarkerDataset(
+                documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier
+            ).prepare_documents()
         elif self.inner_model_type == 'typed_entity_marker':
-            dataset = TypedEntityMarkerDataset(documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier)
+            dataset = TypedEntityMarkerDataset(
+                documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier
+            ).prepare_documents()
         else:
             raise ValueError
 
-        added_vocab = self._tokenizer.get_added_vocab()
-        if len(added_vocab) > self._added_vocab_len:
-            self._added_vocab_len = len(added_vocab)
-            self._encoder.resize_token_embeddings(len(self._tokenizer))
+        self._encoder.resize_token_embeddings(len(self._tokenizer))
 
         return dataset
 

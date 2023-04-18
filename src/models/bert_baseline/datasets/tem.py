@@ -55,14 +55,14 @@ class TypedEntityMarkerDataset(EntityMarkerDataset):
 
                 if span == subject_start_token:
                     ss = len(tokens)
-                    word_tokens = subject_start + word_tokens
+                    word_tokens = [subject_start] + word_tokens
                 elif span == subject_end_token:
-                    word_tokens = word_tokens + subject_end
+                    word_tokens = word_tokens + [subject_end]
                 elif span == object_start_token:
                     os = len(tokens)
-                    word_tokens = object_start + word_tokens
+                    word_tokens = [object_start] + word_tokens
                 elif span == object_end_token:
-                    word_tokens = word_tokens + object_end
+                    word_tokens = word_tokens + [object_end]
 
                 tokens.extend(word_tokens)
 

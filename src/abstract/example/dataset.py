@@ -45,9 +45,7 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         self._used_docs = 0
 
     def __getitem__(self, idx: int) -> PreparedDocument:
-        if self.should_prepare:
-            self.prepare_documents()
-
+        self.prepare_documents()
         self._used_docs += 1
 
         return self._prepared_docs[idx]
@@ -88,7 +86,8 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
         pass
 
     def prepare_documents(self):
-        documents = tqdm(self._documents, desc=self._desc, disable=not bool(self._desc))
-        self._prepared_docs = list(map(self._prepare_document, documents))
-        self._used_docs = 0
+        if self.should_prepare:
+            documents = tqdm(self._documents, desc=self._desc, disable=not bool(self._desc))
+            self._prepared_docs = list(map(self._prepare_document, documents))
+            self._used_docs = 0
         return self
