@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer, BertModel
 
-from .datasets import EntityMarkerDataset, TypedEntityMarkerDataset
+from .datasets import DiversifiedTypedEntityMarkerDataset, EntityMarkerDataset, TypedEntityMarkerDataset
 
 
 class BertBaseline(AbstractWrapperModel):
@@ -58,14 +58,22 @@ class BertBaseline(AbstractWrapperModel):
             extract_labels: bool = False,
             evaluation: bool = False
     ) -> AbstractDataset:
+
         if self.inner_model_type == 'entity_marker':
             dataset = EntityMarkerDataset(
                 documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier
             ).prepare_documents()
+
         elif self.inner_model_type == 'typed_entity_marker':
             dataset = TypedEntityMarkerDataset(
                 documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier
             ).prepare_documents()
+
+        elif self.inner_model_type == 'div_typed_entity_marker':
+            dataset = DiversifiedTypedEntityMarkerDataset(
+                documents, self._tokenizer, extract_labels, evaluation, self.relations, desc, diversifier
+            ).prepare_documents()
+
         else:
             raise ValueError
 
