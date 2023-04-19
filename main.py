@@ -24,6 +24,7 @@ def load_manager():
         config: ManagerConfig = ManagerConfig.from_dict(config_dict, output_dir)
 
     config_path = Path(output_dir) / "config.json"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
     with config_path.open('w') as file:
         json.dump(config_dict, file)
 

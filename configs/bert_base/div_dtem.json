@@ -9,7 +9,7 @@
   "training_config": {
     "compute_metrics": false,
     "training_arguments": {
-      "num_train_epochs": 5,
+      "num_train_epochs": 10,
       "evaluation_strategy": "no",
       "save_total_limit": 1,
       "do_train": true,
