@@ -44,9 +44,7 @@ class SSANAdapt(AbstractModel):
         self._dist_ceil = math.ceil(math.log(self._tokenizer.__getattribute__(len_attr), self._dist_base)) + 1
         self._dist_emb_dim = self._dist_ceil * 2
 
-        self._redefine_encoder_structure()
-
-        out_dim = next(module.out_features for module in list(self._encoder.modules())[::-1] if "out_features" in module.__dict__)
+        out_dim = next(module.out_features for module in list(self._model.modules())[::-1] if "out_features" in module.__dict__)
 
         self._dim_reduction = torch.nn.Linear(out_dim, hidden_dim)
         self._dropout = torch.nn.Dropout(self._model.config.hidden_dropout_prob)
@@ -58,6 +56,10 @@ class SSANAdapt(AbstractModel):
     @property
     def inner_model_type(self):
         return self._inner_model_type
+
+    @property
+    def entities(self):
+        return self._entities
 
     def _redefine_structure(self):
         for layer in self._model.encoder.layer:
