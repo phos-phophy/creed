@@ -4,7 +4,7 @@ from typing import Iterable, List, Optional
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, AbstractWrapperModel, DiversifierConfig, Document, NO_REL_IND, cuda_autocast
+from src.abstract import AbstractDataset, AbstractModel, DiversifierConfig, Document, NO_REL_IND, cuda_autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer, BertModel
@@ -12,7 +12,7 @@ from transformers import AutoModel, AutoTokenizer, BertModel
 from .datasets import DiversifiedTypedEntityMarkerDataset, EntityMarkerDataset, TypedEntityMarkerDataset
 
 
-class BertBaseline(AbstractWrapperModel):
+class BertBaseline(AbstractModel):
 
     def __init__(
             self,
