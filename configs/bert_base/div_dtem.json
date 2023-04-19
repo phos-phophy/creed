@@ -68,29 +68,6 @@
     }
   },
   "eval_diversifier": {
-    "replace_prob": 0.85,
-    "noise_prob": 0.15,
-    "mapping": {
-      "ORGANIZATION": ["ORGANIZATION", "ORG", "GROUPING"],
-      "PERSON": ["PERSON", "PER", "HUMAN"],
-      "NUMBER": ["NUMBER", "NUM", "QUANTITY"],
-      "DATE": ["DATE", "MOMENT", "STAGE"],
-      "NATIONALITY": ["NATIONALITY", "RACE", "FOLK"],
-      "LOCATION": ["LOCATION", "AREA", "LOC"],
-      "TITLE": ["TITLE", "HEADING", "HEADER"],
-      "CITY": ["CITY", "TOWN", "URBAN"],
-      "MISC": ["MISC", "ETC", "MISCELLANEOUS"],
-      "COUNTRY": ["COUNTRY", "NATION", "REALM"],
-      "CRIMINAL_CHARGE": ["CRIMINAL_CHARGE", "CRIME", "CHARGE"],
-      "RELIGION": ["RELIGION", "CULT", "FAITH"],
-      "DURATION": ["DURATION", "PERIOD", "LENGTH"],
-      "URL": ["URL"],
-      "STATE_OR_PROVINCE": ["STATE_OR_PROVINCE", "REGION", "AREA"],
-      "IDEOLOGY": ["IDEOLOGY", "PHILOSOPHY", "WORLDVIEW"],
-      "CAUSE_OF_DEATH": ["CAUSE_OF_DEATH", "DEATH", "MORTAL"]
-    }
-  },
-  "test_diversifier": {
     "replace_prob": 1,
     "mapping": {
       "ORGANIZATION": ["INSTITUTE"],
@@ -110,6 +87,28 @@
       "STATE_OR_PROVINCE": ["TERRITORY"],
       "IDEOLOGY": ["DOCTRINE"],
       "CAUSE_OF_DEATH": ["DIE"]
+    }
+  },
+  "test_diversifier": {
+    "replace_prob": 1,
+    "mapping": {
+      "ORGANIZATION": ["ESTABLISHMENT"],
+      "PERSON": ["INDIVIDUAL"],
+      "NUMBER": ["SIGN"],
+      "DATE": ["DAY"],
+      "NATIONALITY": ["NATION"],
+      "LOCATION": ["POSITION"],
+      "TITLE": ["APPELLATION"],
+      "CITY": ["MUNICIPAL"],
+      "MISC": ["VARIOUS"],
+      "COUNTRY": ["POLITY"],
+      "CRIMINAL_CHARGE": ["ACCUSATION"],
+      "RELIGION": ["CREED"],
+      "DURATION": ["VALIDITY"],
+      "URL": ["URL"],
+      "STATE_OR_PROVINCE": ["DOMAIN"],
+      "IDEOLOGY": ["OUTLOOK"],
+      "CAUSE_OF_DEATH": ["PERDITION"]
     }
   },
   "model_init_config": {
