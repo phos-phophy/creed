@@ -2,8 +2,8 @@ from src.abstract import AbstractModel
 
 
 def get_ssan_adapt():
-    from .ssan_adapt import SSANAdaptModel
-    return SSANAdaptModel
+    from .ssan_adapt import SSANAdapt
+    return SSANAdapt
 
 
 def get_bert_baseline():

@@ -5,11 +5,11 @@ from pathlib import Path
 
 from src.abstract import DiversifierConfig, Document, EntityFact, Span, get_tokenizer_len_attribute
 from src.loader import DocREDLoader
-from src.models.ssan_adapt.inner_models.ie_types.dataset import IETypesSSANAdaptDataset
+from src.models.ssan_adapt.datasets import IETypesDataset
 from transformers import AutoTokenizer
 
 
-class IETypesSSANAdaptDatasetTest(unittest.TestCase):
+class IETypesDatasetTest(unittest.TestCase):
 
     def setUp(self):
         with Path('tests/models/ssan_adapt/data/rel_info.json').open('r') as file:
@@ -42,7 +42,7 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
                  EntityFact('', 'ENT2', 3, (Span(24, 27), Span(28, 31), Span(49, 52))))
 
         document = Document('', text, sentences, facts)
-        dataset = IETypesSSANAdaptDataset(
+        dataset = IETypesDataset(
             [document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', diversifier
         ).prepare_documents()
 
@@ -72,7 +72,7 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
                  EntityFact('', 'ENT3', 3, (Span(28, 31), Span(49, 52))))
 
         document = Document('', text, sentences, facts)
-        dataset = IETypesSSANAdaptDataset(
+        dataset = IETypesDataset(
             [document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', diversifier
         ).prepare_documents()
 
@@ -101,7 +101,7 @@ class IETypesSSANAdaptDatasetTest(unittest.TestCase):
                  EntityFact('', 'ENT2', 3, (Span(24, 27), Span(28, 31), Span(49, 52))))
 
         document = Document('', text, sentences, facts)
-        dataset = IETypesSSANAdaptDataset(
+        dataset = IETypesDataset(
             [document], self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', diversifier
         ).prepare_documents()
 

@@ -5,7 +5,7 @@ from typing import List
 
 import numpy as np
 import torch
-from src.abstract import AbstractWrapperModel, Document
+from src.abstract import AbstractModel, Document
 from src.loader import get_loader
 from src.models import get_model
 from torch.utils.data import DataLoader
@@ -27,7 +27,7 @@ class ModelManager:
         self.set_seed()
 
         load_path = config.model_init_config.load_path
-        model = AbstractWrapperModel.load(load_path) if load_path else get_model(**config.model_init_config.model_params)
+        model = AbstractModel.load(load_path) if load_path else get_model(**config.model_init_config.model_params)
         self.model = model.cuda() if torch.cuda.is_available() else model
 
     def train(self):

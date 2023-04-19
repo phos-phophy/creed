@@ -100,7 +100,6 @@ The base classes are divided into 4 main categories:
   * AbstractDataset
 * **_Models_**:
   * AbstractModel
-  * AbstractWrapperModel
 * **_Utilities_**:
   * ModelManager
   * AbstractLoader
@@ -110,15 +109,15 @@ The base classes are divided into 4 main categories:
 ```mermaid
 classDiagram
 directionTB
-    ModelManager "1" --> "1" AbstractModelWrapper : init, train and evaluate
-    AbstractModelWrapper ..> AbstractDataset : use
+    ModelManager "1" --> "1" AbstractModel : init, train and evaluate
+    AbstractModel ..> AbstractDataset : use
     AbstractDataset "1" o-- "1..*" Document : process
     AbstractDataset "1" o-- "1..*" PreparedDocument : store
     
-    AbstractModelWrapper <|-- SSANAdaptModel
-    AbstractModelWrapper <|-- BertBaseline
+    AbstractModel <|-- SSANAdaptModel
+    AbstractModel <|-- BertBaseline
     
-    class AbstractModelWrapper{
+    class AbstractModel{
         <<Abstract>>
     }
     
