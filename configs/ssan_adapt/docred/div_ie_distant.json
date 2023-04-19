@@ -61,6 +61,10 @@
       "tokenizer_path": "bert-base-uncased",
       "hidden_dim": 128,
       "dist_base": 2,
+      "entities": [
+        "NO_ENT",
+        "ENT"
+      ],
       "relations": [
         "NO_REL",
         "P6",

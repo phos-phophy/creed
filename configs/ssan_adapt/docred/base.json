@@ -23,5 +23,5 @@
   "train_dataset_path": "etc/datasets/docred/train_annotated.json",
   "dev_dataset_path": "etc/datasets/docred/dev.json",
   "eval_dataset_path": "etc/datasets/docred/dev.json",
-  "pred_dataset_path": "etc/datasets/docred/test.json",
+  "pred_dataset_path": "etc/datasets/docred/test.json"
 }
