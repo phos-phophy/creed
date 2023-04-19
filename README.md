@@ -73,13 +73,13 @@ flowchart LR
     <td>Ignoring</td>
     <td>53.60</td>
     <td>-</td>
-    <td>-</td>
+    <td> 76.28 &plusmn 0.18 </td>
   </tr>
   <tr>
     <td>Diversified training</td>
     <td>54.23</td>
     <td>-</td>
-    <td>-</td>
+    <td>74.56 &plusmn 0.83 </td>
   </tr>
 </table>
 
@@ -114,7 +114,7 @@ directionTB
     AbstractDataset "1" o-- "1..*" Document : process
     AbstractDataset "1" o-- "1..*" PreparedDocument : store
     
-    AbstractModel <|-- SSANAdaptModel
+    AbstractModel <|-- SSANAdapt
     AbstractModel <|-- BertBaseline
     
     class AbstractModel{
