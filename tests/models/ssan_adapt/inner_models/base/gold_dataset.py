@@ -1,10 +1,10 @@
 from typing import List
 
 import torch
-from src.models.ssan_adapt.inner_models.base.dataset import BaseSSANAdaptDataset
+from src.models.ssan_adapt.datasets import BaseDataset
 
 
-class GoldDataset(BaseSSANAdaptDataset):
+class GoldDataset(BaseDataset):
     def _extract_struct_matrix(self, token_to_sentence_ind: List[int], token_to_coreference_id: List[int]):
         length = len(token_to_sentence_ind)
         struct_mask = torch.zeros((5, length, length), dtype=torch.bool)

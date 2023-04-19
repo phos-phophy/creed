@@ -3,12 +3,9 @@
     "loader_type": "docred"
   },
   "train_dataset_path": "etc/datasets/docred/train_distant.json",
-  "save_path": "etc/models/ssan_adapt/docred/div_ie_distant/model.pkl",
   "training_config": {
     "compute_metrics": false,
     "training_arguments": {
-      "logging_dir": "etc/models/ssan_adapt/docred/div_ie_distant/log_dir",
-      "output_dir": "etc/models/ssan_adapt/docred/div_ie_distant/output",
       "num_train_epochs": 10,
       "evaluation_strategy": "no",
       "save_total_limit": 1,
@@ -64,6 +61,10 @@
       "tokenizer_path": "bert-base-uncased",
       "hidden_dim": 128,
       "dist_base": 2,
+      "entities": [
+        "NO_ENT",
+        "ENT"
+      ],
       "relations": [
         "NO_REL",
         "P6",

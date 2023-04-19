@@ -1,3 +1,7 @@
+from functools import total_ordering
+
+
+@total_ordering
 class Span:
     def __init__(self, start_idx: int, end_idx: int):
         self._start_idx = start_idx
@@ -8,6 +12,9 @@ class Span:
 
     def __eq__(self, other: 'Span'):
         return self.start_idx == other.start_idx and self.end_idx == self.end_idx
+
+    def __lt__(self, other: 'Span'):
+        return self.start_idx < other.start_idx or self.start_idx == other.start_idx and self.end_idx < other.end_idx
 
     def __hash__(self):
         return hash((self.start_idx, self.end_idx))

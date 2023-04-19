@@ -1,44 +1,110 @@
 import json
+import math
 from pathlib import Path
-from typing import Any, Iterable, List
+from typing import Any, Iterable, List, Optional
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, AbstractWrapperModel, DiversifierConfig, Document, NO_REL_IND
+from src.abstract import AbstractDataset, AbstractModel, DiversifierConfig, Document, NO_REL_IND, get_tokenizer_len_attribute
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from transformers import AutoModel, AutoTokenizer, BertModel
 
-from .inner_models import AbstractSSANAdaptInnerModel, get_inner_model
+from .attention import SSANAttention
+from .datasets import BaseDataset, IETypesDataset, WOTypesDataset
+from .embeddings import NEREmbeddings
 
 
-class SSANAdaptModel(AbstractWrapperModel):
+class SSANAdapt(AbstractModel):
 
     def __init__(
             self,
             inner_model_type: str,
             hidden_dim: int,
             relations: Iterable[str],
-            **kwargs
+            pretrained_model_path: str,
+            tokenizer_path: str,
+            dist_base: int,
+            entities: Optional[Iterable[str]]
     ):
 
-        super(SSANAdaptModel, self).__init__(relations)
+        super(SSANAdapt, self).__init__(relations)
+        self._inner_model_type = inner_model_type
 
-        self._inner_model: AbstractSSANAdaptInnerModel = get_inner_model(inner_model_type=inner_model_type, relations=relations, **kwargs)
+        self._entities = tuple(entities) if entities else ()
 
-        self._dist_ceil = self._inner_model.dist_ceil
+        self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+        self._model: BertModel = AutoModel.from_pretrained(pretrained_model_path)
+        self._redefine_structure()
+
+        self._dist_base = dist_base
+
+        len_attr = get_tokenizer_len_attribute(self._tokenizer)
+
+        self._dist_ceil = math.ceil(math.log(self._tokenizer.__getattribute__(len_attr), self._dist_base)) + 1
         self._dist_emb_dim = self._dist_ceil * 2
 
-        out_dim = next(module.out_features for module in list(self._inner_model.modules())[::-1] if "out_features" in module.__dict__)
+        out_dim = next(module.out_features for module in list(self._model.modules())[::-1] if "out_features" in module.__dict__)
 
         self._dim_reduction = torch.nn.Linear(out_dim, hidden_dim)
-        self._dropout = torch.nn.Dropout(self._inner_model.config.hidden_dropout_prob)
+        self._dropout = torch.nn.Dropout(self._model.config.hidden_dropout_prob)
         self._rel_dist_embeddings = torch.nn.Embedding(self._dist_emb_dim, self._dist_emb_dim, padding_idx=self._dist_ceil)
         self._bili = torch.nn.Bilinear(hidden_dim + self._dist_emb_dim, hidden_dim + self._dist_emb_dim, len(self.relations))
 
         self._threshold = None
 
+    @property
+    def inner_model_type(self):
+        return self._inner_model_type
+
+    @property
+    def entities(self):
+        return self._entities
+
+    def _redefine_structure(self):
+        for layer in self._model.encoder.layer:
+            layer.attention.self = SSANAttention(layer.attention.self)
+
+        self._model.embeddings = NEREmbeddings(self._model.embeddings, len(self.entities))
+
+    def prepare_dataset(self, documents: Iterable[Document], diversifier: DiversifierConfig, desc: str, extract_labels: bool = False,
+                        evaluation: bool = False) -> AbstractDataset:
+
+        if self.inner_model_type == 'base':
+            if diversifier.active:
+                raise ValueError("Base SSAN Adapt model and active diversifier are not compatible!")
+
+            dataset = BaseDataset(
+                documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations, self._dist_base,
+                self._dist_ceil, desc, diversifier
+            )
+
+        elif self.inner_model_type == 'wo':
+            if diversifier.active:
+                raise ValueError("WO SSAN Adapt model and active diversifier are not compatible!")
+
+            dataset = WOTypesDataset(
+                documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations, self._dist_base,
+                self._dist_ceil, desc, diversifier
+            )
+
+        elif self.inner_model_type == 'ie':
+            dataset = IETypesDataset(
+                documents, self._tokenizer, extract_labels, evaluation, self.entities, self.relations, self._dist_base,
+                self._dist_ceil, desc, diversifier
+            )
+
+        else:
+            raise ValueError
+
+        return dataset
+
     def forward(
             self,
+            input_ids=None,  # (bs, len)
+            ner_ids=None,  # (bs, len)
+            attention_mask=None,  # (bs, len)
+            struct_matrix=None,  # (bs, 5, len, len),
             dist_ids=None,  # (bs, max_ent, max_ent)
             ent_mask=None,  # (bs, max_ent, len)
             labels=None,  # (bs, max_ent, max_ent, num_link)
@@ -46,7 +112,17 @@ class SSANAdaptModel(AbstractWrapperModel):
             **kwargs
     ) -> Any:
 
-        output = self._inner_model(**kwargs)
+        struct_matrix = struct_matrix.transpose(0, 1)[:, :, None, :, :]  # (5, bs, 1, len, len)
+
+        self._model.embeddings.ner_ids = ner_ids
+        for layer in self._model.encoder.layer:
+            layer.attention.self.struct_matrix = struct_matrix
+
+        output = self._model(input_ids=input_ids, attention_mask=attention_mask, **kwargs)
+
+        del self._model.embeddings.ner_ids
+        for layer in self._model.encoder.layer:
+            del layer.attention.self.struct_matrix
 
         # tensors for each token in the text
         tokens: torch.Tensor = output[0]  # (bs, len, dim)
@@ -75,16 +151,6 @@ class SSANAdaptModel(AbstractWrapperModel):
             return self._compute_loss(logits, labels, labels_mask), torch.sigmoid(logits)
 
         return torch.sigmoid(logits)
-
-    def prepare_dataset(
-            self,
-            document: Iterable[Document],
-            diversifier: DiversifierConfig,
-            desc: str,
-            extract_labels=False,
-            evaluation=False
-    ) -> AbstractDataset:
-        return self._inner_model.prepare_dataset(document, diversifier, desc, extract_labels, evaluation)
 
     def _compute_loss(
             self,

@@ -5,10 +5,10 @@ from typing import Dict, List, Tuple
 import torch
 from src.abstract import Document, EntityFact, FactClass, NO_ENT_IND, Span
 
-from ..base.dataset import BaseSSANAdaptDataset
+from .base import BaseDataset
 
 
-class IETypesSSANAdaptDataset(BaseSSANAdaptDataset):
+class IETypesDataset(BaseDataset):
     ENT_IND = NO_ENT_IND + 1
 
     def _get_ent_tokens(self, document: Document):
@@ -58,9 +58,7 @@ class IETypesSSANAdaptDataset(BaseSSANAdaptDataset):
         for ind, sentence in enumerate(document.sentences):
             for span in sentence:
                 word = start_ent_tokens[cur_ind] + document.get_word(span) + end_ent_tokens[cur_ind]
-                tokens = self.tokenizer.encode(word)[1:-1]  # crop tokens of the beginning and the end
-
-                tokens = tokens if len(tokens) else [self.tokenizer.unk_token_id]
+                tokens = self._word2token(word)
 
                 input_ids.extend(tokens)
                 token_to_sentence_ind += [ind] * len(tokens)

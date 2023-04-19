@@ -5,7 +5,7 @@ from typing import List
 
 import numpy as np
 import torch
-from src.abstract import AbstractWrapperModel, Document
+from src.abstract import AbstractModel, Document
 from src.loader import get_loader
 from src.models import get_model
 from torch.utils.data import DataLoader
@@ -27,17 +27,17 @@ class ModelManager:
         self.set_seed()
 
         load_path = config.model_init_config.load_path
-        model = AbstractWrapperModel.load(Path(load_path)) if load_path else get_model(**config.model_init_config.model_params)
+        model = AbstractModel.load(load_path) if load_path else get_model(**config.model_init_config.model_params)
         self.model = model.cuda() if torch.cuda.is_available() else model
 
     def train(self):
 
-        if not self.config.train_dataset_path or not self.config.save_path:
+        if not self.config.train_dataset_path:
             return
 
         print('Load the training and dev datasets')
-        train_documents = self.load(Path(self.config.train_dataset_path), 'Training documents')
-        dev_documents = self.load(Path(self.config.dev_dataset_path), 'Dev documents') if self.config.dev_dataset_path else None
+        train_documents = self.load(self.config.train_dataset_path, 'Training documents')
+        dev_documents = self.load(self.config.dev_dataset_path, 'Dev documents') if self.config.dev_dataset_path else None
 
         train_desc = 'Prepare training dataset'
         dev_desc = 'Prepare dev dataset'
@@ -47,6 +47,7 @@ class ModelManager:
 
         train_dataset = self.model.prepare_dataset(train_documents, train_diversifier, train_desc, True, False)
         dev_dataset = self.model.prepare_dataset(dev_documents, dev_diversifier, dev_desc, True, True) if dev_documents else None
+
         dev_dataset = dev_dataset.prepare_documents() if dev_dataset else None
 
         train_params = TrainingArguments(**self.config.training_config.training_arguments)
@@ -71,63 +72,66 @@ class ModelManager:
     def evaluate(self):
         """ Evaluate the model """
 
-        if not self.config.eval_dataset_path or not self.config.output_eval_path or not self.config.save_path:
+        if not self.config.eval_dataset_path:
             return
 
-        print(f'Load the eval dataset and evaluate the model. The results will be saved in the file {Path(self.config.output_eval_path)}')
-        documents = self.load(Path(self.config.eval_dataset_path), 'Eval documents')
+        print(f'Load the eval dataset and evaluate the model. The results will be saved in the file {self.config.output_eval_path}')
+        documents = self.load(self.config.eval_dataset_path, 'Eval documents')
 
         diversifier = self.config.eval_diversifier
         batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
         dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare eval dataset', True, True).prepare_documents()
+
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
 
         torch.cuda.empty_cache()
-        self.model.evaluate(dataloader, Path(self.config.output_eval_path))
+        self.model.evaluate(dataloader, self.config.output_eval_path)
 
         self.save(rewrite=True)
 
     def test(self):
         """ Test the model on the public test dataset """
 
-        if not self.config.test_dataset_path or not self.config.output_test_path:
+        if not self.config.test_dataset_path:
             return
 
-        print(f'Load the test dataset and test the model. The results will be saved in the file {Path(self.config.output_test_path)}')
-        documents = self.load(Path(self.config.test_dataset_path), 'Test_documents')
+        print(f'Load the test dataset and test the model. The results will be saved in the file {self.config.output_test_path}')
+        documents = self.load(self.config.test_dataset_path, 'Test_documents')
 
         diversifier = self.config.test_diversifier
         batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
         dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare test dataset', True, True).prepare_documents()
+
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
 
         torch.cuda.empty_cache()
-        self.model.test(dataloader, Path(self.config.output_test_path))
+        self.model.test(dataloader, self.config.output_test_path)
 
     def predict(self):
         """ Predict on the private test dataset """
 
-        if not self.config.pred_dataset_path or not self.config.output_pred_path:
+        if not self.config.pred_dataset_path:
             return
 
-        print(f'Load the pred dataset and make predictions that will be saved in the file {Path(self.config.output_pred_path)}')
-        documents = self.load(Path(self.config.pred_dataset_path), 'Pred documents')
+        print(f'Load the pred dataset and make predictions that will be saved in the file {self.config.output_pred_path}')
+        documents = self.load(self.config.pred_dataset_path, 'Pred documents')
 
         diversifier = self.config.pred_diversifier
         batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
         dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare pred dataset', False, True).prepare_documents()
+
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
         torch.cuda.empty_cache()
-        self.model.predict(documents, dataloader, Path(self.config.output_pred_path))
+        self.model.predict(documents, dataloader, self.config.output_pred_path)
 
     def save(self, *, rewrite: bool = False):
         if self.config.save_path:
-            print(f'Save the model in the file {Path(self.config.save_path)}')
-            self.model.save(path=Path(self.config.save_path), rewrite=rewrite)
+            print(f'Save the model in the file {self.config.save_path}')
+            self.model.save(path=self.config.save_path, rewrite=rewrite)
 
     def load(self, dataset_path: Path, desc: str = "") -> List[Document]:
         return list(tqdm(self.loader.load(dataset_path), desc=desc))

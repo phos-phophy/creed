@@ -1,11 +1,9 @@
 from .abstract import AbstractModel, NO_ENT_IND, NO_REL_IND
-from .torch_model import TorchModel
-from .wrapper import AbstractWrapperModel
+from .helper import cuda_autocast
 
 __all__ = [
     "AbstractModel",
-    "AbstractWrapperModel",
     "NO_ENT_IND",
     "NO_REL_IND",
-    "TorchModel"
+    "cuda_autocast"
 ]

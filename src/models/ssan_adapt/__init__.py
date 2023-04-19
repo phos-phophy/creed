@@ -1,5 +1,5 @@
-from .model import SSANAdaptModel
+from .model import SSANAdapt
 
 __all__ = [
-    "SSANAdaptModel"
+    "SSANAdapt"
 ]

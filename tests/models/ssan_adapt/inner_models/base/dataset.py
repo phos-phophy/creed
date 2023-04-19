@@ -6,7 +6,7 @@ from pathlib import Path
 import torch
 from src.abstract import DiversifierConfig, EntityFact, NO_REL_IND, RelationFact, get_tokenizer_len_attribute
 from src.loader import DocREDLoader
-from src.models.ssan_adapt.inner_models.base.dataset import BaseSSANAdaptDataset
+from src.models.ssan_adapt.datasets import BaseDataset
 from tests.helpers import equal_tensors
 from transformers import AutoTokenizer
 
@@ -39,7 +39,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
         documents = list(self.loader.load(Path("tests/loader/data/docred_1.json")))
-        document = BaseSSANAdaptDataset(
+        document = BaseDataset(
             documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', self.diversifier
         ).prepare_documents()[0]
 
@@ -70,10 +70,10 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
         documents = list(self.loader.load(Path("tests/loader/data/docred_1.json")))
-        document1 = BaseSSANAdaptDataset(
+        document1 = BaseDataset(
             documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', self.diversifier
         ).prepare_documents()[0]
-        document2 = BaseSSANAdaptDataset(
+        document2 = BaseDataset(
             documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', self.diversifier
         ).prepare_documents()[0]
 
@@ -90,7 +90,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
 
         documents = list(self.loader.load(Path("tests/loader/data/docred_1.json")))
         documents = documents + documents
-        documents = BaseSSANAdaptDataset(
+        documents = BaseDataset(
             documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', self.diversifier
         ).prepare_documents()
 
@@ -109,7 +109,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         dist_ceil = math.ceil(math.log(self.tokenizer.__getattribute__(self.len_attr), dist_base)) + 1
 
         documents = list(self.loader.load(Path("tests/loader/data/docred_1.json")))
-        document = BaseSSANAdaptDataset(
+        document = BaseDataset(
             documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', self.diversifier
         ).prepare_documents()[0]
 
@@ -142,7 +142,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
         documents = list(self.loader.load(Path("tests/loader/data/docred_1.json")))
 
         gold_document = documents[0]
-        pred_document = BaseSSANAdaptDataset(
+        pred_document = BaseDataset(
             documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', self.diversifier
         ).prepare_documents()[0]
 
@@ -160,7 +160,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
 
         documents = list(self.loader.load(Path("tests/loader/data/docred_200.json")))
 
-        pred_dataset = BaseSSANAdaptDataset(
+        pred_dataset = BaseDataset(
             documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', self.diversifier
         ).prepare_documents()
         gold_dataset = GoldDataset(
