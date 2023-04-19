@@ -111,8 +111,8 @@ classDiagram
 directionTB
     ModelManager "1" --> "1" AbstractModel : init, train and evaluate
     AbstractModel ..> AbstractDataset : use
-    AbstractDataset "1" o-- "1..*" Document : process
-    AbstractDataset "1" o-- "1..*" PreparedDocument : store
+    AbstractDataset "1" o-- "1..*" Document : process docs
+    AbstractDataset "1" o-- "1..*" PreparedDocument : convert to prepared docs
     
     AbstractModel <|-- SSANAdapt
     AbstractModel <|-- BertBaseline
@@ -134,11 +134,11 @@ directionTB
 classDiagram
 direction TB
 
-   Document "1" o-- "1..*" AbstractFact
    Document "1" o-- "1..*" Span
+   Document "1" o-- "1..*" AbstractFact
    AbstractFact <|-- EntityFact
    AbstractFact <|-- RelationFact
-   Span "1" o-- "1..*" EntityFact : is mentioned in
+   Span "1" --o "1..*" EntityFact : fact is mentioned in
    AbstractFact "1" --> "1" FactClass : is a
    
    class Document{
