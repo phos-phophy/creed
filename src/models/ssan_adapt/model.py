@@ -11,8 +11,8 @@ from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer, BertModel
 
 from .attention import SSANAttention
+from .datasets import BaseDataset, IETypesDataset, WOTypesDataset
 from .embeddings import NEREmbeddings
-from .inner_models import BaseDataset, IETypesDataset, WOTypesDataset
 
 
 class SSANAdapt(AbstractModel):
