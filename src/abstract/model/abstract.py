@@ -1,10 +1,11 @@
 import pickle
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Iterable, Type, TypeVar
+from typing import Any, Iterable, List, Type, TypeVar
 
 import torch
 from src.abstract.example import AbstractDataset, DiversifierConfig, Document
+from torch.utils.data import DataLoader
 
 _Model = TypeVar('_Model', bound='AbstractModel')
 
@@ -61,4 +62,19 @@ class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
 
     @abstractmethod
     def forward(self, *args, **kwargs) -> Any:
+        pass
+
+    @abstractmethod
+    def evaluate(self, dataloader: DataLoader, output_path: Path = None) -> None:
+        """Use for the dev dataset"""
+        pass
+
+    @abstractmethod
+    def predict(self, documents: List[Document], dataloader: DataLoader, output_path: Path) -> None:
+        """Use for private test dataset"""
+        pass
+
+    @abstractmethod
+    def test(self, dataloader: DataLoader, output_path: Path = None) -> None:
+        """Use for the public test dataset"""
         pass
