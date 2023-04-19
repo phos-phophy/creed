@@ -3,10 +3,10 @@ from typing import Dict, List, Tuple
 import torch
 from src.abstract import EntityFact, NO_ENT_IND, Span
 
-from ..base.dataset import BaseSSANAdaptDataset
+from .base import BaseDataset
 
 
-class WOTypesSSANAdaptDataset(BaseSSANAdaptDataset):
+class WOTypesDataset(BaseDataset):
     ENT_IND = NO_ENT_IND + 1
 
     def _extract_ner_types(self, ner_facts: Tuple[EntityFact, ...], span_to_token_ind: Dict[Span, List[int]], seq_len: int):

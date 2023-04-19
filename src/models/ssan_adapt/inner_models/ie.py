@@ -5,10 +5,10 @@ from typing import Dict, List, Tuple
 import torch
 from src.abstract import Document, EntityFact, FactClass, NO_ENT_IND, Span
 
-from ..base.dataset import BaseSSANAdaptDataset
+from .base import BaseDataset
 
 
-class IETypesSSANAdaptDataset(BaseSSANAdaptDataset):
+class IETypesDataset(BaseDataset):
     ENT_IND = NO_ENT_IND + 1
 
     def _get_ent_tokens(self, document: Document):

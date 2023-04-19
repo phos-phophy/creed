@@ -7,7 +7,7 @@ from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFac
     RelationFact, Span
 
 
-class BaseSSANAdaptDataset(AbstractDataset):
+class BaseDataset(AbstractDataset):
     USUAL_TOKEN = -1
 
     def __init__(
@@ -24,7 +24,7 @@ class BaseSSANAdaptDataset(AbstractDataset):
             diversifier: DiversifierConfig,
             **kwargs
     ):
-        super(BaseSSANAdaptDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation, diversifier)
+        super(BaseDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation, diversifier)
 
         self._max_ent = self._count_max_ent(documents) if evaluation else None
         self._entities = tuple(entities)

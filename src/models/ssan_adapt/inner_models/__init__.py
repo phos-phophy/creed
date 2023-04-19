@@ -1,7 +1,10 @@
-from .abstract import AbstractSSANAdaptInnerModel
-from .configure import get_inner_model
+from .base import BaseDataset
+from .ie import IETypesDataset
+from .wo import WOTypesDataset
+
 
 __all__ = [
-    "AbstractSSANAdaptInnerModel",
-    "get_inner_model"
+    "BaseDataset",
+    "IETypesDataset",
+    "WOTypesDataset"
 ]
