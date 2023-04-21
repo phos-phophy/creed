@@ -255,7 +255,7 @@ class SSANAdapt(AbstractModel):
         if output_path:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with output_path.open('w') as file:
-                json.dump(result, file)
+                json.dump(result, file, indent=4)
 
         self._threshold = threshold
 
@@ -275,7 +275,7 @@ class SSANAdapt(AbstractModel):
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open('w') as file:
-            json.dump(output_preds, file)
+            json.dump(output_preds, file, indent=4)
 
     def test(self, dataloader: DataLoader, output_path: Path = None):
 
@@ -315,7 +315,7 @@ class SSANAdapt(AbstractModel):
         if output_path:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with output_path.open('w') as file:
-                json.dump(result, file)
+                json.dump(result, file, indent=4)
 
 
 def iter_over_pred(pred, ent_mask, threshold):

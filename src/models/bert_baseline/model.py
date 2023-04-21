@@ -4,6 +4,7 @@ from typing import Iterable, List, Optional
 
 import numpy as np
 import torch
+from sklearn.metrics import precision_recall_fscore_support
 from src.abstract import AbstractDataset, AbstractModel, DiversifierConfig, Document, NO_REL_IND, cuda_autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -109,6 +110,10 @@ class BertBaseline(AbstractModel):
         return outputs
 
     def _evaluate(self, dataloader: DataLoader, output_path: Path = None, desc: str = None) -> None:
+
+        if Path is None:
+            pass
+
         loss = 0.0
         labels_ids, preds = [], []
         for inputs in tqdm(dataloader, desc=desc):
@@ -128,33 +133,31 @@ class BertBaseline(AbstractModel):
                 pred = torch.argmax(logits, dim=-1)
             preds += pred.tolist()
 
-        labels_ids = np.array(labels_ids, dtype=np.int64)
-        preds = np.array(preds, dtype=np.int64)
+        labels_ids = np.array(labels_ids, dtype=np.int64)  # (N,)
+        preds = np.array(preds, dtype=np.int64)  # (N,)
 
-        correct_by_relation = ((labels_ids == preds) & (preds != NO_REL_IND)).astype(np.int32).sum()
-        guessed_by_relation = (preds != 0).astype(np.int32).sum()
-        gold_by_relation = (labels_ids != 0).astype(np.int32).sum()
+        self._count_stats(labels_ids, preds, loss, output_path)
 
-        prec_micro = 1.0
-        if guessed_by_relation > 0:
-            prec_micro = float(correct_by_relation) / float(guessed_by_relation)
+    def _count_stats(self, labels_ids: np.ndarray, preds: np.ndarray, loss: float, output_path: Path):
 
-        recall_micro = 1.0
-        if gold_by_relation > 0:
-            recall_micro = float(correct_by_relation) / float(gold_by_relation)
+        labels = np.arrange(len(self.relations))
+        relations = list(self.relations)
 
-        f1_micro = 0.0
-        if prec_micro + recall_micro > 0.0:
-            f1_micro = 2.0 * prec_micro * recall_micro / (prec_micro + recall_micro)
+        # without NO_REL relations
+        labels = labels[labels != NO_REL_IND]
+        relations = relations[:NO_REL_IND] + relations[NO_REL_IND + 1:]
+
+        pr, r, f, _ = precision_recall_fscore_support(labels_ids, preds, average='micro', labels=labels, zero_division=0)
+        pr_sep, r_sep, f_sep, _ = precision_recall_fscore_support(labels_ids, preds, average=None, labels=labels, zero_division=0)
 
         result = {
             "loss": float(loss),
-            "precision": float(prec_micro),
-            "recall": float(recall_micro),
-            "f1": float(f1_micro)
+            "precision": float(pr),
+            "recall": float(r),
+            "f1": float(f),
+            "labels": {relation: {"precision": pr_sep[ind], "recall": r_sep[ind], "f1": f_sep[ind]} for ind, relation in relations}
         }
 
-        if output_path:
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            with output_path.open('w') as file:
-                json.dump(result, file)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open('w') as file:
+            json.dump(result, file, indent=4)
