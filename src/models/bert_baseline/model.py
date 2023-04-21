@@ -140,7 +140,7 @@ class BertBaseline(AbstractModel):
 
     def _count_stats(self, labels_ids: np.ndarray, preds: np.ndarray, loss: float, output_path: Path):
 
-        labels = np.arrange(len(self.relations))
+        labels = np.arange(len(self.relations))
         relations = list(self.relations)
 
         # without NO_REL relations
@@ -155,7 +155,12 @@ class BertBaseline(AbstractModel):
             "precision": float(pr),
             "recall": float(r),
             "f1": float(f),
-            "labels": {relation: {"precision": pr_sep[ind], "recall": r_sep[ind], "f1": f_sep[ind]} for ind, relation in relations}
+            "labels": {
+                relation: {
+                    "precision": pr_sep[ind],
+                    "recall": r_sep[ind],
+                    "f1": f_sep[ind]
+                } for ind, relation in enumerate(relations)}
         }
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
