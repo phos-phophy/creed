@@ -3,13 +3,18 @@ from collections import defaultdict
 from typing import Dict, List, Tuple
 
 import torch
-from src.abstract import Document, EntityFact, FactClass, NO_ENT_IND, Span
+from src.abstract import Document, EntityFact, FactClass, NO_ENT_IND, PreparedDocument, Span
 
 from .base import BaseDataset
 
 
 class IETypesDataset(BaseDataset):
     ENT_IND = NO_ENT_IND + 1
+
+    def __getitem__(self, idx: int) -> PreparedDocument:
+        if len(self._prepared_docs) > 0:  # if there is already prepared doc in memory then returns it (dev and test datasets)
+            return super(IETypesDataset, self).__getitem__(idx)
+        return self._prepare_document(self._documents[idx])
 
     def _get_ent_tokens(self, document: Document):
 
