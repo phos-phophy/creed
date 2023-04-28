@@ -56,25 +56,28 @@ class IETypesDataset(BaseDataset):
 
     def _tokenize(self, document: Document):
 
-        input_ids, token_to_sentence_ind, token_to_span = [], [], []
+        tokens, token_to_sentence_ind, token_to_span = [], [], []
         start_ent_tokens, end_ent_tokens = self._get_ent_tokens(document)
 
         cur_ind = 0
         for ind, sentence in enumerate(document.sentences):
             for span in sentence:
-                word = start_ent_tokens[cur_ind] + document.get_word(span) + end_ent_tokens[cur_ind]
-                tokens = self._word2token(word)
+                s_tokens = self.word2token(start_ent_tokens[cur_ind]) if len(start_ent_tokens[cur_ind]) else []
+                e_tokens = self.word2token(end_ent_tokens[cur_ind]) if len(end_ent_tokens[cur_ind]) else []
 
-                input_ids.extend(tokens)
-                token_to_sentence_ind += [ind] * len(tokens)
-                token_to_span += [span] * len(tokens)
+                word_tokens = s_tokens + self.word2token(document.get_word(span)) + e_tokens
+
+                tokens.extend(word_tokens)
+                token_to_sentence_ind += [ind] * len(word_tokens)
+                token_to_span += [span] * len(word_tokens)
                 cur_ind += 1
 
-        input_ids = input_ids[:self.max_len - 2]
+        tokens = tokens[:self.max_len - 2]
         token_to_sentence_ind = token_to_sentence_ind[:self.max_len - 2]
         token_to_span = token_to_span[:self.max_len - 2]
 
-        input_ids = [self._bos_token] + input_ids + [self._eos_token]
+        input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+        input_ids = self.tokenizer.build_inputs_with_special_tokens(input_ids)
         token_to_sentence_ind = [-1] + token_to_sentence_ind + [-1]
 
         span_to_token_ind = defaultdict(list)

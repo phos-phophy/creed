@@ -37,8 +37,6 @@ class BaseDataset(AbstractDataset):
 
         self._dist_bins = torch.tensor([dist_base ** i for i in range(dist_ceil)], dtype=torch.long)
 
-        self._local_cache = dict()
-
     @property
     def max_ent(self):
         return self._max_ent
@@ -124,29 +122,24 @@ class BaseDataset(AbstractDataset):
 
         return PreparedDocument(features=features, labels=labels)
 
-    def _word2token(self, word_: str):
-        if word_ not in self._local_cache:
-            tokens_ = self.tokenizer.encode(word_)[1:-1]  # crop tokens of the beginning and the end
-            self._local_cache[word_] = tokens_ if len(tokens_) else [self.tokenizer.unk_token_id]
-        return self._local_cache[word_]
-
     def _tokenize(self, document: Document):
 
-        input_ids, token_to_sentence_ind, token_to_span = [], [], []
+        tokens, token_to_sentence_ind, token_to_span = [], [], []
 
         for ind, sentence in enumerate(document.sentences):
             for span in sentence:
-                tokens = self._word2token(document.get_word(span))
+                word_tokens = self.word2token(document.get_word(span))
 
-                input_ids.extend(tokens)
-                token_to_sentence_ind += [ind] * len(tokens)
-                token_to_span += [span] * len(tokens)
+                tokens.extend(word_tokens)
+                token_to_sentence_ind += [ind] * len(word_tokens)
+                token_to_span += [span] * len(word_tokens)
 
-        input_ids = input_ids[:self.max_len - 2]
+        tokens = tokens[:self.max_len - 2]
         token_to_sentence_ind = token_to_sentence_ind[:self.max_len - 2]
         token_to_span = token_to_span[:self.max_len - 2]
 
-        input_ids = [self._bos_token] + input_ids + [self._eos_token]
+        input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+        input_ids = self.tokenizer.build_inputs_with_special_tokens(input_ids)
         token_to_sentence_ind = [-1] + token_to_sentence_ind + [-1]
 
         span_to_token_ind = defaultdict(list)

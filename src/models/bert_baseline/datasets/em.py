@@ -22,8 +22,6 @@ class EntityMarkerDataset(AbstractDataset):
         self._relations = tuple(relations)
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}
 
-        self._local_cache = dict()
-
     def _prepare_document(self, document: Document) -> PreparedDocument:
 
         input_ids, ss, os = self._tokenize(document)
@@ -42,12 +40,6 @@ class EntityMarkerDataset(AbstractDataset):
             labels = {"labels": torch.tensor([rel_ind], dtype=torch.long)}
 
         return PreparedDocument(features=features, labels=labels)
-
-    def _word2token(self, word_: str):
-        if word_ not in self._local_cache:
-            tokens_ = self.tokenizer.tokenize(word_)
-            self._local_cache[word_] = tokens_ if len(tokens_) else [self.tokenizer.unk_token]
-        return self._local_cache[word_]
 
     @staticmethod
     def _get_fact(document: Document, attribute_name: str, attribute_value: Any):
@@ -73,7 +65,7 @@ class EntityMarkerDataset(AbstractDataset):
         for sentence in document.sentences:
             for span in sentence:
 
-                word_tokens = self._word2token(document.get_word(span))
+                word_tokens = self.word2token(document.get_word(span))
 
                 if span == subject_start_token:
                     ss = len(tokens)

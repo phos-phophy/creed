@@ -22,8 +22,6 @@ class TypedEntityMarkerDataset(EntityMarkerDataset):
         self._relations = tuple(relations)
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}
 
-        self._local_cache = dict()
-
         self._new_tokens = []
 
     def _tokenize(self, document: Document):
@@ -51,7 +49,7 @@ class TypedEntityMarkerDataset(EntityMarkerDataset):
         for sentence in document.sentences:
             for span in sentence:
 
-                word_tokens = self._word2token(document.get_word(span))
+                word_tokens = self.word2token(document.get_word(span))
 
                 if span == subject_start_token:
                     ss = len(tokens)

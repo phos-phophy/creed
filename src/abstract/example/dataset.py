@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from functools import lru_cache
 from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple
 
 import torch
@@ -91,3 +92,8 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
             self._prepared_docs = list(map(self._prepare_document, documents))
             self._used_docs = 0
         return self
+
+    @lru_cache(maxsize=None)
+    def word2token(self, word: str):
+        tokens = self.tokenizer.tokenize(word)
+        return tokens if len(tokens) else [self.tokenizer.unk_token]

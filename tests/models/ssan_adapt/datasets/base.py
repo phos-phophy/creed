@@ -10,7 +10,7 @@ from src.models.ssan_adapt.datasets import BaseDataset
 from tests.helpers import equal_tensors
 from transformers import AutoTokenizer
 
-from .gold_dataset import GoldDataset
+from .base_gold import GoldDataset
 
 
 class BaseSSANAdaptDatasetTest(unittest.TestCase):
