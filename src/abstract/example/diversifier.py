@@ -21,6 +21,8 @@ class DiversifierConfig(NamedTuple):
 
 
 class Diversifier:
+    """ A base class that changes entity types while the model is running """
+
     def __init__(self, tokenizer, config: DiversifierConfig):
 
         config.validate()

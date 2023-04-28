@@ -12,12 +12,14 @@ from src.abstract.feature import (
 
 
 class Document:
+    """ A base class that represents one example from a dataset """
+
     def __init__(self, doc_id: str, text: str, sentences: Iterable[Iterable[Span]], facts: Iterable[AbstractFact]):
 
         self._doc_id = doc_id
         self._text = text
-        self._words = tuple(chain.from_iterable(sentences))
         self._sentences = tuple(tuple(sentence) for sentence in sentences)
+        self._words = tuple(chain.from_iterable(self._sentences))
         self._facts = tuple(facts)
 
         self._validate_spans(self._words)

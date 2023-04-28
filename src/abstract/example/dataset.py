@@ -12,11 +12,15 @@ from .helpers import get_tokenizer_len_attribute
 
 
 class PreparedDocument(NamedTuple):
+    """ A base class that represents one processed example from a dataset """
+
     features: Dict[str, torch.Tensor]
     labels: Optional[Dict[str, torch.Tensor]]  # e.g. {"labels": ..., "labels_mask": ...}
 
 
 class AbstractDataset(Dataset, metaclass=ABCMeta):
+    """ An abstract base class for datasets. All models (that inherit from AbstractModel class) must implement their own datasets """
+
     def __init__(
             self,
             documents: Iterable[Document],
