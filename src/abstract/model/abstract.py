@@ -14,6 +14,7 @@ NO_ENT_IND = 0
 
 
 class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
+    """ An abstract base class that represents relation extraction and classification model """
 
     def __init__(self, relations: Iterable[str]):
         super(AbstractModel, self).__init__()
@@ -66,15 +67,15 @@ class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
 
     @abstractmethod
     def evaluate(self, dataloader: DataLoader, output_path: Path = None) -> None:
-        """Use for the dev dataset"""
+        """ Use for the dev dataset """
         pass
 
     @abstractmethod
     def predict(self, documents: List[Document], dataloader: DataLoader, output_path: Path) -> None:
-        """Use for private test dataset"""
+        """ Use for private test dataset """
         pass
 
     @abstractmethod
     def test(self, dataloader: DataLoader, output_path: Path = None) -> None:
-        """Use for the public test dataset"""
+        """ Use for the public test dataset """
         pass
