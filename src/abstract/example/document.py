@@ -6,23 +6,21 @@ from src.abstract.feature import (
     AbstractFact,
     EntityFact,
     FactClass,
+    Mention,
     RelationFact,
-    Span
+    Word
 )
 
 
 class Document:
     """ A base class that represents one example from a dataset """
 
-    def __init__(self, doc_id: str, text: str, sentences: Iterable[Iterable[Span]], facts: Iterable[AbstractFact]):
+    def __init__(self, doc_id: str, sentences: Iterable[Iterable[Word]], facts: Iterable[AbstractFact]):
 
         self._doc_id = doc_id
-        self._text = text
         self._sentences = tuple(tuple(sentence) for sentence in sentences)
-        self._words = tuple(chain.from_iterable(self._sentences))
         self._facts = tuple(facts)
 
-        self._validate_spans(self._words)
         self._validate_facts()
 
         self._coreference_chains = self._build_coreference_chains(facts)
@@ -33,11 +31,11 @@ class Document:
 
     @property
     def text(self):
-        return self._text
+        return ' '.join(word.text for word in self.words)
 
     @property
     def words(self):
-        return self._words
+        return tuple(chain.from_iterable(self.sentences))
 
     @property
     def sentences(self):
@@ -60,31 +58,22 @@ class Document:
                 coreference_chains[fact.coreference_id].append(fact)
         return {key: tuple(item) for key, item in coreference_chains.items()}
 
-    @staticmethod
-    def _validate_span(text_span: Span, span: Span):
-        if span not in text_span:
-            raise ValueError(f"Span should be in the text: {span} not in {text_span}")
-
-    def _validate_spans(self, spans: Tuple[Span, ...]):
-        text_span = Span(0, len(self.text))
-
-        for span in spans:
-            self._validate_span(text_span, span)
+    def _validate_mentions(self, mentions: Iterable[Mention]):
+        words = self.words
+        for mention in mentions:
+            for word in mention.words:
+                if word not in words:
+                    raise ValueError
 
     def _validate_facts(self):
         for fact in self.facts:
             if isinstance(fact, EntityFact):
-                self._validate_spans(fact.mentions)
+                self._validate_mentions(fact.mentions)
             elif isinstance(fact, RelationFact):
-                self._validate_spans(fact.from_fact.mentions)
-                self._validate_spans(fact.to_fact.mentions)
+                self._validate_mentions(fact.from_fact.mentions)
+                self._validate_mentions(fact.to_fact.mentions)
             else:
                 raise ValueError
-
-    def get_word(self, span: Span):
-        if span in self.words:
-            return self.text[span.start_idx: span.end_idx]
-        raise ValueError(f"Document does not contain a word in the span: {span}")
 
     def add_relation_facts(self, facts: Iterable[RelationFact]):
         self._facts = tuple(list(self._facts) + list(facts))
