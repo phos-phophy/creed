@@ -1,9 +1,8 @@
 import json
-from itertools import chain
 from pathlib import Path
 from typing import Any, Dict, Iterator, List
 
-from src.abstract import AbstractFact, AbstractLoader, Document, EntityFact, RelationFact, Span
+from src.abstract import AbstractFact, AbstractLoader, Document, EntityFact, Mention, RelationFact, Word
 
 
 """
@@ -33,43 +32,42 @@ class DocREDLoader(AbstractLoader):
 
     def _build_document(self, example: Dict[str, Any]) -> Document:
 
-        sentences: List[List[Span]] = self._extract_sentences(example)
-        text = ' '.join(word for sentence in example['sents'] for word in sentence)
+        sentences: List[List[Word]] = self._extract_sentences(example)
 
         entity_facts = self._extract_entity_facts(example["vertexSet"], sentences)
 
         facts: List[AbstractFact] = entity_facts
         facts.extend(self._extract_rel_facts(example.get("labels", []), entity_facts))
 
-        return Document(example["title"], text, sentences, facts)
+        return Document(example["title"], sentences, facts)
 
     @staticmethod
     def _extract_sentences(example: Dict[str, Any]):
-        start_idx = 0
-        sentences: List[List[Span]] = []
+        sentences: List[List[Word]] = []
 
-        for sent in example["sents"]:
+        ind_in_doc = 0
+        for sent_ind, sent in enumerate(example["sents"]):
             sentence = []
 
-            for word in sent:
-                sentence.append(Span(start_idx, start_idx + len(word)))
-                start_idx += len(word) + 1
+            for ind_in_sent, word in enumerate(sent):
+                sentence.append(Word(word, sent_ind, ind_in_sent, ind_in_doc))
+                ind_in_doc += 1
 
             sentences.append(sentence)
 
         return sentences
 
     @staticmethod
-    def _extract_entity_facts(vertex_set: List[List[Dict]], sentences: List[List[Span]]):
+    def _extract_entity_facts(vertex_set: List[List[Dict]], sentences: List[List[Word]]):
 
         def get_mention_spans(mention: dict):
             sent_id, start, end = mention["sent_id"], mention["pos"][0], mention["pos"][1]
-            return [sentences[sent_id][span_id] for span_id in range(start, end, 1)]
+            return Mention(sentences[sent_id][span_id] for span_id in range(start, end, 1))
 
         def build_entity_fact(facts_desc: List[dict], coref_id: int):
             type_id = facts_desc[0]["type"]
-            mention_spans = chain.from_iterable(get_mention_spans(mention) for mention in facts_desc)
-            return EntityFact("", type_id, coref_id, tuple(set(mention_spans)))
+            mention_spans = {get_mention_spans(mention) for mention in facts_desc}
+            return EntityFact("", type_id, coref_id, tuple(mention_spans))
 
         return [build_entity_fact(coref_facts_desc, ind) for ind, coref_facts_desc in enumerate(vertex_set)]
 

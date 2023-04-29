@@ -63,7 +63,7 @@ class Document:
         for mention in mentions:
             for word in mention.words:
                 if word not in words:
-                    raise ValueError
+                    raise ValueError(f'Word "{word}" is not in text!')
 
     def _validate_facts(self):
         for fact in self.facts:

@@ -49,3 +49,12 @@ class Mention:
     @property
     def words(self):
         return self._words
+
+    def __eq__(self, other: 'Mention'):
+        return self.words == other.words
+
+    def __hash__(self):
+        return hash(self.words)
+
+    def __repr__(self):
+        return 'Mention(' + ', '.join(str(word) for word in self.words) + ')'

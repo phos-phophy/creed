@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Tuple
 
-from .span import Mention
+from .word import Mention
 
 
 class FactClass(str, Enum):
