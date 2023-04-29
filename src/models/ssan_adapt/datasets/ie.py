@@ -28,7 +28,7 @@ class IETypesDataset(BaseDataset):
             fact_info = (ner_fact.coreference_id, type_id)
 
             for mention in ner_fact.mentions:
-                for word in mention:
+                for word in mention.words:
                     if word.ind_in_doc > 0:
                         if end[word.ind_in_doc - 1] != fact_info:
                             start[word.ind_in_doc] = fact_info
@@ -90,7 +90,7 @@ class IETypesDataset(BaseDataset):
         ind_of_type_id = type(self).ENT_IND
         for ind, fact in enumerate(ner_facts):
             for mention in fact.mentions:
-                for word in mention:
+                for word in mention.words:
                     for token_ind in word_to_token_ind.get(word, []):
                         ner_ids[token_ind] = ind_of_type_id
                         ent_mask[ind][token_ind] = True

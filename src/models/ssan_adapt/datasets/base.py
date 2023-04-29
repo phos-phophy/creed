@@ -149,7 +149,7 @@ class BaseDataset(AbstractDataset):
 
     def _extract_ner_facts(self, document: Document, word_to_token_ind: Dict[Word, List[int]]):
         ent_facts = tuple(filter(lambda fact: fact.fact_class is FactClass.ENTITY, document.facts))
-        return tuple(filter(lambda fact: any((w in word_to_token_ind) for m in fact.mentions for w in m), ent_facts))[:self.max_ent]
+        return tuple(filter(lambda fact: any((w in word_to_token_ind) for m in fact.mentions for w in m.words), ent_facts))[:self.max_ent]
 
     @staticmethod
     def _extract_link_facts(document: Document):
@@ -167,7 +167,7 @@ class BaseDataset(AbstractDataset):
             ind_of_type_id = self._ent_to_ind[fact.type_id]
 
             for mention in fact.mentions:
-                for word in mention:
+                for word in mention.words:
                     for token_ind in word_to_token_ind.get(word, []):
                         ner_ids[token_ind] = ind_of_type_id
                         ent_mask[ind][token_ind] = True

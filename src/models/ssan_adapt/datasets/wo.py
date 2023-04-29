@@ -20,7 +20,7 @@ class WOTypesDataset(BaseDataset):
         ind_of_type_id = type(self).ENT_IND
         for ind, fact in enumerate(ner_facts):
             for mention in fact.mentions:
-                for word in mention:
+                for word in mention.words:
                     for token_ind in word_to_token_ind.get(word, []):
                         ner_ids[token_ind] = ind_of_type_id
                         ent_mask[ind][token_ind] = True
