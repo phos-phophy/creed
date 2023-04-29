@@ -1,7 +1,7 @@
 from typing import Any, Iterable
 
 import torch
-from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, FactClass, NO_REL_IND, PreparedDocument
+from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, FactClass, Mention, NO_REL_IND, PreparedDocument
 
 
 class EntityMarkerDataset(AbstractDataset):
@@ -52,33 +52,31 @@ class EntityMarkerDataset(AbstractDataset):
         object_fact: EntityFact = next(self._get_fact(document, 'name', 'object'))
         subject_fact: EntityFact = next(self._get_fact(document, 'name', 'subject'))
 
-        object_spans = sorted(object_fact.mentions)
-        subject_spans = sorted(subject_fact.mentions)
+        object_mention: Mention = object_fact.mentions[0]
+        subject_mention = subject_fact.mentions[0]
 
-        return subject_spans[0], subject_spans[-1], object_spans[0], object_spans[-1]
+        return subject_mention.words[0], subject_mention.words[-1], object_mention.words[0], object_mention.words[-1]
 
     def _tokenize(self, document: Document):
         tokens, ss, os = [], 0, 0
 
-        subject_start_token, subject_end_token, object_start_token, object_end_token = self._get_facts_info(document)
+        subject_start, subject_end, object_start, object_end = self._get_facts_info(document)
 
-        for sentence in document.sentences:
-            for span in sentence:
+        for word in document.words:
+            word_tokens = self.word2token(word.text)
 
-                word_tokens = self.word2token(document.get_word(span))
+            if word == subject_start:
+                ss = len(tokens)
+                word_tokens = ['[E1]'] + word_tokens
+            elif word == subject_end:
+                word_tokens = word_tokens + ['[/E1]']
+            elif word == object_start:
+                os = len(tokens)
+                word_tokens = ['[E2]'] + word_tokens
+            elif word == object_end:
+                word_tokens = word_tokens + ['[/E2]']
 
-                if span == subject_start_token:
-                    ss = len(tokens)
-                    word_tokens = ['[E1]'] + word_tokens
-                elif span == subject_end_token:
-                    word_tokens = word_tokens + ['[/E1]']
-                elif span == object_start_token:
-                    os = len(tokens)
-                    word_tokens = ['[E2]'] + word_tokens
-                elif span == object_end_token:
-                    word_tokens = word_tokens + ['[/E2]']
-
-                tokens.extend(word_tokens)
+            tokens.extend(word_tokens)
 
         tokens = tokens[:self.max_len - 2]
         input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
