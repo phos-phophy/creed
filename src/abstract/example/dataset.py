@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from functools import lru_cache
-from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple
 
 import torch
 from torch.utils.data import Dataset
@@ -14,7 +14,7 @@ from .helpers import get_tokenizer_len_attribute
 class PreparedDocument(NamedTuple):
     """ A base class that represents one processed example from a dataset """
 
-    features: Dict[str, torch.Tensor]
+    features: Dict[str, Any]
     labels: Optional[Dict[str, torch.Tensor]]  # e.g. {"labels": ..., "labels_mask": ...}
 
 

@@ -1,5 +1,5 @@
 from itertools import product
-from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 import torch
 from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, FactClass, NO_REL_IND, PreparedDocument, Word
@@ -27,9 +27,10 @@ class BaseDataset(AbstractDataset):
     def _prepare_document(self, document: Document) -> PreparedDocument:
         """
         1) input_ids: LongTensor (len,)
-        2) entity_pos: LongTensor  (len,)
-        3) hts: LongTensor (max_ent, max_ent)
-        4) labels: BoolTensor (max_ent, max_ent, num_link)
+        2) attention_mask: BoolTensor (len,)
+        3) entity_pos: List[List[Tuple[int, int]]]
+        4) hts: LongTensor (ent * (ent - 1), max_ent)
+        5) labels: BoolTensor (ent * (ent - 1), num_link)
         """
 
         ner_facts = tuple(filter(lambda f: f.fact_class is FactClass.ENTITY, document.facts))
@@ -40,13 +41,14 @@ class BaseDataset(AbstractDataset):
 
         features = {
             'input_ids': input_ids,
+            'attention_mask': torch.ones(input_ids.shape[0], dtype=torch.bool),
             'entity_pos': entity_pos,
             'hts': hts,
         }
 
         return PreparedDocument(features=features, labels={"labels": labels})
 
-    def _get_ent_tokens(self, document: Document, ner_facts: Tuple[EntityFact, ...]):
+    def _get_ent_tokens(self, document: Document, ner_facts: Tuple[EntityFact, ...]) -> Tuple[List[str], List[str]]:
 
         words = document.words
         start, end = [()] * len(words), [()] * len(words)
@@ -100,7 +102,7 @@ class BaseDataset(AbstractDataset):
         return torch.tensor(input_ids, dtype=torch.long), word_map
 
     @staticmethod
-    def _get_entity_pos(ner_facts: Tuple[EntityFact, ...], word_map: Dict[Word, int]):
+    def _get_entity_pos(ner_facts: Tuple[EntityFact, ...], word_map: Dict[Word, int]) -> List[List[Tuple[int, int]]]:
         entity_pos = []
 
         for fact in ner_facts:
@@ -113,7 +115,7 @@ class BaseDataset(AbstractDataset):
 
         return entity_pos
 
-    def _get_labels_and_hts(self, document: Document, ner_facts: Tuple[EntityFact, ...]):
+    def _get_labels_and_hts(self, document: Document, ner_facts: Tuple[EntityFact, ...]) -> Tuple[torch.BoolTensor, torch.LongTensor]:
 
         n = len(ner_facts)
         fact_to_ind = {fact: ind for ind, fact in enumerate(ner_facts)}
