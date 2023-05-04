@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Dict, List, Tuple
 
 import torch
-from src.abstract import Document, EntityFact, FactClass, NO_ENT_IND, PreparedDocument, Word
+from src.abstract import Document, EntityFact, NO_ENT_IND, PreparedDocument, Word
 
 from .base import BaseDataset
 
@@ -20,9 +20,7 @@ class IETypesDataset(BaseDataset):
         words = document.words
         start, end = [()] * len(words), [()] * len(words)
 
-        ner_facts: Tuple[EntityFact, ...] = tuple(filter(lambda fact: fact.fact_class is FactClass.ENTITY, document.facts))[:self.max_ent]
-
-        for ner_fact in ner_facts:
+        for ner_fact in document.entity_facts[:self.max_ent]:
 
             type_id = ner_fact.type_id if not self.diversifier.active else self.diversifier[ner_fact.type_id]
             fact_info = (ner_fact.coreference_id, type_id)

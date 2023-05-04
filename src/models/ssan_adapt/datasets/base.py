@@ -3,7 +3,7 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, FactClass, NO_ENT_IND, NO_REL_IND, PreparedDocument, \
+from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, NO_ENT_IND, NO_REL_IND, PreparedDocument, \
     RelationFact, Word
 
 
@@ -43,10 +43,7 @@ class BaseDataset(AbstractDataset):
 
     @staticmethod
     def _count_max_ent(documents: Iterable[Document]):
-        def get_ner_count(doc: Document):
-            return len(list(filter(lambda fact: fact.fact_class is FactClass.ENTITY, doc.facts)))
-
-        doc2ner_count = [1] + list(map(lambda document: get_ner_count(document), documents))
+        doc2ner_count = [1] + list(map(lambda document: len(document.entity_facts), documents))
         return max(doc2ner_count)
 
     def _build_empty_doc(self):
@@ -117,7 +114,7 @@ class BaseDataset(AbstractDataset):
 
         labels = None
         if self.extract_labels:  # 5th stage: extract labels and labels_mask
-            labels_tensors, labels_mask = self._extract_labels_and_mask(ner_facts, self._extract_link_facts(document))
+            labels_tensors, labels_mask = self._extract_labels_and_mask(ner_facts, document.relation_facts)
             labels = {"labels": labels_tensors, "labels_mask": labels_mask}
 
         return PreparedDocument(features=features, labels=labels)
@@ -148,12 +145,8 @@ class BaseDataset(AbstractDataset):
         return torch.tensor(input_ids, dtype=torch.long), token_to_sentence_ind, word_to_token_ind
 
     def _extract_ner_facts(self, document: Document, word_to_token_ind: Dict[Word, List[int]]):
-        ent_facts = tuple(filter(lambda fact: fact.fact_class is FactClass.ENTITY, document.facts))
-        return tuple(filter(lambda fact: any((w in word_to_token_ind) for m in fact.mentions for w in m.words), ent_facts))[:self.max_ent]
-
-    @staticmethod
-    def _extract_link_facts(document: Document):
-        return tuple(filter(lambda fact: fact.fact_class is FactClass.RELATION, document.facts))
+        ent_facts = filter(lambda fact: any((w in word_to_token_ind) for m in fact.mentions for w in m.words), document.entity_facts)
+        return tuple(ent_facts)[:self.max_ent]
 
     def _extract_ner_types(self, ner_facts: Tuple[EntityFact, ...], word_to_token_ind: Dict[Word, List[int]], seq_len: int):
 
