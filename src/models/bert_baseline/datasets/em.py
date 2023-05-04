@@ -1,7 +1,7 @@
 from typing import Any, Iterable
 
 import torch
-from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, FactClass, Mention, NO_REL_IND, PreparedDocument
+from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, Mention, NO_REL_IND, PreparedDocument
 
 
 class EntityMarkerDataset(AbstractDataset):
@@ -35,22 +35,22 @@ class EntityMarkerDataset(AbstractDataset):
 
         labels = None
         if self.extract_labels:
-            link_fact = next(self._get_fact(document, 'fact_class', FactClass.RELATION))
+            link_fact = document.relation_facts[0]
             rel_ind = self._rel_to_ind[link_fact.type_id] if link_fact else NO_REL_IND
             labels = {"labels": torch.tensor([rel_ind], dtype=torch.long)}
 
         return PreparedDocument(features=features, labels=labels)
 
     @staticmethod
-    def _get_fact(document: Document, attribute_name: str, attribute_value: Any):
-        for fact in document.facts:
+    def _get_entity_fact(document: Document, attribute_name: str, attribute_value: Any):
+        for fact in document.entity_facts:
             if hasattr(fact, attribute_name) and fact.__getattribute__(attribute_name) == attribute_value:
                 yield fact
         yield None
 
     def _get_facts_info(self, document: Document):
-        object_fact: EntityFact = next(self._get_fact(document, 'name', 'object'))
-        subject_fact: EntityFact = next(self._get_fact(document, 'name', 'subject'))
+        object_fact: EntityFact = next(self._get_entity_fact(document, 'name', 'object'))
+        subject_fact: EntityFact = next(self._get_entity_fact(document, 'name', 'subject'))
 
         object_mention: Mention = object_fact.mentions[0]
         subject_mention = subject_fact.mentions[0]

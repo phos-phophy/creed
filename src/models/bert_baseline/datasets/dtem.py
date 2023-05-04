@@ -27,8 +27,8 @@ class DiversifiedTypedEntityMarkerDataset(EntityMarkerDataset):
     def _tokenize(self, document: Document):
         tokens, ss, os = [], 0, 0
 
-        object_type = next(self._get_fact(document, 'name', 'object')).type_id
-        subject_type = next(self._get_fact(document, 'name', 'subject')).type_id
+        object_type = next(self._get_entity_fact(document, 'name', 'object')).type_id
+        subject_type = next(self._get_entity_fact(document, 'name', 'subject')).type_id
 
         if self.diversifier.active:
             object_type = self.diversifier[object_type]
