@@ -2,7 +2,7 @@ from itertools import product
 from typing import Dict, Iterable, List, Tuple
 
 import torch
-from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, FactClass, NO_REL_IND, PreparedDocument, Word
+from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, NO_REL_IND, PreparedDocument, Word
 
 
 class BaseDataset(AbstractDataset):
@@ -33,11 +33,9 @@ class BaseDataset(AbstractDataset):
         5) labels: BoolTensor (ent * (ent - 1), num_link)
         """
 
-        ner_facts = tuple(filter(lambda f: f.fact_class is FactClass.ENTITY, document.facts))
-
-        input_ids, sent_map = self._tokenize(document, ner_facts)
-        entity_pos = self._get_entity_pos(ner_facts, sent_map)
-        labels, hts = self._get_labels_and_hts(document, ner_facts)
+        input_ids, sent_map = self._tokenize(document, document.entity_facts)
+        entity_pos = self._get_entity_pos(document.entity_facts, sent_map)
+        labels, hts = self._get_labels_and_hts(document, document.entity_facts)
 
         features = {
             'input_ids': input_ids,
@@ -124,7 +122,7 @@ class BaseDataset(AbstractDataset):
         labels = torch.zeros(n * n, len(self._relations), dtype=torch.bool)
         labels[:, NO_REL_IND] = True
 
-        for rel_fact in filter(lambda fact: fact.fact_class is FactClass.RELATION, document.facts):
+        for rel_fact in document.relation_facts:
             source_fact_ind = fact_to_ind[rel_fact.from_fact]
             target_fact_ind = fact_to_ind[rel_fact.to_fact]
 
