@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterator, List
 
-from src.abstract import AbstractFact, AbstractLoader, Document, EntityFact, Mention, RelationFact, Word
+from src.abstract import AbstractLoader, Document, EntityFact, Mention, RelationFact, Word
 
 
 """
@@ -35,11 +35,9 @@ class DocREDLoader(AbstractLoader):
         sentences: List[List[Word]] = self._extract_sentences(example)
 
         entity_facts = self._extract_entity_facts(example["vertexSet"], sentences)
+        relation_facts = self._extract_rel_facts(example.get("labels", []), entity_facts)
 
-        facts: List[AbstractFact] = entity_facts
-        facts.extend(self._extract_rel_facts(example.get("labels", []), entity_facts))
-
-        return Document(example["title"], sentences, facts)
+        return Document(example["title"], sentences, entity_facts, relation_facts)
 
     @staticmethod
     def _extract_sentences(example: Dict[str, Any]):

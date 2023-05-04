@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterator, List
 
-from src.abstract import AbstractFact, AbstractLoader, Document, EntityFact, Mention, RelationFact, Word
+from src.abstract import AbstractLoader, Document, EntityFact, Mention, RelationFact, Word
 
 
 """
@@ -38,11 +38,11 @@ class TacredLoader(AbstractLoader):
 
         entity_facts: List[EntityFact] = self._extract_entity_facts(example, sentences)
 
-        facts: List[AbstractFact] = entity_facts
+        relation_facts: List[RelationFact] = []
         if example["relation"] != "no_relation":
-            facts.append(RelationFact("", example["relation"], entity_facts[0], entity_facts[1]))
+            relation_facts.append(RelationFact("", example["relation"], entity_facts[0], entity_facts[1]))
 
-        return Document(example["docid"], sentences, facts)
+        return Document(example["docid"], sentences, entity_facts, relation_facts)
 
     @staticmethod
     def _extract_sentences(example: Dict[str, Any]):
