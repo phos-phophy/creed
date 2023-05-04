@@ -1,11 +1,14 @@
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypeVar
 
 import torch
 from src.abstract import PreparedDocument
 from torch.nn.utils.rnn import pad_sequence
 
 
-def collate_fn(documents: List[PreparedDocument]) -> Dict[str, torch.Tensor]:
+_CollatedFeatures = TypeVar('_CollatedFeatures', torch.Tensor, List)
+
+
+def collate_fn(documents: List[PreparedDocument]) -> Dict[str, _CollatedFeatures]:
     document_dict = {}
 
     for field_name in documents[0]._fields:
@@ -17,16 +20,16 @@ def collate_fn(documents: List[PreparedDocument]) -> Dict[str, torch.Tensor]:
 
         for feature_name in feature_names:
             features = get_features(documents, field_name, feature_name)
-            document_dict[feature_name] = collate(features)
+            document_dict[feature_name] = collate(features) if features and isinstance(features[0], torch.Tensor) else features
 
     return document_dict
 
 
-def get_features(documents: List[PreparedDocument], field_name, feature_name):
+def get_features(documents: List[PreparedDocument], field_name, feature_name) -> List[Any]:
     return [document.__getattribute__(field_name)[feature_name] for document in documents]
 
 
-def collate(tensors: Optional[List[torch.Tensor]]):
+def collate(tensors: Optional[List[torch.Tensor]]) -> Optional[torch.Tensor]:
     if tensors is None:
         return None
 

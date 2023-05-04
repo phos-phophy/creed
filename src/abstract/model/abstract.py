@@ -1,13 +1,16 @@
 import pickle
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Iterable, List, Type, TypeVar
+from typing import Any, Dict, Iterable, List, Type, TypeVar
 
 import torch
-from src.abstract.example import AbstractDataset, DiversifierConfig, Document
+from src.abstract.example import AbstractDataset, DiversifierConfig, Document, PreparedDocument
 from torch.utils.data import DataLoader
 
+from .collate import collate_fn
+
 _Model = TypeVar('_Model', bound='AbstractModel')
+_CollatedFeatures = TypeVar('_CollatedFeatures', torch.Tensor, List)
 
 NO_REL_IND = 0
 NO_ENT_IND = 0
@@ -79,3 +82,7 @@ class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
     def test(self, dataloader: DataLoader, output_path: Path = None) -> None:
         """ Use for the public test dataset """
         pass
+
+    @staticmethod
+    def collate_fn(documents: List[PreparedDocument]) -> Dict[str, _CollatedFeatures]:
+        return collate_fn(documents)

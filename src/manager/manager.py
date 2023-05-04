@@ -12,7 +12,6 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import Trainer, TrainingArguments
 
-from .collate import collate_fn
 from .config import ManagerConfig
 from .score import score_model
 
@@ -60,7 +59,7 @@ class ModelManager:
             args=train_params,
             train_dataset=train_dataset,
             eval_dataset=dev_dataset,
-            data_collator=collate_fn,
+            data_collator=self.model.collate_fn,
             compute_metrics=compute_metrics
         )
 
@@ -83,7 +82,7 @@ class ModelManager:
 
         dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare eval dataset', True, True).prepare_documents()
 
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=self.model.collate_fn)
 
         torch.cuda.empty_cache()
         self.model.evaluate(dataloader, self.config.output_eval_path)
@@ -104,7 +103,7 @@ class ModelManager:
 
         dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare test dataset', True, True).prepare_documents()
 
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=self.model.collate_fn)
 
         torch.cuda.empty_cache()
         self.model.test(dataloader, self.config.output_test_path)
@@ -123,7 +122,7 @@ class ModelManager:
 
         dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare pred dataset', False, True).prepare_documents()
 
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=self.model.collate_fn)
 
         torch.cuda.empty_cache()
         self.model.predict(documents, dataloader, self.config.output_pred_path)
