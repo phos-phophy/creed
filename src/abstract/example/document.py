@@ -2,28 +2,26 @@ from collections import defaultdict
 from itertools import chain
 from typing import Dict, Iterable, Tuple
 
-from src.abstract.feature import (
-    AbstractFact,
-    EntityFact,
-    FactClass,
-    Mention,
-    RelationFact,
-    Word
-)
+from src.abstract.feature import EntityFact, RelationFact, Word
 
 
 class Document:
     """ A base class that represents one example from a dataset """
 
-    def __init__(self, doc_id: str, sentences: Iterable[Iterable[Word]], facts: Iterable[AbstractFact]):
+    def __init__(
+            self,
+            doc_id: str,
+            sentences: Iterable[Iterable[Word]],
+            entity_facts: Iterable[EntityFact],
+            relation_facts: Iterable[RelationFact]
+    ):
 
         self._doc_id = doc_id
         self._sentences = tuple(tuple(sentence) for sentence in sentences)
-        self._facts = tuple(facts)
+        self._entity_facts = tuple(entity_facts)
+        self._relation_facts = tuple(relation_facts)
 
-        self._validate_facts()
-
-        self._coreference_chains = self._build_coreference_chains(facts)
+        self._coreference_chains = self._build_coreference_chains(self._entity_facts)
 
     @property
     def doc_id(self):
@@ -42,39 +40,23 @@ class Document:
         return self._sentences
 
     @property
-    def facts(self):
-        return self._facts
+    def entity_facts(self):
+        return self._entity_facts
+
+    @property
+    def relation_facts(self):
+        return self._relation_facts
 
     @property
     def coreference_chains(self):
         return self._coreference_chains
 
     @staticmethod
-    def _build_coreference_chains(facts) -> Dict[int, Tuple[EntityFact]]:
+    def _build_coreference_chains(facts: Iterable[EntityFact]) -> Dict[int, Tuple[EntityFact]]:
         coreference_chains = defaultdict(list)
         for fact in facts:
-            if fact.fact_class is FactClass.ENTITY:
-                fact: EntityFact
-                coreference_chains[fact.coreference_id].append(fact)
+            coreference_chains[fact.coreference_id].append(fact)
         return {key: tuple(item) for key, item in coreference_chains.items()}
 
-    def _validate_mentions(self, mentions: Iterable[Mention]):
-        words = self.words
-        for mention in mentions:
-            for word in mention.words:
-                if word not in words:
-                    raise ValueError(f'Word "{word}" is not in text!')
-
-    def _validate_facts(self):
-        for fact in self.facts:
-            if isinstance(fact, EntityFact):
-                self._validate_mentions(fact.mentions)
-            elif isinstance(fact, RelationFact):
-                self._validate_mentions(fact.from_fact.mentions)
-                self._validate_mentions(fact.to_fact.mentions)
-            else:
-                raise ValueError
-
     def add_relation_facts(self, facts: Iterable[RelationFact]):
-        self._facts = tuple(list(self._facts) + list(facts))
-        self._validate_facts()
+        self._relation_facts = tuple(list(self._relation_facts) + list(facts))
