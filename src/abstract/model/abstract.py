@@ -7,10 +7,9 @@ import torch
 from src.abstract.example import AbstractDataset, DiversifierConfig, Document, PreparedDocument
 from torch.utils.data import DataLoader
 
-from .collate import collate_fn
+from .collate import CollatedFeatures, Collator
 
 _Model = TypeVar('_Model', bound='AbstractModel')
-_CollatedFeatures = TypeVar('_CollatedFeatures', torch.Tensor, List)
 
 NO_REL_IND = 0
 NO_ENT_IND = 0
@@ -83,6 +82,5 @@ class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
         """ Use for the public test dataset """
         pass
 
-    @staticmethod
-    def collate_fn(documents: List[PreparedDocument]) -> Dict[str, _CollatedFeatures]:
-        return collate_fn(documents)
+    def collate_fn(self, documents: List[PreparedDocument]) -> Dict[str, CollatedFeatures]:
+        return Collator.collate_fn(documents)
