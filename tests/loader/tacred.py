@@ -28,7 +28,7 @@ class TacredLoaderTest(unittest.TestCase):
                       Word("tank", 0, 51, 51), Word("before", 0, 52, 52), Word("all", 0, 53, 53), Word("that", 0, 54, 54),
                       Word(".", 0, 55, 55)]]
 
-        facts = [
+        entity_facts = [
             EntityFact("subject", "ORGANIZATION", 0, (Mention([
                 Word("Progressive", 0, 33, 33), Word("Democrats", 0, 34, 34), Word("of", 0, 35, 35), Word("America", 0, 36, 36)
             ]),)),
@@ -37,7 +37,7 @@ class TacredLoaderTest(unittest.TestCase):
             ]),))
         ]
 
-        gold_document = Document(doc_id, sentences, facts)
+        gold_document = Document(doc_id, sentences, entity_facts)
 
         document = list(self.loader.load(Path('tests/loader/data/tacred_without_rel.json')))[0]
         equal_docs(self, gold_document, document)
@@ -53,12 +53,14 @@ class TacredLoaderTest(unittest.TestCase):
                       Word("take", 0, 21, 21), Word("a", 0, 22, 22), Word("government", 0, 23, 23), Word("job", 0, 24, 24),
                       Word(".", 0, 25, 25)]]
 
-        facts = [EntityFact("subject", "PERSON", 0, (Mention([Word("Douglas", 0, 8, 8), Word("Flint", 0, 9, 9)]),)),
-                 EntityFact("object", "TITLE", 1, (Mention([Word("chairman", 0, 12, 12)]),))]
+        entity_facts = [
+            EntityFact("subject", "PERSON", 0, (Mention([Word("Douglas", 0, 8, 8), Word("Flint", 0, 9, 9)]),)),
+            EntityFact("object", "TITLE", 1, (Mention([Word("chairman", 0, 12, 12)]),))
+        ]
 
-        facts.extend([RelationFact("", "per:title", facts[0], facts[1])])
+        relation_facts = [RelationFact("", "per:title", entity_facts[0], entity_facts[1])]
 
-        gold_document = Document(doc_id, sentences, facts)
+        gold_document = Document(doc_id, sentences, entity_facts, relation_facts)
 
         document = list(self.loader.load(Path('tests/loader/data/tacred_with_rel.json')))[0]
         equal_docs(self, gold_document, document)

@@ -9,7 +9,8 @@ def equal_docs(case: TestCase, gold_doc: Document, doc: Document):
     case.assertEqual(gold_doc.text, doc.text)
     case.assertEqual(gold_doc.words, doc.words)
     case.assertEqual(gold_doc.sentences, doc.sentences)
-    case.assertEqual(set(gold_doc.facts), set(doc.facts))
+    case.assertEqual(set(gold_doc.entity_facts), set(doc.entity_facts))
+    case.assertEqual(set(gold_doc.relation_facts), set(doc.relation_facts))
 
 
 def equal_tensors(case: TestCase, gold_tensor: Tensor, tensor: Tensor):

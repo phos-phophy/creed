@@ -13,13 +13,13 @@ class Document:
             doc_id: str,
             sentences: Iterable[Iterable[Word]],
             entity_facts: Iterable[EntityFact],
-            relation_facts: Iterable[RelationFact]
+            relation_facts: Iterable[RelationFact] = None
     ):
 
         self._doc_id = doc_id
         self._sentences = tuple(tuple(sentence) for sentence in sentences)
         self._entity_facts = tuple(entity_facts)
-        self._relation_facts = tuple(relation_facts)
+        self._relation_facts = tuple(relation_facts) if relation_facts else tuple()
 
         self._coreference_chains = self._build_coreference_chains(self._entity_facts)
 

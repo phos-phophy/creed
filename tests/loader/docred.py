@@ -25,14 +25,14 @@ class DocREDLoaderTest(unittest.TestCase):
         doc_id = example["title"]
         sentences = [[Word('First', 0, 0, 0), Word('sentence', 0, 1, 1), Word('.', 0, 2, 2)],
                      [Word('End', 1, 0, 3), Word('of', 1, 1, 4), Word('text', 1, 2, 5), Word('!', 1, 3, 6)]]
-        facts = [
+        entity_facts = [
             EntityFact("", "NUM", 0, (Mention([Word('First', 0, 0, 0)]),)),
             EntityFact("", "POS", 1, (Mention([Word('End', 1, 0, 3)]),)),
             EntityFact("", "MISC", 2, (Mention([Word('text', 1, 2, 5)]),))
         ]
-        facts.extend([RelationFact("", "P17", facts[1], facts[2])])
+        relation_facts = [RelationFact("", "P17", entity_facts[1], entity_facts[2])]
 
-        gold_doc = Document(doc_id, sentences, tuple(facts))
+        gold_doc = Document(doc_id, sentences, entity_facts, relation_facts)
 
         document = self.loader._build_document(example)
         equal_docs(self, gold_doc, document)
@@ -52,14 +52,14 @@ class DocREDLoaderTest(unittest.TestCase):
         doc_id = example["title"]
         sentences = [[Word('First', 0, 0, 0), Word('sentence', 0, 1, 1), Word('.', 0, 2, 2)],
                      [Word('End', 1, 0, 3), Word('of', 1, 1, 4), Word('text', 1, 2, 5), Word('!', 1, 3, 6)]]
-        facts = [
+        entity_facts = [
             EntityFact("", "NUM", 0, (Mention([Word('First', 0, 0, 0)]),)),
             EntityFact("", "POS", 1, (Mention([Word('End', 1, 0, 3)]),)),
             EntityFact("", "MISC", 2, (Mention([Word('of', 1, 1, 4)]), Mention([Word('text', 1, 2, 5)]),))
         ]
-        facts.extend([RelationFact("", "P17", facts[1], facts[2])])
+        relation_facts = [RelationFact("", "P17", entity_facts[1], entity_facts[2])]
 
-        gold_doc = Document(doc_id, sentences, tuple(facts))
+        gold_doc = Document(doc_id, sentences, entity_facts, relation_facts)
 
         document = self.loader._build_document(example)
         equal_docs(self, gold_doc, document)
@@ -79,14 +79,14 @@ class DocREDLoaderTest(unittest.TestCase):
         doc_id = example["title"]
         sentences = [[Word('First', 0, 0, 0), Word('sentence', 0, 1, 1), Word('.', 0, 2, 2)],
                      [Word('End', 1, 0, 3), Word('of', 1, 1, 4), Word('text', 1, 2, 5), Word('!', 1, 3, 6)]]
-        facts = [
+        entity_facts = [
             EntityFact("", "NUM", 0, (Mention([Word('First', 0, 0, 0)]),)),
             EntityFact("", "POS", 1, (Mention([Word('End', 1, 0, 3)]),)),
             EntityFact("", "MISC", 2, (Mention([Word('of', 1, 1, 4)]),))
         ]
-        facts.extend([RelationFact("", "P17", facts[1], facts[2])])
+        relation_facts = [RelationFact("", "P17", entity_facts[1], entity_facts[2])]
 
-        gold_doc = Document(doc_id, sentences, tuple(facts))
+        gold_doc = Document(doc_id, sentences, entity_facts, relation_facts)
 
         document = self.loader._build_document(example)
         equal_docs(self, gold_doc, document)
@@ -136,7 +136,7 @@ class DocREDLoaderTest(unittest.TestCase):
                       Word("foreign", 6, 40, 162), Word("shows", 6, 41, 163), Word(".", 6, 42, 164)]
                      ]
 
-        facts = [
+        entity_facts = [
             EntityFact("", "ORG", 0, (Mention([Word("Skai", 0, 0, 0), Word("TV", 0, 1, 1)]),
                                       Mention([Word("Skai", 4, 0, 80), Word("TV", 4, 1, 81)]),
                                       Mention([Word("Skai", 5, 3, 105), Word("TV", 5, 4, 106)]))),
@@ -154,18 +154,17 @@ class DocREDLoaderTest(unittest.TestCase):
             EntityFact("", "MISC", 10, (Mention([Word("Greek", 5, 13, 115)]),))
         ]
 
-        facts.extend([
-            RelationFact("", "P17", facts[2], facts[9]),
-            RelationFact("", "P17", facts[3], facts[9]),
-            RelationFact("", "P17", facts[5], facts[9]),
-            RelationFact("", "P159", facts[0], facts[2]),
-            RelationFact("", "P127", facts[0], facts[3]),
-            RelationFact("", "P159", facts[0], facts[5]),
-            RelationFact("", "P17", facts[0], facts[9]),
+        relation_facts = [
+            RelationFact("", "P17", entity_facts[2], entity_facts[9]),
+            RelationFact("", "P17", entity_facts[3], entity_facts[9]),
+            RelationFact("", "P17", entity_facts[5], entity_facts[9]),
+            RelationFact("", "P159", entity_facts[0], entity_facts[2]),
+            RelationFact("", "P127", entity_facts[0], entity_facts[3]),
+            RelationFact("", "P159", entity_facts[0], entity_facts[5]),
+            RelationFact("", "P17", entity_facts[0], entity_facts[9]),
+        ]
 
-        ])
-
-        gold_document = Document(doc_id, sentences, tuple(facts))
+        gold_document = Document(doc_id, sentences, entity_facts, relation_facts)
 
         document = list(self.loader.load(Path("tests/loader/data/docred_1.json")))[0]
         equal_docs(self, gold_document, document)

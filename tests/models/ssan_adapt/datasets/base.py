@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 import torch
-from src.abstract import DiversifierConfig, EntityFact, NO_REL_IND, RelationFact, get_tokenizer_len_attribute
+from src.abstract import DiversifierConfig, NO_REL_IND, get_tokenizer_len_attribute
 from src.loader import DocREDLoader
 from src.models.ssan_adapt.datasets import BaseDataset
 from tests.helpers import equal_tensors
@@ -113,8 +113,8 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
             documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', self.diversifier
         ).prepare_documents()[0]
 
-        rel_facts = tuple(filter(lambda fact: isinstance(fact, RelationFact) and fact.type_id in self.relations, documents[0].facts))
-        ent_facts = tuple(filter(lambda fact: isinstance(fact, EntityFact), documents[0].facts))
+        rel_facts = tuple(filter(lambda fact: fact.type_id in self.relations, documents[0].relation_facts))
+        ent_facts = documents[0].entity_facts
         fact_to_ind = {fact: ind for ind, fact in enumerate(ent_facts)}
 
         expected_labels = torch.zeros(11, 11, 97, dtype=torch.bool)
@@ -146,7 +146,7 @@ class BaseSSANAdaptDatasetTest(unittest.TestCase):
             documents, self.tokenizer, True, True, self.entities, self.relations, dist_base, dist_ceil, '', self.diversifier
         ).prepare_documents()[0]
 
-        gold_labels_num = len(list(filter(lambda fact: isinstance(fact, RelationFact), gold_document.facts)))
+        gold_labels_num = len(gold_document.relation_facts)
 
         labels: torch.Tensor = pred_document.labels["labels"]
         labels = torch.cat((labels[:, :, :NO_REL_IND], labels[:, :, NO_REL_IND + 1:]), dim=-1)  # without NO_REL link
