@@ -38,6 +38,7 @@ class ManagerConfig(NamedTuple):
 
     seed: int = 42
     training_config: TrainingConfig = TrainingConfig({}, False)
+    extra_training_config: dict = {}
 
     train_dataset_path: Path = None
     dev_dataset_path: Path = None

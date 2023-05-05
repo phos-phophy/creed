@@ -1,7 +1,7 @@
 import pickle
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Type, TypeVar
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
 
 import torch
 from src.abstract.example import AbstractDataset, DiversifierConfig, Document, PreparedDocument
@@ -83,4 +83,9 @@ class AbstractModel(torch.nn.Module, metaclass=ABCMeta):
         pass
 
     def collate_fn(self, documents: List[PreparedDocument]) -> Dict[str, CollatedFeatures]:
+        """ Model-specific collate function """
         return Collator.collate_fn(documents)
+
+    def create_optimizers(self, kwargs: dict) -> Tuple[Optional[torch.optim.Optimizer], Optional[torch.optim.lr_scheduler.LambdaLR]]:
+        """ Creates model-specific optimizer and scheduler """
+        return None, None
