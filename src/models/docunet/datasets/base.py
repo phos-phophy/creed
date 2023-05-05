@@ -29,7 +29,7 @@ class BaseDataset(AbstractDataset):
         1) input_ids: LongTensor (len,)
         2) attention_mask: BoolTensor (len,)
         3) entity_pos: List[List[Tuple[int, int]]]
-        4) hts: LongTensor (ent * (ent - 1), max_ent)
+        4) hts: LongTensor (ent * (ent - 1), 2)
         5) labels: BoolTensor (ent * (ent - 1), num_link)
         """
 

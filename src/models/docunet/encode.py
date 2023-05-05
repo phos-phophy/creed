@@ -7,21 +7,21 @@ from transformers import BertModel
 
 
 def encode(
-        encoder: BertModel, input_ids: torch.Tensor, attention_mask: torch.Tensor, start_tokens, end_tokens
+        encoder: BertModel, input_ids: torch.Tensor, attention_mask: torch.Tensor, start_token, end_token
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """ Encodes inputs with encoder
 
     :param encoder: bert model
     :param input_ids: LongTensor of (bs, len) shape
     :param attention_mask: BoolTensor of (bs, len) shape
-    :param start_tokens:
-    :param end_tokens:
+    :param start_token: start token of the sentence
+    :param end_token: end token of the sentence
     :return: encoded inputs and attention scores
     """
 
     if input_ids.shape[1] <= 512:
         return process_short_input(encoder, input_ids, attention_mask)
-    return process_long_input(encoder, input_ids, attention_mask, start_tokens, end_tokens)
+    return process_long_input(encoder, input_ids, attention_mask, start_token, end_token)
 
 
 def process_short_input(
@@ -48,21 +48,21 @@ def process_short_input(
 
 
 def process_long_input(
-        encoder: BertModel, input_ids: torch.Tensor, attention_mask: torch.Tensor, start_tokens, end_tokens
+        encoder: BertModel, input_ids: torch.Tensor, attention_mask: torch.Tensor, start_token, end_token
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """ Splits the input to 2 overlapping chunks. Now BERT can encode inputs of which the length are up to 1024
 
     :param encoder: bert model
     :param input_ids: LongTensor of (bs, len) shape
     :param attention_mask: BoolTensor of (bs, len) shape
-    :param start_tokens:
-    :param end_tokens:
+    :param start_token: start token of the sentence
+    :param end_token: end token of the sentence
     :return: encoded inputs and attention scores
     """
 
     _, length = input_ids.size()
-    start_tokens = torch.tensor([start_tokens]).to(input_ids)
-    end_tokens = torch.tensor([end_tokens]).to(input_ids)
+    start_tokens = torch.tensor([start_token]).to(input_ids)
+    end_tokens = torch.tensor([end_token]).to(input_ids)
     len_start = start_tokens.size(0)
     len_end = end_tokens.size(0)
 

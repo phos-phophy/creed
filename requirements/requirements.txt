@@ -6,3 +6,4 @@ tqdm==4.64.1
 scikit-learn==1.0.2
 gdown==4.6.0
 jupyter==1.0.0
+opt_einsum==3.3.0
