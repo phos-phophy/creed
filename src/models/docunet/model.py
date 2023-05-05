@@ -5,7 +5,7 @@ import torch
 from opt_einsum import contract
 from src.abstract import AbstractDataset, AbstractModel, CollatedFeatures, DiversifierConfig, Document, PreparedDocument
 from torch.utils.data import DataLoader
-from transformers import AutoModel, AutoTokenizer, BertModel
+from transformers import AdamW, AutoModel, AutoTokenizer, BertModel, get_linear_schedule_with_warmup
 
 from .collator import DocUNetCollator
 from .datasets import BaseDataset, WOTypesDataset
@@ -20,7 +20,6 @@ class DocUNet(AbstractModel):
             tokenizer_path: str,
             inner_model_type: str,
             relations: Iterable[str],
-            dropout: float,
             unet_in_dim: int,
             unet_out_dim: int,
             channels: int,
@@ -44,7 +43,6 @@ class DocUNet(AbstractModel):
         self._bilinear = torch.nn.Linear(emb_size * block_size, len(self.relations))
 
         self._inner_model_type = inner_model_type
-        self._bertdrop = torch.nn.Dropout(dropout)
         self._ne = ne
 
     def prepare_dataset(
@@ -250,3 +248,20 @@ class DocUNet(AbstractModel):
 
     def collate_fn(self, documents: List[PreparedDocument]) -> Dict[str, CollatedFeatures]:
         return DocUNetCollator.collate_fn(documents)
+
+    def create_optimizers(self, kwargs: dict) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
+
+        extract_layer = ["extractor", "bilinear"]
+        encoder_layer = ['encoder']
+        optimizer_grouped_parameters = [
+            {"params": [p for n, p in self.named_parameters() if any(nd in n for nd in encoder_layer)], "lr": kwargs["encoder_lr"]},
+            {"params": [p for n, p in self.named_parameters() if any(nd in n for nd in extract_layer)], "lr": 1e-4},
+            {"params": [p for n, p in self.named_parameters() if not any(nd in n for nd in extract_layer + encoder_layer)]},
+        ]
+
+        optimizer = AdamW(optimizer_grouped_parameters, lr=kwargs["learning_rate"], eps=kwargs["adam_epsilon"])
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer, num_warmup_steps=kwargs["warmup_steps"], num_training_steps=kwargs["total_steps"]
+        )
+
+        return optimizer, scheduler
