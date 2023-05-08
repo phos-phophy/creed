@@ -7,51 +7,53 @@ explore how models can be adapted to the changing types of entities.
 
 ## Motivation
 
-There are several ways to deal with the changing types of entyties:
+There are several ways to deal with the changing types of entities:
 
 1) Fine-tuning
 
-    We can retrain our model on the new obtained data, but the main problem is to get and annotate new documents
+    We can retrain our model on the new obtained data, but the main problem is to get and annotate new documents. For more details please 
+    refer to following studies: 
+    [Domain Adaptation for Relation Extraction with Domain Adversarial Neural Network](https://aclanthology.org/I17-2072) and
+    [Instance Weighting for Domain Adaptation in NLP](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.149.8018&rep=rep1&type=pdf).
 
 2) Ignoring
 
-    * Build a model that does not use any information of entities' types;
-    * Or don't pay any attention to the domain shift during inference.
+    Another way is to build a model that does not use any information of entities' types and just mark entities in the text with special
+    tokens (e.g. [SUBJ] and [/SUBJ], [OBJ] and [/OBJ], etc.). For more details please refer to 
+    [An Improved Baseline for Sentence-level Relation Extraction](https://arxiv.org/abs/2102.01373) and
+    [A Generative Model for Relation Extraction and Classification](https://arxiv.org/abs/2202.13229).
 
 3) Mapping
 
-   Another way is to build a mapping from the model's entity types to another domain ones. But there may be situations
-   when it is impossible to build the unambiguous mapping (e.g. diagram below, where `PER` correspond only to `PERSON`,
-   but `NUM` is `NUMBER` and `TIME` concurrently).
+   Reasonable way is to build a mapping from the model's entity types to another domain ones. But there may be situations
+   when it is impossible to build the unambiguous mapping (e.g. diagram below, where new type `NUMBER` correspond to 5 old ones).
 
    In the case of the unambiguous mapping, we can try all suitable mappings, but if there are $N$ entities and $M$
    candidates for each of them, $M^N$ model runs are required.
 
 ```mermaid
-flowchart LR
-    subgraph a["New unknown domain"]
-        direction TB
+flowchart TB
+    subgraph a["New entity type"]
         subgraph b[" "]
-            direction LR
-            NUM1(["NUM"])-- Date of birth --->PER1(["PER"])
-            NUM2(["NUM"])-- Age --->PER2(["PER"])
+
+            num([NUMBER])
         end
     end
-    subgraph c["Model's domain"]
-        direction TB
+    subgraph c["Old entity types"]
         subgraph d[" "]
-            direction LR
-            time([TIME])-- Date of birth --->person1(["PERSON"])
-            number([NUMBER])-- Age --->person2(["PERSON"])
+
+            num(["NUMBER"]) --> quantity(["QUANTITY"])
+            num(["NUMBER"]) --> percent(["PERCENT"])
+            num(["NUMBER"]) --> ordinal(["ORDINAL"])
+            num(["NUMBER"]) --> cardinal(["CARDINAL"])
+            num(["NUMBER"]) --> money(["MONEY"])
         end
     end
-    a ==> c 
 ```
 
 4) Diversified training
 
-   We are going to develop training methods that instills domain shift resistance in RE models and allows them to adapt to
-   new types of entities.
+   The last method is called diversified training. Its key point is to change original entity types with the corresponding synonyms.
 
 ## Results
 
@@ -71,13 +73,13 @@ flowchart LR
   </tr>
   <tr>
     <td>Ignoring</td>
-    <td>53.60</td>
+    <td>54.32 &plusmn 0.05 </td>
     <td>-</td>
     <td> 76.28 &plusmn 0.18 </td>
   </tr>
   <tr>
     <td>Diversified training</td>
-    <td>54.23</td>
+    <td>51.62 &plusmn 0.16 </td>
     <td>-</td>
     <td>74.56 &plusmn 0.83 </td>
   </tr>
@@ -110,19 +112,48 @@ The base classes are divided into 4 main categories:
 classDiagram
 directionTB
     ModelManager "1" --> "1" AbstractModel : init, train and evaluate
+    ModelManager "1" --> "1" AbstractLoader : use to load documents
     AbstractModel ..> AbstractDataset : use
     AbstractDataset "1" o-- "1..*" Document : process docs
     AbstractDataset "1" o-- "1..*" PreparedDocument : convert to prepared docs
     
     AbstractModel <|-- SSANAdapt
+    AbstractModel <|-- DocUNet
     AbstractModel <|-- BertBaseline
+    
+    AbstractLoader <|-- DocREDLoader
+    AbstractLoader <|-- TacredLoader
+    
+    class ModelManager{
+        +config: ManagerConfig
+        +loader: AbstractLoader
+        +model: AbstractModel
+        +train()
+        +evaluate()
+        +predict()
+        +test()
+        +save_model()
+    }
+    
+    class AbstractLoader{
+        <<Abstract>>
+        +load(path: Path)* Iterator[Document]
+    }
     
     class AbstractModel{
         <<Abstract>>
+        +prepare_dataset(documents)*
+        +forward(*args, **kwargs)*
+        +evaluate(dataloader: DataLoader, output_path: Path)*
+        +predict(documents: List[Document], dataloader: DataLoader, output_path: Path)*
+        +test(dataloader: DataLoader, output_path: Path)*
     }
     
     class AbstractDataset{
         <<Abstract>>
+        #documents: Tuple[Document]
+        #prepared_docs: List[PreparedDocument]
+        +prepare_documents()*
     }
     
     class PreparedDocument{
@@ -134,11 +165,12 @@ directionTB
 classDiagram
 direction TB
 
-   Document "1" o-- "1..*" Span
+   Document "1" o-- "1..*" Word
    Document "1" o-- "1..*" AbstractFact
    AbstractFact <|-- EntityFact
    AbstractFact <|-- RelationFact
-   Span "1" --o "1..*" EntityFact : fact is mentioned in
+   Word "1..*" --o "1" Mention
+   Mention "1" --o "1..*" EntityFact : fact is mentioned in
    AbstractFact "1" --> "1" FactClass : is a
    
    class Document{
@@ -146,14 +178,19 @@ direction TB
       +text: str
       +words: Tuple[Span]
       +sentences: Tuple[Tuple[Span]]
-      +facts: Tuple[AbstractFact]
+      +entity_facts: Tuple[EntityFact]
+      +relation_facts: Tuple[RelationFact]
       +coreference_chains: Dict[int, Tuple[EntityFact]]
-      +get_word(span: Span) str
+      +add_relation_facts(facts:  Iterable[RelationFact])
    }
    
-   class Span:::rect{
+   class Word{
       +start_idx: int
       +end_idx: int
+   }
+   
+   class Mention{
+       +words: Tuple[Word]
    }
    
    class FactClass{
@@ -171,7 +208,7 @@ direction TB
    
    class EntityFact{
       +coreference_id: int
-      +mentions: FrozenSet[Span]
+      +mentions: FrozenSet[Mention]
    }
    
    class RelationFact{
