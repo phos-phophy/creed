@@ -1,15 +1,19 @@
+import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
+import numpy as np
 import torch
 from opt_einsum import contract
-from src.abstract import AbstractDataset, AbstractModel, CollatedFeatures, DiversifierConfig, Document, PreparedDocument
+from src.abstract import AbstractDataset, AbstractModel, CollatedFeatures, DiversifierConfig, Document, NO_REL_IND, PreparedDocument
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 from transformers import AdamW, AutoModel, AutoTokenizer, BertModel, get_linear_schedule_with_warmup
 
 from .collator import DocUNetCollator
 from .datasets import BaseDataset, WOTypesDataset
 from .encode import encode
+from .loss import ATLoss
 from .unet import UNet
 
 
@@ -30,6 +34,13 @@ class DocUNet(AbstractModel):
     ):
         super().__init__(relations)
 
+        self._unet_in_dim = unet_in_dim
+        self._unet_out_dim = unet_out_dim
+        self._channels = channels
+        self._emb_size = emb_size
+        self._block_size = block_size
+        self._ne = ne
+
         self._entities = tuple(entities) if entities else ()
 
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
@@ -43,7 +54,8 @@ class DocUNet(AbstractModel):
         self._bilinear = torch.nn.Linear(emb_size * block_size, len(self.relations))
 
         self._inner_model_type = inner_model_type
-        self._ne = ne
+
+        self._loss_fnt = ATLoss()
 
     def prepare_dataset(
             self,
@@ -86,7 +98,7 @@ class DocUNet(AbstractModel):
             start, _ = entity_mentions[0]
             if start + offset < length:  # In case the entity mention is truncated due to limited max seq length.
                 return sequence_output[ind, start + offset], attention[ind, :, start + offset]
-            return torch.zeros(self.config.hidden_size).to(sequence_output), torch.zeros(h, length).to(attention)
+            return torch.zeros(self._encoder.config.hidden_size).to(sequence_output), torch.zeros(h, length).to(attention)
 
         embeddings, attentions = [], []
         for start, _ in entity_mentions:  # iterate over all mentions of the current entity
@@ -97,7 +109,7 @@ class DocUNet(AbstractModel):
         # combine mention's vectors to the single one for entity (embedding and attention)
         if len(embeddings) > 0:
             return torch.logsumexp(torch.stack(embeddings, dim=0), dim=0), torch.stack(attentions, dim=0).mean(0)
-        return torch.zeros(self.config.hidden_size).to(sequence_output), torch.zeros(h, length).to(attention)
+        return torch.zeros(self._encoder.config.hidden_size).to(sequence_output), torch.zeros(h, length).to(attention)
 
     def _get_ht(
             self,
@@ -196,7 +208,7 @@ class DocUNet(AbstractModel):
             entity_pos: List[List[List[Tuple[int, int]]]],
             hts: List[torch.Tensor],
             labels: List[torch.Tensor]
-    ) -> Any:
+    ) -> Tuple:
 
         # First stage: Encode inputs via bert encoder
         # sequence_output is FloatTensor of (bs, seq_len, d) shape
@@ -225,26 +237,129 @@ class DocUNet(AbstractModel):
 
         # Fifth stage: Classify
         # emb_block = e_dim // block_size
-        b1 = hs.view(-1, self.emb_size // self.block_size, self.block_size)  # (R, emb_block, block_size)
-        b2 = ts.view(-1, self.emb_size // self.block_size, self.block_size)  # (R, emb_block, block_size)
-        bl = (b1.unsqueeze(3) * b2.unsqueeze(2)).view(-1, self.emb_size * self.block_size)  # (R, e_dim * block_size)
-        logits = self.bilinear(bl)  # (R, class_number)
+        b1 = hs.view(-1, self._emb_size // self._block_size, self._block_size)  # (R, emb_block, block_size)
+        b2 = ts.view(-1, self._emb_size // self._block_size, self._block_size)  # (R, emb_block, block_size)
+        bl = (b1.unsqueeze(3) * b2.unsqueeze(2)).view(-1, self._emb_size * self._block_size)  # (R, e_dim * block_size)
+        logits = self._bilinear(bl)  # (R, class_number)
 
-        output = (self.loss_fnt.get_label(logits, num_labels=len(self.relations)))
+        output = (self._loss_fnt.get_label(logits, num_labels=len(self.relations)),)  # (R, class_number)
         if labels is not None:
-            labels = torch.cat(labels, dim=0).to(logits)
-            loss = self.loss_fnt(logits.float(), labels.float())
+            labels = torch.cat(labels, dim=0).to(logits)  # (R, class_number)
+            loss = self._loss_fnt(logits.float(), labels.float())
             output = (loss.to(sequence_output), output)
         return output
 
     def evaluate(self, dataloader: DataLoader, output_path: Path = None) -> None:
-        pass
+        self._evaluate(dataloader, output_path, 'Evaluating')
 
     def predict(self, documents: List[Document], dataloader: DataLoader, output_path: Path) -> None:
-        pass
+
+        preds, htss = [], []
+        for inputs in tqdm(dataloader, desc='Predicting'):
+            self.eval()
+
+            inputs.update({
+                'input_ids': inputs["input_ids"].cuda() if torch.cuda.is_available() else inputs["input_ids"],
+                'attention_mask': inputs["attention_mask"].cuda() if torch.cuda.is_available() else inputs["attention_mask"],
+            })
+
+            with torch.no_grad():
+                outputs = self(**inputs)
+                if len(outputs) > 1:
+                    _, pred = outputs
+                else:
+                    pred = outputs[0]  # (R, class_number)
+
+                pred = pred.cpu().numpy()  # (R, class_number)
+                pred[np.isnan(pred)] = 0
+
+            htss += inputs["hts"]
+            preds.append(pred)
+
+        preds = np.concatenate(preds, axis=0).astype(np.float32)  # (R_total, class_number)
+
+        h_idx, t_idx, title = [], [], []
+        for hts, d in zip(htss, documents):
+            h_idx += hts[:, 0].tolist()
+            t_idx += hts[:, 1].tolist()
+            title += [d.doc_id for _ in hts]
+
+        output_preds = []
+        for i in range(preds.shape[0]):
+            pred = preds[i]
+            pred = np.nonzero(pred)[0].tolist()
+            for p in pred:
+                if p != NO_REL_IND:
+                    output_preds.append(
+                        {
+                            'title': title[i],
+                            'h_idx': h_idx[i],
+                            't_idx': t_idx[i],
+                            'r': self.relations[p]
+                        }
+                    )
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open('w') as file:
+            json.dump(output_preds, file, indent=4)
 
     def test(self, dataloader: DataLoader, output_path: Path = None) -> None:
-        pass
+        self._evaluate(dataloader, output_path, 'Test')
+
+    def _evaluate(self, dataloader: DataLoader, output_path: Path = None, desc: str = None) -> None:
+        if Path is None:
+            pass
+
+        total_loss = 0.0
+        labels_ids, preds = [], []
+        for inputs in tqdm(dataloader, desc=desc):
+            self.eval()
+
+            inputs.update({
+                'input_ids': inputs["input_ids"].cuda() if torch.cuda.is_available() else inputs["input_ids"],
+                'attention_mask': inputs["attention_mask"].cuda() if torch.cuda.is_available() else inputs["attention_mask"],
+            })
+
+            with torch.no_grad():
+                outputs = self(**inputs)
+                if len(outputs) > 1:
+                    loss, pred = outputs
+                    total_loss += loss.item()
+                else:
+                    pred = outputs[0]  # (R, class_number)
+
+                labels = inputs["labels"].cpu().numpu()  # (R, class_number)
+                pred = pred.cpu().numpy()  # (R, class_number)
+                pred[np.isnan(pred)] = 0
+
+            preds.append(pred)
+            labels_ids.append(labels)
+
+        preds = np.concatenate(preds, axis=0).astype(np.float32)  # (R_total, class_number)
+        labels_ids = np.concatenate(labels_ids, axis=0).astype(np.float32)  # (R_total, class_number)
+
+        mask = np.ones_like(labels_ids, dtype=np.bool)  # (R_total, class_number)
+        mask[:, NO_REL_IND] = False  # (R_total, class_number)
+
+        total_labels = labels_ids[mask].sum()
+        total_preds = preds[mask].sum()
+
+        correct_preds = (preds == labels_ids)[mask].sum()
+
+        precision = correct_preds / total_preds
+        recall = correct_preds / total_labels
+        f = (2 * recall * precision / (recall + precision + 1e-20))
+
+        result = {
+            "loss": float(loss),
+            "precision": float(precision),
+            "recall": float(recall),
+            "f1": float(f)
+        }
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open('w') as file:
+            json.dump(result, file, indent=4)
 
     def collate_fn(self, documents: List[PreparedDocument]) -> Dict[str, CollatedFeatures]:
         return DocUNetCollator.collate_fn(documents)
