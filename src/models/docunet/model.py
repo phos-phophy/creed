@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
@@ -8,7 +8,7 @@ from opt_einsum import contract
 from src.abstract import AbstractDataset, AbstractModel, CollatedFeatures, DiversifierConfig, Document, NO_REL_IND, PreparedDocument
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import AdamW, AutoModel, AutoTokenizer, BertModel, get_linear_schedule_with_warmup
+from transformers import AdamW, AutoModel, AutoTokenizer, BertModel
 
 from .collator import DocUNetCollator
 from .datasets import BaseDataset, WOTypesDataset
@@ -24,24 +24,23 @@ class DocUNet(AbstractModel):
             tokenizer_path: str,
             inner_model_type: str,
             relations: Iterable[str],
+            num_labels: int,
             unet_in_dim: int,
             unet_out_dim: int,
             channels: int,
             emb_size: int,
             block_size: int,
-            ne: int,
-            entities: Optional[Iterable[str]] = None,
+            ne: int
     ):
         super().__init__(relations)
 
+        self._num_labels = num_labels
         self._unet_in_dim = unet_in_dim
         self._unet_out_dim = unet_out_dim
         self._channels = channels
         self._emb_size = emb_size
         self._block_size = block_size
         self._ne = ne
-
-        self._entities = tuple(entities) if entities else ()
 
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
         self._encoder: BertModel = AutoModel.from_pretrained(pretrained_model_path)
@@ -242,7 +241,7 @@ class DocUNet(AbstractModel):
         bl = (b1.unsqueeze(3) * b2.unsqueeze(2)).view(-1, self._emb_size * self._block_size)  # (R, e_dim * block_size)
         logits = self._bilinear(bl)  # (R, class_number)
 
-        output = (self._loss_fnt.get_label(logits, num_labels=len(self.relations)),)  # (R, class_number)
+        output = (self._loss_fnt.get_label(logits, num_labels=self._num_labels),)  # (R, class_number)
         if labels is not None:
             labels = torch.cat(labels, dim=0).to(logits)  # (R, class_number)
             loss = self._loss_fnt(logits.float(), labels.float())
@@ -364,7 +363,7 @@ class DocUNet(AbstractModel):
     def collate_fn(self, documents: List[PreparedDocument]) -> Dict[str, CollatedFeatures]:
         return DocUNetCollator.collate_fn(documents)
 
-    def create_optimizers(self, kwargs: dict) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
+    def create_optimizer(self, kwargs: dict) -> torch.optim.Optimizer:
 
         extract_layer = ["extractor", "bilinear"]
         encoder_layer = ['encoder']
@@ -375,8 +374,5 @@ class DocUNet(AbstractModel):
         ]
 
         optimizer = AdamW(optimizer_grouped_parameters, lr=kwargs["learning_rate"], eps=kwargs["adam_epsilon"])
-        scheduler = get_linear_schedule_with_warmup(
-            optimizer, num_warmup_steps=kwargs["warmup_steps"], num_training_steps=kwargs["total_steps"]
-        )
 
-        return optimizer, scheduler
+        return optimizer

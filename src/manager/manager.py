@@ -61,7 +61,7 @@ class ModelManager:
             eval_dataset=dev_dataset,
             data_collator=self.model.collate_fn,
             compute_metrics=compute_metrics,
-            optimizers=self.model.create_optimizers(self.config.extra_training_config)
+            optimizers=(self.model.create_optimizer(self.config.extra_training_config), None)
         )
 
         print('Start training')
