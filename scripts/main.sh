@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# -------------------Training Shell Script--------------------
 cuda=
 
 while getopts v:c:s:o: flag

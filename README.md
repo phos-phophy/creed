@@ -5,7 +5,7 @@ applications for RE such as knowledge-base population, question answering, summa
 increasing number of studies, there is a lack of cross-domain evaluation researches. The purpose of this work is to
 explore how models can be adapted to the changing types of entities.
 
-## Motivation
+## 1. Adaptation methods
 
 There are several ways to deal with the changing types of entities:
 
@@ -31,6 +31,10 @@ There are several ways to deal with the changing types of entities:
    In the case of the unambiguous mapping, we can try all suitable mappings, but if there are $N$ entities and $M$
    candidates for each of them, $M^N$ model runs are required.
 
+4) Diversified training
+
+   The last method is called diversified training. Its key point is to change original entity types with the corresponding synonyms.
+
 ```mermaid
 flowchart TB
     subgraph a["New unknown entity type"]
@@ -51,11 +55,13 @@ flowchart TB
     end
 ```
 
-4) Diversified training
+The 2 main requirements of this work are: 
+* adaptation method applicability without additional data;
+* immutability of the speed of the model work.
 
-   The last method is called diversified training. Its key point is to change original entity types with the corresponding synonyms.
+Therefore, we will only compare `Ignoring` and `Diversified training` methods
 
-## Results
+## 2. Achieved results
 
 <table>
   <tr>
@@ -85,13 +91,15 @@ flowchart TB
   </tr>
 </table>
 
+As we can see ignoring method has the best results
 
-## Class diagrams
+## 3. Pipeline
 
 The base classes are divided into 4 main categories:
 
 * **_Examples' features_**:
-  * Span
+  * Word
+  * Mention
   * FactClass
   * AbstractFact
     * EntityFact
@@ -217,9 +225,17 @@ direction TB
    }
 ```
 
-## Run
+### 3.1 How to add new dataset?
 
-### Dowload datasets
+Need to implement a new loader (inherited from AbstractLoader class) that will convert new dataset examples to instances of Document class
+
+### 3.1 How to add new model?
+
+Need to implement a new model (inherited from AbstractModel class) and corresponding set of datasets (inherited from AbstractDocument class) 
+
+## 4. How to run?
+
+### 4.1 Download datasets
 
 1) `bash scripts/download_datasets.sh`
 2) In order to download original TACRED dataset visit [LDC TACRED webpage](https://catalog.ldc.upenn.edu/LDC2018T24).
@@ -233,11 +249,15 @@ direction TB
    * put all patched files in the `./etc/dataset/tacred/data/json` directory
 
 
-### Build docker container
+### 4.2.1 Build docker container (optional)
 1) `cd path/to/project`
 2) `docker build ./`
 3) `docker run -it --gpus=all __image_id__ /bin/bash`
 
-### Start training
+### 4.2.2 Or instead of building container, install requirements
+
+`pip3 install -r requirements/requirements.txt`
+
+### 4.3 Start training
 
 `bash scripts/main.sh -c path/to/config -v __gpu_id__ -s __seed__ -o path/to/model/output/dir`
