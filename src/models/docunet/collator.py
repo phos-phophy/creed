@@ -18,7 +18,7 @@ class DocUNetCollator(Collator):
             for feature_name in feature_names:
                 features = cls.get_features(documents, field_name, feature_name)
 
-                if feature_names not in ("labels", "hts", "entity_pos"):
+                if feature_name not in ("labels", "hts", "entity_pos"):
                     features = cls.collate(features)
 
                 document_dict[feature_name] = features

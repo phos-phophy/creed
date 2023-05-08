@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
@@ -156,7 +156,7 @@ class DocUNet(AbstractModel):
             batch_attentions.append(document_attentions)
 
             # r = n_e * (n_e - 1) - number of possible relations in the document
-            ht_i = torch.LongTensor(hts[i]).to(sequence_output.device)
+            ht_i = hts[i].to(sequence_output.device)
             hs = torch.index_select(document_embeddings, 0, ht_i[:, 0])  # (r, dim)
             ts = torch.index_select(document_embeddings, 0, ht_i[:, 1])  # (r, dim)
 
@@ -195,7 +195,7 @@ class DocUNet(AbstractModel):
             tail_attentions = torch.index_select(document_attentions, 0, index_pair[:, 1])  # (ne * ne, h, seq_len)
             ht_attentions = (head_attentions * tail_attentions).mean(1)  # (ne * ne, seq_len)
             ht_attentions = ht_attentions / (ht_attentions.sum(1, keepdim=True) + 1e-5)  # (ne * ne, seq_len)
-            rs = contract(sequence_output[b], ht_attentions, subscripts="ld,rl->rd")  # (ne * ne, dim)
+            rs = contract("ld,rl->rd", sequence_output[b], ht_attentions)  # (ne * ne, dim)
             map_rss.append(rs)
 
         return torch.cat(map_rss, dim=0).reshape(sequence_output.shape[0], self._ne, self._ne, sequence_output.shape[2])
@@ -207,7 +207,7 @@ class DocUNet(AbstractModel):
             entity_pos: List[List[List[Tuple[int, int]]]],
             hts: List[torch.Tensor],
             labels: List[torch.Tensor]
-    ) -> Tuple:
+    ) -> Any:
 
         # First stage: Encode inputs via bert encoder
         # sequence_output is FloatTensor of (bs, seq_len, d) shape
@@ -241,7 +241,7 @@ class DocUNet(AbstractModel):
         bl = (b1.unsqueeze(3) * b2.unsqueeze(2)).view(-1, self._emb_size * self._block_size)  # (R, e_dim * block_size)
         logits = self._bilinear(bl)  # (R, class_number)
 
-        output = (self._loss_fnt.get_label(logits, num_labels=self._num_labels),)  # (R, class_number)
+        output = self._loss_fnt.get_label(logits, num_labels=self._num_labels)  # (R, class_number)
         if labels is not None:
             labels = torch.cat(labels, dim=0).to(logits)  # (R, class_number)
             loss = self._loss_fnt(logits.float(), labels.float())
@@ -264,10 +264,10 @@ class DocUNet(AbstractModel):
 
             with torch.no_grad():
                 outputs = self(**inputs)
-                if len(outputs) > 1:
+                if isinstance(outputs, tuple):
                     _, pred = outputs
                 else:
-                    pred = outputs[0]  # (R, class_number)
+                    pred = outputs  # (R, class_number)
 
                 pred = pred.cpu().numpy()  # (R, class_number)
                 pred[np.isnan(pred)] = 0
@@ -321,18 +321,18 @@ class DocUNet(AbstractModel):
 
             with torch.no_grad():
                 outputs = self(**inputs)
-                if len(outputs) > 1:
+                if isinstance(outputs, tuple):
                     loss, pred = outputs
                     total_loss += loss.item()
                 else:
-                    pred = outputs[0]  # (R, class_number)
+                    pred = outputs  # (R, class_number)
 
-                labels = inputs["labels"].cpu().numpu()  # (R, class_number)
+                labels = [i.cpu().numpy() for i in inputs["labels"]]  # (R, class_number)
                 pred = pred.cpu().numpy()  # (R, class_number)
                 pred[np.isnan(pred)] = 0
 
             preds.append(pred)
-            labels_ids.append(labels)
+            labels_ids += labels
 
         preds = np.concatenate(preds, axis=0).astype(np.float32)  # (R_total, class_number)
         labels_ids = np.concatenate(labels_ids, axis=0).astype(np.float32)  # (R_total, class_number)
@@ -343,7 +343,7 @@ class DocUNet(AbstractModel):
         total_labels = labels_ids[mask].sum()
         total_preds = preds[mask].sum()
 
-        correct_preds = (preds == labels_ids)[mask].sum()
+        correct_preds = (preds == labels_ids)[mask & (labels_ids == 1)].sum()
 
         precision = correct_preds / total_preds
         recall = correct_preds / total_labels

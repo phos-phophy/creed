@@ -107,8 +107,8 @@ class BaseDataset(AbstractDataset):
             entity_pos.append([])
 
             for mention in fact.mentions:
-                start = word_map[mention.words[0].ind_in_doc]
-                end = word_map[mention.words[-1].ind_in_doc]
+                start = word_map[mention.words[0]]
+                end = word_map[mention.words[-1]]
                 entity_pos[-1].append((start, end))
 
         return entity_pos

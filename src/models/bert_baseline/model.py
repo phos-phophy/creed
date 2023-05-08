@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple
+from typing import Any, Iterable, List, Optional
 
 import numpy as np
 import torch
@@ -92,7 +92,7 @@ class BertBaseline(AbstractModel):
         self._evaluate(dataloader, output_path, 'Test')
 
     @cuda_autocast
-    def forward(self, input_ids=None, attention_mask=None, labels=None, ss=None, os=None) -> Tuple:
+    def forward(self, input_ids=None, attention_mask=None, labels=None, ss=None, os=None) -> Any:
         pooled_output = self._encoder(input_ids, attention_mask=attention_mask)[0]  # (bs, length, hidden_size)
 
         idx = torch.arange(input_ids.size(0)).to(input_ids.device)  # (bs, )
@@ -102,7 +102,7 @@ class BertBaseline(AbstractModel):
         h = torch.cat((ss_emb, os_emb), dim=-1)  # (bs, 2 * hidden_size)
         logits = self._classifier(h)  # (bs, num_rel)
 
-        outputs = (logits,)
+        outputs = logits
         if labels is not None:
             loss = self._loss_fnt(logits.float(), labels.flatten())
             outputs = (loss, outputs)
@@ -124,11 +124,11 @@ class BertBaseline(AbstractModel):
 
             with torch.no_grad():
                 outputs = self(**inputs)
-                if len(outputs) > 1:
+                if isinstance(outputs, tuple):
                     batch_loss, logits = outputs
                     loss += batch_loss.mean().item()
                 else:
-                    logits = outputs[0]
+                    logits = outputs
 
                 pred = torch.argmax(logits, dim=-1)
             preds += pred.tolist()
