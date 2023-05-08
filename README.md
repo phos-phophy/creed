@@ -26,20 +26,20 @@ There are several ways to deal with the changing types of entities:
 3) Mapping
 
    Reasonable way is to build a mapping from the model's entity types to another domain ones. But there may be situations
-   when it is impossible to build the unambiguous mapping (e.g. diagram below, where new type `NUMBER` correspond to 5 old ones).
+   when it is impossible to build the unambiguous mapping (e.g. diagram below, where new type `NUMBER` corresponds to 5 old ones).
 
    In the case of the unambiguous mapping, we can try all suitable mappings, but if there are $N$ entities and $M$
    candidates for each of them, $M^N$ model runs are required.
 
 ```mermaid
 flowchart TB
-    subgraph a["New entity type"]
+    subgraph a["New unknown entity type"]
         subgraph b[" "]
 
             num([NUMBER])
         end
     end
-    subgraph c["Old entity types"]
+    subgraph c["Familiar entity types"]
         subgraph d[" "]
 
             num(["NUMBER"]) --> quantity(["QUANTITY"])
