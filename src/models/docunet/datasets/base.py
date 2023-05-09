@@ -53,8 +53,7 @@ class BaseDataset(AbstractDataset):
 
         for ner_fact in ner_facts:
 
-            type_id = ner_fact.type_id if not self.diversifier.active else self.diversifier[ner_fact.type_id]
-            fact_info = (ner_fact.coreference_id, type_id)
+            fact_info = (ner_fact.coreference_id, ner_fact.type_id)
 
             for mention in ner_fact.mentions:
                 for word in mention.words:
