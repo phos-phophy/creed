@@ -29,30 +29,6 @@
       "NUM": ["NUM", "DIGIT", "QUANTITY"]
     }
   },
-  "dev_diversifier": {
-    "replace_prob": 0.85,
-    "noise_prob": 0.15,
-    "mapping": {
-      "ORG": ["ORG", "INSTITUTE", "GROUPING"],
-      "LOC": ["LOC", "AREA", "DISTRICT"],
-      "TIME": ["TIME", "MOMENT", "STAGE"],
-      "PER": ["PER", "CHARACTER", "HUMAN"],
-      "MISC": ["MISC", "ETC", "DIFFERENT"],
-      "NUM": ["NUM", "DIGIT", "QUANTITY"]
-    }
-  },
-  "test_diversifier": {
-    "replace_prob": 0.85,
-    "noise_prob": 0.15,
-    "mapping": {
-      "ORG": ["ORGANIZATION"],
-      "LOC": ["LOCATION"],
-      "TIME": ["DATE"],
-      "PER": ["PERSON"],
-      "MISC": ["MISCELLANEOUS"],
-      "NUM": ["NUMBER"]
-    }
-  },
   "model_init_config": {
     "model_params": {
       "model_type": "ssan_adapt",

@@ -50,15 +50,14 @@
     }
   },
   "eval_diversifier": {
-    "replace_prob": 0.85,
-    "noise_prob": 0.15,
+    "replace_prob": 1,
     "mapping": {
-      "ORG": ["ORG", "INSTITUTE", "GROUPING"],
-      "LOC": ["LOC", "AREA", "DISTRICT"],
-      "TIME": ["TIME", "MOMENT", "STAGE"],
-      "PER": ["PER", "CHARACTER", "HUMAN"],
-      "MISC": ["MISC", "ETC", "DIFFERENT"],
-      "NUM": ["NUM", "DIGIT", "QUANTITY"]
+      "ORG": ["ESTABLISHMENT"],
+      "LOC": ["POSITION"],
+      "TIME": ["DAY"],
+      "PER": ["INDIVIDUAL"],
+      "MISC": ["VARIOUS"],
+      "NUM": ["SIGN"]
     }
   },
   "test_diversifier": {
