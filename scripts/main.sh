@@ -33,4 +33,4 @@ fi
 # 3. Runs training
 run_path="main.py"
 export CUDA_VISIBLE_DEVICES=$cuda
-echo python3 $run_path -c "$config" -s "$seed" -o "$output"
+python3 $run_path -c "$config" -s "$seed" -o "$output"
