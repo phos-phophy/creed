@@ -11,7 +11,7 @@ from tqdm import tqdm
 from transformers import AdamW, AutoModel, AutoTokenizer, BertModel
 
 from .collator import DocUNetCollator
-from .datasets import BaseDataset, WOTypesDataset
+from .datasets import BaseDataset, IETypesDataset, WOTypesDataset
 from .encode import encode
 from .loss import ATLoss
 from .unet import UNet
@@ -66,6 +66,8 @@ class DocUNet(AbstractModel):
     ) -> AbstractDataset:
         if self._inner_model_type == 'base':
             dataset = BaseDataset(documents, self._tokenizer, desc, extract_labels, evaluation, diversifier, self.relations)
+        elif self._inner_model_type == 'ie':
+            dataset = IETypesDataset(documents, self._tokenizer, desc, extract_labels, evaluation, diversifier, self.relations)
         elif self._inner_model_type == 'wo':
             dataset = WOTypesDataset(documents, self._tokenizer, desc, extract_labels, evaluation, diversifier, self.relations)
         else:
