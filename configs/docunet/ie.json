@@ -25,10 +25,68 @@
     "learning_rate": 5e-4,
     "adam_epsilon": 1e-6
   },
+  "train_diversifier": {
+    "replace_prob": 0.85,
+    "noise_prob": 0.15,
+    "mapping": {
+      "ORG": ["ORG", "INSTITUTE", "GROUPING"],
+      "LOC": ["LOC", "AREA", "DISTRICT"],
+      "TIME": ["TIME", "MOMENT", "STAGE"],
+      "PER": ["PER", "CHARACTER", "HUMAN"],
+      "MISC": ["MISC", "ETC", "DIFFERENT"],
+      "NUM": ["NUM", "DIGIT", "QUANTITY"]
+    }
+  },
+  "dev_diversifier": {
+    "replace_prob": 0.85,
+    "noise_prob": 0.15,
+    "mapping": {
+      "ORG": ["ORG", "INSTITUTE", "GROUPING"],
+      "LOC": ["LOC", "AREA", "DISTRICT"],
+      "TIME": ["TIME", "MOMENT", "STAGE"],
+      "PER": ["PER", "CHARACTER", "HUMAN"],
+      "MISC": ["MISC", "ETC", "DIFFERENT"],
+      "NUM": ["NUM", "DIGIT", "QUANTITY"]
+    }
+  },
+  "eval_diversifier": {
+    "replace_prob": 0.85,
+    "noise_prob": 0.15,
+    "mapping": {
+      "ORG": ["ORG", "INSTITUTE", "GROUPING"],
+      "LOC": ["LOC", "AREA", "DISTRICT"],
+      "TIME": ["TIME", "MOMENT", "STAGE"],
+      "PER": ["PER", "CHARACTER", "HUMAN"],
+      "MISC": ["MISC", "ETC", "DIFFERENT"],
+      "NUM": ["NUM", "DIGIT", "QUANTITY"]
+    }
+  },
+  "test_diversifier": {
+     "replace_prob": 1,
+    "mapping": {
+      "ORG": ["ORGANIZATION"],
+      "LOC": ["LOCATION"],
+      "TIME": ["DATE"],
+      "PER": ["PERSON"],
+      "MISC": ["MISCELLANEOUS"],
+      "NUM": ["NUMBER"]
+    }
+  },
+  "pred_diversifier": {
+    "replace_prob": 1,
+    "mapping": {
+      "ORG": ["ORGANIZATION"],
+      "LOC": ["LOCATION"],
+      "TIME": ["DATE"],
+      "PER": ["PERSON"],
+      "MISC": ["MISCELLANEOUS"],
+      "NUM": ["NUMBER"]
+    }
+  },
   "model_init_config": {
     "model_params": {
       "model_type": "docunet",
-      "inner_model_type": "base",
+      "inner_model_type": "ie",
       "pretrained_model_path": "bert-base-cased",
       "tokenizer_path": "bert-base-cased",
       "unet_in_dim": 3,

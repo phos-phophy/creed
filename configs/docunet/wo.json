@@ -28,7 +28,7 @@
   "model_init_config": {
     "model_params": {
       "model_type": "docunet",
-      "inner_model_type": "base",
+      "inner_model_type": "wo",
       "pretrained_model_path": "bert-base-cased",
       "tokenizer_path": "bert-base-cased",
       "unet_in_dim": 3,
