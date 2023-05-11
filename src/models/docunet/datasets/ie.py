@@ -1,6 +1,7 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
-from src.abstract import Document, EntityFact
+import torch
+from src.abstract import Document, EntityFact, Word
 
 from .base import BaseDataset
 
@@ -34,7 +35,27 @@ class IETypesDataset(BaseDataset):
                     else:
                         end[word.ind_in_doc] = fact_info
 
-        start_ent_tokens = [f' [{s[1]}] ' if s else '' for s in start]
-        end_ent_tokens = [f' [/{e[1]}] ' if e else '' for e in end]
+        start_ent_tokens = [f'[{s[1]}]' if s else '' for s in start]
+        end_ent_tokens = [f'[/{e[1]}]' if e else '' for e in end]
 
         return start_ent_tokens, end_ent_tokens
+
+    def _tokenize(self, document: Document, ner_facts: Tuple[EntityFact, ...]) -> Tuple[torch.Tensor, Dict[Word, int]]:
+        tokens, word_map = [], {}
+        start_ent_tokens, end_ent_tokens = self._get_ent_tokens(document, ner_facts)
+
+        for word in document.words:
+            s_tokens = self.word2token(start_ent_tokens[word.ind_in_doc]) if len(start_ent_tokens[word.ind_in_doc]) else []
+            e_tokens = self.word2token(end_ent_tokens[word.ind_in_doc]) if len(end_ent_tokens[word.ind_in_doc]) else []
+
+            word_tokens = s_tokens + self.word2token(word.text) + e_tokens
+
+            word_map[word] = len(tokens)
+            tokens.extend(word_tokens)
+
+        tokens = tokens[:2 * self.max_len - 2]
+
+        input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+        input_ids = self.tokenizer.build_inputs_with_special_tokens(input_ids)
+
+        return torch.tensor(input_ids, dtype=torch.long), word_map

@@ -24,6 +24,10 @@ class BaseDataset(AbstractDataset):
         self._relations = tuple(relations)
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}
 
+    @property
+    def max_len(self):
+        return 2 * super(BaseDataset, self).max_len  # can process double-length text
+
     def _prepare_document(self, document: Document) -> PreparedDocument:
         """
         1) input_ids: LongTensor (len,)
@@ -73,8 +77,9 @@ class BaseDataset(AbstractDataset):
                     else:
                         end[word.ind_in_doc] = fact_info
 
-        start_ent_tokens = [f' [unused{self._entity_type[s[1]]}] ' if s else '' for s in start]
-        end_ent_tokens = [f' [unused{self._entity_type[e[1]] + 50}] ' if e else '' for e in end]
+        # these tokens are reserved in tokenizer
+        start_ent_tokens = [f'[unused{self._entity_type[s[1]]}]' if s else '' for s in start]
+        end_ent_tokens = [f'[unused{self._entity_type[e[1]] + 50}]' if e else '' for e in end]
 
         return start_ent_tokens, end_ent_tokens
 
@@ -83,8 +88,8 @@ class BaseDataset(AbstractDataset):
         start_ent_tokens, end_ent_tokens = self._get_ent_tokens(document, ner_facts)
 
         for word in document.words:
-            s_tokens = self.word2token(start_ent_tokens[word.ind_in_doc]) if len(start_ent_tokens[word.ind_in_doc]) else []
-            e_tokens = self.word2token(end_ent_tokens[word.ind_in_doc]) if len(end_ent_tokens[word.ind_in_doc]) else []
+            s_tokens = [start_ent_tokens[word.ind_in_doc]] if len(start_ent_tokens[word.ind_in_doc]) else []
+            e_tokens = [end_ent_tokens[word.ind_in_doc]] if len(end_ent_tokens[word.ind_in_doc]) else []
 
             word_tokens = s_tokens + self.word2token(word.text) + e_tokens
 
