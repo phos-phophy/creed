@@ -3,8 +3,8 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
-from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, FactClass, NO_ENT_IND, NO_REL_IND, PreparedDocument, \
-    RelationFact, Span
+from src.abstract import AbstractDataset, DiversifierConfig, Document, EntityFact, NO_ENT_IND, NO_REL_IND, PreparedDocument, \
+    RelationFact, Word
 
 
 class BaseDataset(AbstractDataset):
@@ -37,18 +37,13 @@ class BaseDataset(AbstractDataset):
 
         self._dist_bins = torch.tensor([dist_base ** i for i in range(dist_ceil)], dtype=torch.long)
 
-        self._local_cache = dict()
-
     @property
     def max_ent(self):
         return self._max_ent
 
     @staticmethod
     def _count_max_ent(documents: Iterable[Document]):
-        def get_ner_count(doc: Document):
-            return len(list(filter(lambda fact: fact.fact_class is FactClass.ENTITY, doc.facts)))
-
-        doc2ner_count = [1] + list(map(lambda document: get_ner_count(document), documents))
+        doc2ner_count = [1] + list(map(lambda document: len(document.entity_facts), documents))
         return max(doc2ner_count)
 
     def _build_empty_doc(self):
@@ -89,15 +84,15 @@ class BaseDataset(AbstractDataset):
         # 1st stage: tokenize text, get input_ids and extract entity facts
         # token_to_sentence - map token_ind to the corresponding sentence_ind
         # span_to_token_ind - map span to the corresponding token_ind's
-        input_ids, token_to_sentence_ind, span_to_token_ind = self._tokenize(document)
-        ner_facts = self._extract_ner_facts(document, span_to_token_ind)
+        input_ids, token_to_sentence_ind, word_to_token_ind = self._tokenize(document)
+        ner_facts = self._extract_ner_facts(document, word_to_token_ind)
 
         if len(ner_facts) == 0:
             return self._build_empty_doc()
 
         # 2nd stage: get ner_ids and ent_mask
         # token_to_coreference_id - map token_ind to the coreference_id of the corresponding fact
-        ner_ids, ent_mask, token_to_coreference_id = self._extract_ner_types(ner_facts, span_to_token_ind, input_ids.shape[0])
+        ner_ids, ent_mask, token_to_coreference_id = self._extract_ner_types(ner_facts, word_to_token_ind, input_ids.shape[0])
 
         # 3rd stage: get dist_ids and struct_matrix
         dist_ids = self._extract_dist_ids(ent_mask)
@@ -119,51 +114,41 @@ class BaseDataset(AbstractDataset):
 
         labels = None
         if self.extract_labels:  # 5th stage: extract labels and labels_mask
-            labels_tensors, labels_mask = self._extract_labels_and_mask(ner_facts, self._extract_link_facts(document))
+            labels_tensors, labels_mask = self._extract_labels_and_mask(ner_facts, document.relation_facts)
             labels = {"labels": labels_tensors, "labels_mask": labels_mask}
 
         return PreparedDocument(features=features, labels=labels)
 
-    def _word2token(self, word_: str):
-        if word_ not in self._local_cache:
-            tokens_ = self.tokenizer.encode(word_)[1:-1]  # crop tokens of the beginning and the end
-            self._local_cache[word_] = tokens_ if len(tokens_) else [self.tokenizer.unk_token_id]
-        return self._local_cache[word_]
-
     def _tokenize(self, document: Document):
 
-        input_ids, token_to_sentence_ind, token_to_span = [], [], []
+        tokens, token_to_sentence_ind, token_to_word = [], [], []
 
-        for ind, sentence in enumerate(document.sentences):
-            for span in sentence:
-                tokens = self._word2token(document.get_word(span))
+        for word in document.words:
+            word_tokens = self.word2token(word.text)
 
-                input_ids.extend(tokens)
-                token_to_sentence_ind += [ind] * len(tokens)
-                token_to_span += [span] * len(tokens)
+            tokens.extend(word_tokens)
+            token_to_sentence_ind += [word.sent_ind] * len(word_tokens)
+            token_to_word += [word] * len(word_tokens)
 
-        input_ids = input_ids[:self.max_len - 2]
+        tokens = tokens[:self.max_len - 2]
         token_to_sentence_ind = token_to_sentence_ind[:self.max_len - 2]
-        token_to_span = token_to_span[:self.max_len - 2]
+        token_to_word = token_to_word[:self.max_len - 2]
 
-        input_ids = [self._bos_token] + input_ids + [self._eos_token]
+        input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+        input_ids = self.tokenizer.build_inputs_with_special_tokens(input_ids)
         token_to_sentence_ind = [-1] + token_to_sentence_ind + [-1]
 
-        span_to_token_ind = defaultdict(list)
-        for token_ind, span in enumerate(token_to_span, start=1):
-            span_to_token_ind[span].append(token_ind)
+        word_to_token_ind = defaultdict(list)
+        for token_ind, word in enumerate(token_to_word, start=1):
+            word_to_token_ind[word].append(token_ind)
 
-        return torch.tensor(input_ids, dtype=torch.long), token_to_sentence_ind, span_to_token_ind
+        return torch.tensor(input_ids, dtype=torch.long), token_to_sentence_ind, word_to_token_ind
 
-    def _extract_ner_facts(self, document: Document, span_to_token_ind: Dict[Span, List[int]]):
-        ent_facts = tuple(filter(lambda fact: fact.fact_class is FactClass.ENTITY, document.facts))
-        return tuple(filter(lambda fact: any((span in span_to_token_ind) for span in fact.mentions), ent_facts))[:self.max_ent]
+    def _extract_ner_facts(self, document: Document, word_to_token_ind: Dict[Word, List[int]]):
+        ent_facts = filter(lambda fact: any((w in word_to_token_ind) for m in fact.mentions for w in m.words), document.entity_facts)
+        return tuple(ent_facts)[:self.max_ent]
 
-    @staticmethod
-    def _extract_link_facts(document: Document):
-        return tuple(filter(lambda fact: fact.fact_class is FactClass.RELATION, document.facts))
-
-    def _extract_ner_types(self, ner_facts: Tuple[EntityFact, ...], span_to_token_ind: Dict[Span, List[int]], seq_len: int):
+    def _extract_ner_types(self, ner_facts: Tuple[EntityFact, ...], word_to_token_ind: Dict[Word, List[int]], seq_len: int):
 
         max_ent = self.max_ent if self.max_ent else len(ner_facts)
 
@@ -174,11 +159,12 @@ class BaseDataset(AbstractDataset):
         for ind, fact in enumerate(ner_facts):
             ind_of_type_id = self._ent_to_ind[fact.type_id]
 
-            for span in fact.mentions:
-                for token_ind in span_to_token_ind.get(span, []):
-                    ner_ids[token_ind] = ind_of_type_id
-                    ent_mask[ind][token_ind] = True
-                    token_to_coreference_id[token_ind] = fact.coreference_id
+            for mention in fact.mentions:
+                for word in mention.words:
+                    for token_ind in word_to_token_ind.get(word, []):
+                        ner_ids[token_ind] = ind_of_type_id
+                        ent_mask[ind][token_ind] = True
+                        token_to_coreference_id[token_ind] = fact.coreference_id
 
         return ner_ids, ent_mask, token_to_coreference_id
 

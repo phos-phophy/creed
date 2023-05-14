@@ -26,7 +26,7 @@ def load_manager():
     config_path = Path(output_dir) / "config.json"
     config_path.parent.mkdir(parents=True, exist_ok=True)
     with config_path.open('w') as file:
-        json.dump(config_dict, file)
+        json.dump(config_dict, file, indent=4)
 
     return ModelManager(config)
 

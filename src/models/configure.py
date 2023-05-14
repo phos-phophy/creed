@@ -11,9 +11,15 @@ def get_bert_baseline():
     return BertBaseline
 
 
+def get_docunet():
+    from .docunet import DocUNet
+    return DocUNet
+
+
 MODELS = {
     "ssan_adapt": get_ssan_adapt,
-    "bert_baseline": get_bert_baseline
+    "bert_baseline": get_bert_baseline,
+    "docunet": get_docunet
 }
 
 

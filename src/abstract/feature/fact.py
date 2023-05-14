@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Tuple
 
-from .span import Span
+from .word import Mention
 
 
 class FactClass(str, Enum):
@@ -41,7 +41,7 @@ class AbstractFact(metaclass=ABCMeta):
 
 
 class EntityFact(AbstractFact):
-    def __init__(self, name: str, type_id: str, coreference_id: int, mentions: Tuple[Span, ...]):
+    def __init__(self, name: str, type_id: str, coreference_id: int, mentions: Tuple[Mention, ...]):
         super().__init__(name, type_id, FactClass.ENTITY)
         self._coreference_id = coreference_id
         self._mentions = frozenset(mentions)

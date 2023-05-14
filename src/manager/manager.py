@@ -12,7 +12,6 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import Trainer, TrainingArguments
 
-from .collate import collate_fn
 from .config import ManagerConfig
 from .score import score_model
 
@@ -36,8 +35,8 @@ class ModelManager:
             return
 
         print('Load the training and dev datasets')
-        train_documents = self.load(self.config.train_dataset_path, 'Training documents')
-        dev_documents = self.load(self.config.dev_dataset_path, 'Dev documents') if self.config.dev_dataset_path else None
+        train_documents = self.load_dataset(self.config.train_dataset_path, 'Training documents')
+        dev_documents = self.load_dataset(self.config.dev_dataset_path, 'Dev documents') if self.config.dev_dataset_path else None
 
         train_desc = 'Prepare training dataset'
         dev_desc = 'Prepare dev dataset'
@@ -60,14 +59,15 @@ class ModelManager:
             args=train_params,
             train_dataset=train_dataset,
             eval_dataset=dev_dataset,
-            data_collator=collate_fn,
-            compute_metrics=compute_metrics
+            data_collator=self.model.collate_fn,
+            compute_metrics=compute_metrics,
+            optimizers=(self.model.create_optimizer(self.config.extra_training_config), None)
         )
 
         print('Start training')
         trainer.train()
 
-        self.save(rewrite=False)
+        self.save_model(rewrite=False)
 
     def evaluate(self):
         """ Evaluate the model """
@@ -76,19 +76,19 @@ class ModelManager:
             return
 
         print(f'Load the eval dataset and evaluate the model. The results will be saved in the file {self.config.output_eval_path}')
-        documents = self.load(self.config.eval_dataset_path, 'Eval documents')
+        documents = self.load_dataset(self.config.eval_dataset_path, 'Eval documents')
 
         diversifier = self.config.eval_diversifier
         batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
         dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare eval dataset', True, True).prepare_documents()
 
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=self.model.collate_fn)
 
         torch.cuda.empty_cache()
         self.model.evaluate(dataloader, self.config.output_eval_path)
 
-        self.save(rewrite=True)
+        self.save_model(rewrite=True)
 
     def test(self):
         """ Test the model on the public test dataset """
@@ -97,14 +97,14 @@ class ModelManager:
             return
 
         print(f'Load the test dataset and test the model. The results will be saved in the file {self.config.output_test_path}')
-        documents = self.load(self.config.test_dataset_path, 'Test_documents')
+        documents = self.load_dataset(self.config.test_dataset_path, 'Test_documents')
 
         diversifier = self.config.test_diversifier
         batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
         dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare test dataset', True, True).prepare_documents()
 
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=self.model.collate_fn)
 
         torch.cuda.empty_cache()
         self.model.test(dataloader, self.config.output_test_path)
@@ -116,24 +116,24 @@ class ModelManager:
             return
 
         print(f'Load the pred dataset and make predictions that will be saved in the file {self.config.output_pred_path}')
-        documents = self.load(self.config.pred_dataset_path, 'Pred documents')
+        documents = self.load_dataset(self.config.pred_dataset_path, 'Pred documents')
 
         diversifier = self.config.pred_diversifier
         batch_size = self.config.training_config.training_arguments.get("per_device_eval_batch_size", 5)
 
         dataset = self.model.prepare_dataset(documents, diversifier, 'Prepare pred dataset', False, True).prepare_documents()
 
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=self.model.collate_fn)
 
         torch.cuda.empty_cache()
         self.model.predict(documents, dataloader, self.config.output_pred_path)
 
-    def save(self, *, rewrite: bool = False):
+    def save_model(self, *, rewrite: bool = False):
         if self.config.save_path:
             print(f'Save the model in the file {self.config.save_path}')
             self.model.save(path=self.config.save_path, rewrite=rewrite)
 
-    def load(self, dataset_path: Path, desc: str = "") -> List[Document]:
+    def load_dataset(self, dataset_path: Path, desc: str = "") -> List[Document]:
         return list(tqdm(self.loader.load(dataset_path), desc=desc))
 
     def set_seed(self):

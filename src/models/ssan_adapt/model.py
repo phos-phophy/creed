@@ -34,7 +34,7 @@ class SSANAdapt(AbstractModel):
         self._entities = tuple(entities) if entities else ()
 
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-        self._model: BertModel = AutoModel.from_pretrained(pretrained_model_path)
+        self._encoder: BertModel = AutoModel.from_pretrained(pretrained_model_path)
         self._redefine_structure()
 
         self._dist_base = dist_base
@@ -44,10 +44,10 @@ class SSANAdapt(AbstractModel):
         self._dist_ceil = math.ceil(math.log(self._tokenizer.__getattribute__(len_attr), self._dist_base)) + 1
         self._dist_emb_dim = self._dist_ceil * 2
 
-        out_dim = next(module.out_features for module in list(self._model.modules())[::-1] if "out_features" in module.__dict__)
+        out_dim = next(module.out_features for module in list(self._encoder.modules())[::-1] if "out_features" in module.__dict__)
 
         self._dim_reduction = torch.nn.Linear(out_dim, hidden_dim)
-        self._dropout = torch.nn.Dropout(self._model.config.hidden_dropout_prob)
+        self._dropout = torch.nn.Dropout(self._encoder.config.hidden_dropout_prob)
         self._rel_dist_embeddings = torch.nn.Embedding(self._dist_emb_dim, self._dist_emb_dim, padding_idx=self._dist_ceil)
         self._bili = torch.nn.Bilinear(hidden_dim + self._dist_emb_dim, hidden_dim + self._dist_emb_dim, len(self.relations))
 
@@ -62,10 +62,10 @@ class SSANAdapt(AbstractModel):
         return self._entities
 
     def _redefine_structure(self):
-        for layer in self._model.encoder.layer:
+        for layer in self._encoder.encoder.layer:
             layer.attention.self = SSANAttention(layer.attention.self)
 
-        self._model.embeddings = NEREmbeddings(self._model.embeddings, len(self.entities))
+        self._encoder.embeddings = NEREmbeddings(self._encoder.embeddings, len(self.entities))
 
     def prepare_dataset(self, documents: Iterable[Document], diversifier: DiversifierConfig, desc: str, extract_labels: bool = False,
                         evaluation: bool = False) -> AbstractDataset:
@@ -114,14 +114,14 @@ class SSANAdapt(AbstractModel):
 
         struct_matrix = struct_matrix.transpose(0, 1)[:, :, None, :, :]  # (5, bs, 1, len, len)
 
-        self._model.embeddings.ner_ids = ner_ids
-        for layer in self._model.encoder.layer:
+        self._encoder.embeddings.ner_ids = ner_ids
+        for layer in self._encoder.encoder.layer:
             layer.attention.self.struct_matrix = struct_matrix
 
-        output = self._model(input_ids=input_ids, attention_mask=attention_mask, **kwargs)
+        output = self._encoder(input_ids=input_ids, attention_mask=attention_mask, **kwargs)
 
-        del self._model.embeddings.ner_ids
-        for layer in self._model.encoder.layer:
+        del self._encoder.embeddings.ner_ids
+        for layer in self._encoder.encoder.layer:
             del layer.attention.self.struct_matrix
 
         # tensors for each token in the text
@@ -255,7 +255,7 @@ class SSANAdapt(AbstractModel):
         if output_path:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with output_path.open('w') as file:
-                json.dump(result, file)
+                json.dump(result, file, indent=4)
 
         self._threshold = threshold
 
@@ -275,7 +275,7 @@ class SSANAdapt(AbstractModel):
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open('w') as file:
-            json.dump(output_preds, file)
+            json.dump(output_preds, file, indent=4)
 
     def test(self, dataloader: DataLoader, output_path: Path = None):
 
@@ -315,7 +315,7 @@ class SSANAdapt(AbstractModel):
         if output_path:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with output_path.open('w') as file:
-                json.dump(result, file)
+                json.dump(result, file, indent=4)
 
 
 def iter_over_pred(pred, ent_mask, threshold):

@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple
+from functools import lru_cache
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple
 
 import torch
 from torch.utils.data import Dataset
@@ -11,11 +12,15 @@ from .helpers import get_tokenizer_len_attribute
 
 
 class PreparedDocument(NamedTuple):
-    features: Dict[str, torch.Tensor]
+    """ A base class that represents one processed example from a dataset """
+
+    features: Dict[str, Any]
     labels: Optional[Dict[str, torch.Tensor]]  # e.g. {"labels": ..., "labels_mask": ...}
 
 
 class AbstractDataset(Dataset, metaclass=ABCMeta):
+    """ An abstract base class for datasets. All models (that inherit from AbstractModel class) must implement their own datasets """
+
     def __init__(
             self,
             documents: Iterable[Document],
@@ -91,3 +96,8 @@ class AbstractDataset(Dataset, metaclass=ABCMeta):
             self._prepared_docs = list(map(self._prepare_document, documents))
             self._used_docs = 0
         return self
+
+    @lru_cache(maxsize=None)
+    def word2token(self, word: str):
+        tokens = self.tokenizer.tokenize(word)
+        return tokens if len(tokens) else [self.tokenizer.unk_token]

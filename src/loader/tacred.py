@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterator, List
 
-from src.abstract import AbstractFact, AbstractLoader, Document, EntityFact, RelationFact, Span
+from src.abstract import AbstractLoader, Document, EntityFact, Mention, RelationFact, Word
 
 
 """
@@ -34,37 +34,29 @@ class TacredLoader(AbstractLoader):
 
     def _build_document(self, example: Dict[str, Any]) -> Document:
 
-        sentences: List[List[Span]] = self._extract_sentences(example)
-        text = ' '.join(example['token'])
+        sentences: List[List[Word]] = self._extract_sentences(example)
 
         entity_facts: List[EntityFact] = self._extract_entity_facts(example, sentences)
 
-        facts: List[AbstractFact] = entity_facts
+        relation_facts: List[RelationFact] = []
         if example["relation"] != "no_relation":
-            facts.append(RelationFact("", example["relation"], entity_facts[0], entity_facts[1]))
+            relation_facts.append(RelationFact("", example["relation"], entity_facts[0], entity_facts[1]))
 
-        return Document(example["docid"], text, sentences, facts)
+        return Document(example["docid"], sentences, entity_facts, relation_facts)
 
     @staticmethod
     def _extract_sentences(example: Dict[str, Any]):
-        start_idx = 0
-        sentence: List[Span] = []
-
-        for word in example["token"]:
-            sentence.append(Span(start_idx, start_idx + len(word)))
-            start_idx += len(word) + 1
-
-        return [sentence]
+        return [[Word(word, 0, ind, ind) for ind, word in enumerate(example["token"])]]
 
     @staticmethod
-    def _extract_entity_facts(example: Dict[str, Any], sentences: List[List[Span]]):
+    def _extract_entity_facts(example: Dict[str, Any], sentences: List[List[Word]]):
 
-        def get_mention_spans(start, end):
-            return [sentences[0][span_id] for span_id in range(start, end + 1, 1)]
+        def get_mention(start, end):
+            return Mention(sentences[0][span_id] for span_id in range(start, end + 1, 1))
 
         facts = [
-            EntityFact("subject", example["subj_type"], 0, tuple(set(get_mention_spans(example["subj_start"], example["subj_end"])))),
-            EntityFact("object", example["obj_type"], 1, tuple(set(get_mention_spans(example["obj_start"], example["obj_end"]))))
+            EntityFact("subject", example["subj_type"], 0, (get_mention(example["subj_start"], example["subj_end"]),)),
+            EntityFact("object", example["obj_type"], 1, (get_mention(example["obj_start"], example["obj_end"]),))
         ]
 
         return facts
