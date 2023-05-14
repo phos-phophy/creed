@@ -30,10 +30,6 @@ class TypedEntityMarkerDataset(EntityMarkerDataset):
         object_type = next(self._get_entity_fact(document, 'name', 'object')).type_id
         subject_type = next(self._get_entity_fact(document, 'name', 'subject')).type_id
 
-        if self.diversifier.active:
-            object_type = self.diversifier[object_type]
-            subject_type = self.diversifier[subject_type]
-
         object_end_token = '[/OBJ-{}]'.format(object_type)
         subject_end_token = '[/SUBJ-{}]'.format(subject_type)
         object_start_token = '[OBJ-{}]'.format(object_type)

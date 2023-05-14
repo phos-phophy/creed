@@ -35,7 +35,7 @@ class EntityMarkerDataset(AbstractDataset):
 
         labels = None
         if self.extract_labels:
-            link_fact = document.relation_facts[0]
+            link_fact = document.relation_facts[0] if len(document.relation_facts) else None
             rel_ind = self._rel_to_ind[link_fact.type_id] if link_fact else NO_REL_IND
             labels = {"labels": torch.tensor([rel_ind], dtype=torch.long)}
 
@@ -52,8 +52,8 @@ class EntityMarkerDataset(AbstractDataset):
         object_fact: EntityFact = next(self._get_entity_fact(document, 'name', 'object'))
         subject_fact: EntityFact = next(self._get_entity_fact(document, 'name', 'subject'))
 
-        object_mention: Mention = object_fact.mentions[0]
-        subject_mention = subject_fact.mentions[0]
+        object_mention: Mention = next(iter(object_fact.mentions))
+        subject_mention: Mention = next(iter(subject_fact.mentions))
 
         return subject_mention.words[0], subject_mention.words[-1], object_mention.words[0], object_mention.words[-1]
 
