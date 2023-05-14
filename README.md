@@ -66,7 +66,7 @@ Therefore, we will only compare `Ignoring` and `Diversified training` methods
 <table>
   <tr>
     <th rowspan="3">Adaptation methods</th>
-    <th colspan="3">Results, F1-мера</th>
+    <th colspan="3">Results, F1-score (%) </th>
   </tr>
   <tr>
     <th colspan="2">DocRED</th>
@@ -80,18 +80,18 @@ Therefore, we will only compare `Ignoring` and `Diversified training` methods
   <tr>
     <td>Ignoring</td>
     <td>54.32 &plusmn 0.05 </td>
-    <td>-</td>
-    <td> 76.28 &plusmn 0.18 </td>
+    <td> 60.24 &plusmn 0.08 </td>
+    <td> 76.64 &plusmn 0.37 </td>
   </tr>
   <tr>
     <td>Diversified training</td>
     <td>51.62 &plusmn 0.16 </td>
-    <td>-</td>
-    <td>74.56 &plusmn 0.83 </td>
+    <td> 60.13 &plusmn 0.08  </td>
+    <td>74.96 &plusmn 0.20 </td>
   </tr>
 </table>
 
-As we can see ignoring method has the best results
+As we can see ignoring method has the best results.
 
 ## 3. Pipeline
 
