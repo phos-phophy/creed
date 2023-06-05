@@ -92,12 +92,24 @@ class BertBaseline(AbstractModel):
         self._evaluate(dataloader, output_path, 'Test')
 
     @cuda_autocast
-    def forward(self, input_ids=None, attention_mask=None, labels=None, ss=None, os=None) -> Any:
-        pooled_output = self._encoder(input_ids, attention_mask=attention_mask)[0]  # (bs, length, hidden_size)
+    def forward(
+            self,
+            input_ids: torch.Tensor,  # (bs, length)
+            attention_mask: torch.Tensor,  # (bs, length)
+            ss: torch.Tensor,  # (bs, 2)
+            os: torch.Tensor,  # (bs, 2)
+            labels: torch.Tensor = None,
+    ) -> Any:
+        output = self._encoder(input_ids, attention_mask=attention_mask)[0]  # (bs, length, hidden_size)
 
-        idx = torch.arange(input_ids.size(0)).to(input_ids.device)  # (bs, )
-        ss_emb = pooled_output[idx, ss.flatten()]  # (bs, hidden_size)
-        os_emb = pooled_output[idx, os.flatten()]  # (bs, hidden_size)
+        length_idx = list(range(input_ids.size(1)))
+
+        entities_mask = torch.tensor([length_idx] * input_ids.size(0)).to(output.device)  # (bs, length, 1)
+        ss_entities_mask = (entities_mask.ge(ss[:, [0]]) & entities_mask.lt(ss[:, [1]])).unsqueeze(-1)  # (bs, length, 1)
+        os_entities_mask = (entities_mask.ge(os[:, [0]]) & entities_mask.lt(os[:, [1]])).unsqueeze(-1)  # (bs, length, 1)
+
+        ss_emb = torch.sum(output * ss_entities_mask, dim=1) / (ss[:, 1] - ss[:, 0]).unsqueeze(-1)  # (bs, hidden_size)
+        os_emb = torch.sum(output * os_entities_mask, dim=1) / (os[:, 1] - os[:, 0]).unsqueeze(-1)  # (bs, hidden_size)
 
         h = torch.cat((ss_emb, os_emb), dim=-1)  # (bs, 2 * hidden_size)
         logits = self._classifier(h)  # (bs, num_rel)

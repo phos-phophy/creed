@@ -46,12 +46,14 @@ class TypedEntityMarkerDataset(EntityMarkerDataset):
             word_tokens = self.word2token(word.text)
 
             if word == subject_start:
-                ss = len(tokens)
+                tmp = len(tokens) + 1
+                ss = [tmp, tmp + 1]
                 word_tokens = [subject_start_token] + word_tokens
             elif word == subject_end:
                 word_tokens = word_tokens + [subject_end_token]
             elif word == object_start:
-                os = len(tokens)
+                tmp = len(tokens) + 1
+                os = [tmp, tmp + 1]
                 word_tokens = [object_start_token] + word_tokens
             elif word == object_end:
                 word_tokens = word_tokens + [object_end_token]
@@ -62,4 +64,4 @@ class TypedEntityMarkerDataset(EntityMarkerDataset):
         input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
         input_ids = self.tokenizer.build_inputs_with_special_tokens(input_ids)
 
-        return torch.tensor(input_ids, dtype=torch.long), torch.tensor([ss + 1], dtype=torch.long), torch.tensor([os + 1], dtype=torch.long)
+        return torch.tensor(input_ids, dtype=torch.long), torch.tensor(ss, dtype=torch.long), torch.tensor(os, dtype=torch.long)

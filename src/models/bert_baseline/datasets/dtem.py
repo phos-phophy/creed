@@ -19,8 +19,6 @@ class DiversifiedTypedEntityMarkerDataset(EntityMarkerDataset):
     ):
         super(EntityMarkerDataset, self).__init__(documents, tokenizer, desc, extract_labels, evaluation, diversifier)
 
-        self.tokenizer.add_tokens(['[OBJ-', '[/OBJ-', '[SUBJ-', '[/SUBJ-', ']'])
-
         self._relations = tuple(relations)
         self._rel_to_ind = {rel: ind for ind, rel in enumerate(relations)}
 
@@ -42,16 +40,19 @@ class DiversifiedTypedEntityMarkerDataset(EntityMarkerDataset):
         for word in document.words:
             word_tokens = self.word2token(word.text)
 
+            # shift by 1 because there is a special token
             if word == subject_start:
-                ss = len(tokens)
-                word_tokens = ['[SUBJ-'] + subject_type_tokens + [']'] + word_tokens
+                tmp = len(tokens) + 1
+                ss = [tmp, tmp + len(subject_type_tokens)]
+                word_tokens = subject_type_tokens + word_tokens
             elif word == subject_end:
-                word_tokens = word_tokens + ['[/SUBJ-'] + subject_type_tokens + [']']
+                word_tokens = word_tokens + subject_type_tokens
             elif word == object_start:
-                os = len(tokens)
-                word_tokens = ['[OBJ-'] + object_type_tokens + [']'] + word_tokens
+                tmp = len(tokens) + 1
+                os = [tmp, tmp + len(object_type_tokens)]
+                word_tokens = object_type_tokens + word_tokens
             elif word == object_end:
-                word_tokens = word_tokens + ['[/OBJ-'] + object_type_tokens + [']']
+                word_tokens = word_tokens + object_type_tokens
 
             tokens.extend(word_tokens)
 
@@ -59,4 +60,4 @@ class DiversifiedTypedEntityMarkerDataset(EntityMarkerDataset):
         input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
         input_ids = self.tokenizer.build_inputs_with_special_tokens(input_ids)
 
-        return torch.tensor(input_ids, dtype=torch.long), torch.tensor([ss + 1], dtype=torch.long), torch.tensor([os + 1], dtype=torch.long)
+        return torch.tensor(input_ids, dtype=torch.long), torch.tensor(ss, dtype=torch.long), torch.tensor(os, dtype=torch.long)

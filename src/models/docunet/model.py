@@ -92,7 +92,7 @@ class DocUNet(AbstractModel):
         :return: entity embedding tensor of (dim,) shape and entity attention tensor of (h, seq_len) shape
         """
 
-        offset = 1
+        offset = 1  # shift because there is a special token
         bs, h, _, length = attention.size()
 
         if len(entity_mentions) == 1:  # there is only one mention
@@ -148,11 +148,12 @@ class DocUNet(AbstractModel):
                 document_embeddings.append(entity_embedding)
                 document_attentions.append(entity_attention)
 
-            document_attentions.extend([entity_attention] * (self._ne - len(entity_pos[i])))  # ???
+            # expand document_attentions to at least ne elements
+            document_attentions.extend([entity_attention] * (self._ne - len(entity_pos[i])))  # list of ne elements
 
             # n_e - number of entities in the document
-            document_embeddings = torch.stack(document_embeddings, dim=0)  # (n_e, dim)
-            document_attentions = torch.stack(document_attentions, dim=0)  # (n_e, h, seq_len)
+            document_embeddings = torch.stack(document_embeddings, dim=0)  # (ne, dim)
+            document_attentions = torch.stack(document_attentions, dim=0)  # (ne, h, seq_len)
 
             # batch_embeddings.append(document_embeddings)
             batch_attentions.append(document_attentions)
@@ -192,7 +193,7 @@ class DocUNet(AbstractModel):
 
         map_rss = []
         for b in range(sequence_output.shape[0]):  # iterate over batch
-            document_attentions = attentions[b]  # (n_e, h, seq_len)
+            document_attentions = attentions[b]  # (ne, h, seq_len)
             head_attentions = torch.index_select(document_attentions, 0, index_pair[:, 0])  # (ne * ne, h, seq_len)
             tail_attentions = torch.index_select(document_attentions, 0, index_pair[:, 1])  # (ne * ne, h, seq_len)
             ht_attentions = (head_attentions * tail_attentions).mean(1)  # (ne * ne, seq_len)
@@ -221,7 +222,7 @@ class DocUNet(AbstractModel):
         # Second stage: Extract embeddings for head and tail entities + retrieves attention
         # hs is FloatTensor of (R, dim) shape - head entity embeddings
         # ts is FloatTensor of (R, dim) shape - tail entity embeddings
-        # attentions is a list of tensors with (n_e, h, seq_len) shape
+        # attentions is a list of tensors with (ne, h, seq_len) shape
         hs, ts, _, attentions = self._get_ht(sequence_output, attention, entity_pos, hts)
 
         # Third stage: Collect global information between entities via UNet
